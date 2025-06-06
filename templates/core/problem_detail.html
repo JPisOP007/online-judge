@@ -1,0 +1,970 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}{{ problem.title }} - MyOJ{% endblock %}
+
+{% block extra_css %}
+<style>
+  .section-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--border-color);
+    color: var(--dark-color);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .sample-box {
+    background: rgba(248, 250, 252, 0.8);
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+  }
+
+  .sample-box:hover {
+    border-color: var(--primary-color);
+    box-shadow: var(--shadow-md);
+  }
+
+  .sample-box pre {
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+    color: #e2e8f0;
+    border: none;
+    border-radius: 8px;
+    padding: 1.5rem;
+    font-size: 0.95rem;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+    white-space: pre-wrap;
+    word-break: break-word;
+    margin: 0;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+    line-height: 1.5;
+  }
+
+  .btn-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    align-items: center;
+  }
+
+  .btn-run {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+
+  .btn-run:hover:not(:disabled) {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+    color: white;
+  }
+
+  .btn-submit {
+    background: linear-gradient(135deg, var(--success-color) 0%, #047857 100%);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+
+  .btn-submit:hover:not(:disabled) {
+    background: linear-gradient(135deg, #047857 0%, #065f46 100%);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+    color: white;
+  }
+
+  /* NEW: AI Review Button Styles */
+  .btn-ai-review {
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+
+  .btn-ai-review:hover:not(:disabled) {
+    background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+    color: white;
+  }
+
+  .problem-header {
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.1) 0%, rgba(29, 78, 216, 0.1) 100%);
+    border: 2px solid rgba(37, 99, 235, 0.2);
+    border-radius: var(--border-radius);
+    padding: 2rem;
+    margin-bottom: 2rem;
+    backdrop-filter: blur(10px);
+  }
+
+  .problem-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--dark-color);
+    margin-bottom: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .editor-container {
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    background: white;
+    box-shadow: var(--shadow-md);
+    margin-bottom: 1rem;
+  }
+
+  .editor-header {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .language-selector {
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 6px 12px;
+    background: white;
+    font-weight: 500;
+    min-width: 120px;
+  }
+
+  /* CodeMirror Editor Styles */
+  .editor-wrapper {
+    height: 500px;
+    position: relative;
+    background: #1e293b;
+  }
+
+  .CodeMirror {
+    height: 100%;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace !important;
+    font-size: 14px !important;
+    line-height: 1.5 !important;
+  }
+
+  .CodeMirror-focused .CodeMirror-cursor {
+    border-left: 2px solid #fff;
+  }
+
+  .CodeMirror-gutters {
+    background: rgba(30, 41, 59, 0.8) !important;
+    border-right: 1px solid #475569 !important;
+  }
+
+  .CodeMirror-linenumber {
+    color: #94a3b8 !important;
+  }
+
+  /* Fallback textarea styling */
+  #id_source_code {
+    width: 100%;
+    height: 500px;
+    border: none;
+    outline: none;
+    padding: 20px;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+    font-size: 14px;
+    background: #1e293b;
+    color: #e2e8f0;
+    resize: vertical;
+    line-height: 1.5;
+    display: none;
+  }
+
+  /* OUTPUT SECTION STYLES - CRITICAL FOR VISIBILITY */
+  .output-section {
+    background: white !important;
+    border: 2px solid var(--border-color) !important;
+    border-radius: var(--border-radius) !important;
+    padding: 1.5rem !important;
+    margin-top: 2rem !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: static !important;
+    z-index: auto !important;
+    clear: both !important;
+  }
+
+  .output-section h5 {
+    color: var(--dark-color) !important;
+    font-weight: 600 !important;
+    margin-bottom: 1rem !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+  }
+
+  .output-content {
+    background: #f8f9fa !important;
+    color: #212529 !important;
+    border: 1px solid #dee2e6 !important;
+    border-radius: 8px !important;
+    padding: 1.5rem !important;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace !important;
+    white-space: pre-wrap !important;
+    word-break: break-word !important;
+    font-size: 0.95rem !important;
+    line-height: 1.5 !important;
+    max-height: 300px !important;
+    overflow-y: auto !important;
+    min-height: 60px !important;
+    display: block !important;
+  }
+
+  /* NEW: AI Review Section Styles */
+  .ai-review-section {
+    background: white !important;
+    border: 2px solid #8b5cf6 !important;
+    border-radius: var(--border-radius) !important;
+    padding: 1.5rem !important;
+    margin-top: 2rem !important;
+    display: none;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: static !important;
+    z-index: auto !important;
+    clear: both !important;
+  }
+
+  .ai-review-section.show {
+    display: block !important;
+  }
+
+  .ai-review-section h5 {
+    color: #8b5cf6 !important;
+    font-weight: 600 !important;
+    margin-bottom: 1rem !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+  }
+
+  .ai-review-content {
+    background: #faf5ff !important;
+    color: #1f2937 !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 8px !important;
+    padding: 1.5rem !important;
+    font-family: system-ui, -apple-system, sans-serif !important;
+    white-space: pre-wrap !important;
+    word-break: break-word !important;
+    font-size: 0.95rem !important;
+    line-height: 1.6 !important;
+    max-height: 400px !important;
+    overflow-y: auto !important;
+    min-height: 60px !important;
+    display: block !important;
+  }
+
+  .verdict-badge {
+    padding: 8px 16px !important;
+    border-radius: 20px !important;
+    font-weight: 600 !important;
+    font-size: 0.9rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    margin-top: 1rem !important;
+    visibility: visible !important;
+  }
+
+  .verdict-AC {
+    background: #28a745 !important;
+    color: white !important;
+  }
+
+  .verdict-WA {
+    background: #dc3545 !important;
+    color: white !important;
+  }
+
+  .verdict-TLE, .verdict-RE, .verdict-CE {
+    background: #ffc107 !important;
+    color: #212529 !important;
+  }
+
+  .form-help-text {
+    background: rgba(59, 130, 246, 0.1);
+    border-left: 4px solid var(--primary-color);
+    padding: 12px 16px;
+    border-radius: 0 8px 8px 0;
+    color: var(--primary-color);
+    font-size: 0.9rem;
+    margin-top: 1rem;
+  }
+
+  .back-button {
+    background: rgba(100, 116, 139, 0.1);
+    border: 2px solid var(--secondary-color);
+    color: var(--secondary-color);
+    padding: 10px 20px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+  }
+
+  .back-button:hover {
+    background: var(--secondary-color);
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .loading-spinner {
+    display: none;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  .btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .card-section {
+    background: white;
+    border-radius: var(--border-radius);
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--border-color);
+  }
+
+  @media (max-width: 768px) {
+    .problem-title {
+      font-size: 1.5rem;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .btn-container {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .btn-run, .btn-submit, .btn-ai-review {
+      justify-content: center;
+    }
+
+    .editor-wrapper {
+      height: 400px;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="mb-4 fade-in">
+    <a href="/problems/" class="back-button">
+      <i class="bi bi-arrow-left"></i> Back to Problems
+    </a>
+  </div>
+
+  <section class="problem-header slide-up">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+      <h1 class="problem-title">
+        <i class="bi bi-puzzle"></i>
+        {{ problem.title }}
+      </h1>
+      <span class="difficulty-{{ problem.difficulty|lower }}">
+        <i class="bi bi-star-fill"></i>
+        {{ problem.difficulty|upper }}
+      </span>
+    </div>
+  </section>
+
+  <section class="card-section slide-up">
+    <div class="mb-4">
+      <div class="section-title">
+        <i class="bi bi-file-text"></i>
+        Description
+      </div>
+      <div class="fs-6 lh-lg">{{ problem.description|safe }}</div>
+    </div>
+
+    <div class="mb-4">
+      <div class="section-title">
+        <i class="bi bi-exclamation-triangle"></i>
+        Constraints
+      </div>
+      <div class="fs-6">{{ problem.constraints|linebreaksbr }}</div>
+    </div>
+
+    <div class="row mb-4">
+      <div class="col-md-6">
+        <div class="section-title">
+          <i class="bi bi-download"></i>
+          Input Format
+        </div>
+        <div class="fs-6">{{ problem.input_format|linebreaksbr }}</div>
+      </div>
+      <div class="col-md-6">
+        <div class="section-title">
+          <i class="bi bi-upload"></i>
+          Output Format
+        </div>
+        <div class="fs-6">{{ problem.output_format|linebreaksbr }}</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-6">
+        <div class="sample-box">
+          <div class="section-title">
+            <i class="bi bi-arrow-down-circle"></i>
+            Sample Input
+          </div>
+          <pre>{{ problem.sample_input }}</pre>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="sample-box">
+          <div class="section-title">
+            <i class="bi bi-arrow-up-circle"></i>
+            Sample Output
+          </div>
+          <pre>{{ problem.sample_output }}</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card-section slide-up">
+    <form method="post" id="solution-form">
+      {% csrf_token %}
+      <input type="hidden" name="problem_id" value="{{ problem.id }}" />
+
+      <div class="section-title mb-4">
+        <i class="bi bi-code-slash"></i>
+        Submit Your Solution
+      </div>
+
+      <div class="editor-container">
+        <div class="editor-header">
+          <label class="form-label mb-0 fw-semibold" for="language-select">
+            <i class="bi bi-gear me-1"></i>
+            Language:
+          </label>
+          <select id="language-select" name="language" class="language-selector">
+            <option value="python">Python</option>
+            <option value="cpp">C++</option>
+            <option value="java">Java</option>
+            <option value="javascript">JavaScript</option>
+          </select>
+          <div class="ms-auto text-muted small">
+            <i class="bi bi-info-circle me-1"></i>
+            Code Editor
+          </div>
+        </div>
+        <div class="editor-wrapper">
+          <textarea id="id_source_code" name="source_code">{{ form.source_code.value|default:"# Write your solution here..." }}</textarea>
+        </div>
+      </div>
+
+      <div class="btn-container">
+        <button type="button" class="btn btn-run" id="run-btn">
+          <i class="bi bi-play-fill"></i>
+          <span>Run Code</span>
+          <div class="loading-spinner" id="run-spinner"></div>
+        </button>
+        <button type="button" class="btn btn-submit" id="submit-btn">
+          <i class="bi bi-send-fill"></i>
+          <span>Submit Solution</span>
+          <div class="loading-spinner" id="submit-spinner"></div>
+        </button>
+        <!-- NEW: AI Review Button -->
+        <button type="button" class="btn btn-ai-review" id="ai-review-btn">
+          <i class="bi bi-robot"></i>
+          <span>Get AI Review</span>
+          <div class="loading-spinner" id="ai-review-spinner"></div>
+        </button>
+      </div>
+
+      <div class="form-help-text">
+        <div class="d-flex align-items-start gap-2">
+          <i class="bi bi-lightbulb flex-shrink-0 mt-1"></i>
+          <div>
+            <strong>Tips:</strong><br>
+            • Click <strong>Run Code</strong> to test your solution with sample input<br>
+            • Click <strong>Submit Solution</strong> to evaluate against all test cases<br>
+            • Click <strong>Get AI Review</strong> to analyze your code for improvements<br>
+            • Use Ctrl+Space for code completion, Ctrl+/ for comments
+          </div>
+        </div>
+      </div>
+    </form>
+  </section>
+
+  {% if output %}
+  <section class="card-section output-section" id="output-section">
+    <h5>
+      <i class="bi bi-terminal"></i>
+      Execution Result
+    </h5>
+    <div class="output-content" id="output-content">{{ output }}</div>
+
+    {% if verdict %}
+      <div class="verdict-badge verdict-{{ verdict }}" id="verdict-badge">
+        {% if verdict == 'AC' %}
+          <i class="bi bi-check-circle-fill"></i>
+          Accepted
+        {% elif verdict == 'WA' %}
+          <i class="bi bi-x-circle-fill"></i>
+          Wrong Answer
+        {% elif verdict == 'TLE' %}
+          <i class="bi bi-clock-fill"></i>
+          Time Limit Exceeded
+        {% elif verdict == 'RE' %}
+          <i class="bi bi-exclamation-triangle-fill"></i>
+          Runtime Error
+        {% elif verdict == 'CE' %}
+          <i class="bi bi-bug-fill"></i>
+          Compilation Error
+        {% else %}
+          <i class="bi bi-question-circle-fill"></i>
+          {{ verdict }}
+        {% endif %}
+      </div>
+    {% endif %}
+
+    {% if feedback_message %}
+      <div class="alert alert-info mt-3">
+        <i class="bi bi-info-circle me-2"></i>
+        {{ feedback_message }}
+      </div>
+    {% endif %}
+  </section>
+  {% endif %}
+
+  <!-- NEW: Separate AI Review Section -->
+  <section class="card-section ai-review-section" id="ai-review-section">
+    <h5>
+      <i class="bi bi-robot"></i>
+      AI Code Review
+    </h5>
+    <div class="ai-review-content" id="ai-review-content">
+      <!-- AI feedback will be loaded here -->
+    </div>
+  </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- CodeMirror CSS and JS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-darker.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/clike/clike.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/comment/comment.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/selection/active-line.min.js"></script>
+
+<script>
+let editor;
+let currentLanguage = 'python';
+
+// Language configurations for CodeMirror
+const languageConfigs = {
+  python: {
+    mode: 'python',
+    defaultCode: `# Write your Python solution here
+def solve():
+    # Your code here
+    pass
+
+if __name__ == "__main__":
+    solve()`,
+  },
+  cpp: {
+    mode: 'text/x-c++src',
+    defaultCode: `#include <iostream>
+#include <vector>
+#include <string>
+using namespace std;
+
+int main() {
+    // Your C++ code here
+    
+    return 0;
+}`,
+  },
+  java: {
+    mode: 'text/x-java',
+    defaultCode: `import java.util.*;
+import java.io.*;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        // Your Java code here
+        
+        sc.close();
+    }
+}`,
+  },
+  javascript: {
+    mode: 'javascript',
+    defaultCode: `// Write your JavaScript solution here
+const readline = require('readline');
+
+const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+});
+
+// Your code here`,
+  }
+};
+
+// Initialize CodeMirror
+function initializeCodeMirror() {
+  const textarea = document.getElementById('id_source_code');
+  
+  try {
+    // Get initial code
+    const initialCode = textarea.value && textarea.value.trim() !== "# Write your solution here..." 
+      ? textarea.value 
+      : languageConfigs[currentLanguage].defaultCode;
+
+    editor = CodeMirror.fromTextArea(textarea, {
+      lineNumbers: true,
+      mode: languageConfigs[currentLanguage].mode,
+      theme: 'material-darker',
+      autoCloseBrackets: true,
+      matchBrackets: true,
+      styleActiveLine: true,
+      indentUnit: 4,
+      tabSize: 4,
+      indentWithTabs: false,
+      lineWrapping: true,
+      foldGutter: true,
+      gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
+      extraKeys: {
+        "Ctrl-/": "toggleComment",
+        "Cmd-/": "toggleComment",
+        "Ctrl-Enter": function() {
+          document.getElementById('run-btn').click();
+        },
+        "Ctrl-Shift-Enter": function() {
+          document.getElementById('submit-btn').click();
+        }
+      }
+    });
+
+    editor.setValue(initialCode);
+    editor.setSize(null, 500);
+
+    // Language change handler
+    document.getElementById('language-select').addEventListener('change', function() {
+      const newLanguage = this.value;
+      currentLanguage = newLanguage;
+      
+      const config = languageConfigs[newLanguage];
+      editor.setOption('mode', config.mode);
+      
+      // Only change code if current code is empty or is a default template
+      const currentCode = editor.getValue().trim();
+      const isDefaultCode = Object.values(languageConfigs).some(cfg => 
+        currentCode === cfg.defaultCode.trim()
+      );
+      
+      if (!currentCode || isDefaultCode || currentCode === "# Write your solution here...") {
+        editor.setValue(config.defaultCode);
+      }
+    });
+
+    // Focus editor
+    setTimeout(() => {
+      editor.focus();
+    }, 100);
+
+  } catch (error) {
+    // Show textarea as fallback
+    textarea.style.display = 'block';
+  }
+}
+
+// Loading state helper function
+function showLoadingState(button) {
+  const spinner = button.querySelector('.loading-spinner');
+  const allButtons = document.querySelectorAll('#run-btn, #submit-btn, #ai-review-btn');
+  
+  if (spinner) {
+    spinner.style.display = 'block';
+  }
+  
+  allButtons.forEach(btn => {
+    btn.disabled = true;
+  });
+  
+  // Re-enable buttons after timeout (fallback)
+  setTimeout(() => {
+    allButtons.forEach(btn => {
+      btn.disabled = false;
+    });
+    document.querySelectorAll('.loading-spinner').forEach(s => {
+      s.style.display = 'none';
+    });
+  }, 15000);
+}
+
+// NEW: AI Review function
+async function requestAIReview() {
+  const reviewSection = document.getElementById('ai-review-section');
+  const reviewContent = document.getElementById('ai-review-content');
+  
+  try {
+    // Update textarea with editor content
+    if (editor) {
+      editor.save();
+    }
+    
+    const formData = new FormData();
+    formData.append('action', 'AI_Review');
+    formData.append('source_code', editor ? editor.getValue() : document.getElementById('id_source_code').value);
+    formData.append('language', document.getElementById('language-select').value);
+    formData.append('problem_id', document.querySelector('input[name="problem_id"]').value);
+    
+    // Add CSRF token
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    formData.append('csrfmiddlewaretoken', csrfToken);
+    
+    const response = await fetch(window.location.href, {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      
+      if (data.ai_feedback) {
+        reviewContent.textContent = data.ai_feedback;
+        reviewSection.classList.add('show');
+        reviewSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else {
+        reviewContent.textContent = 'No AI feedback available. Please make sure your code is valid.';
+        reviewSection.classList.add('show');
+      }
+    } else {
+      throw new Error('Failed to get AI review');
+    }
+    
+  } catch (error) {
+    console.error('AI Review Error:', error);
+    reviewContent.textContent = 'Error getting AI review. Please try again later.';
+    reviewSection.classList.add('show');
+  }
+}
+
+// Form submission handler
+document.addEventListener('DOMContentLoaded', function() {
+  // Initialize CodeMirror
+  setTimeout(initializeCodeMirror, 100);
+
+  // Form submission handler with proper action detection
+  const form = document.getElementById('solution-form');
+  if (form) {
+    // Add click handlers to buttons to set action before form submission
+    const runBtn = document.getElementById('run-btn');
+    const submitBtn = document.getElementById('submit-btn');
+    const aiReviewBtn = document.getElementById('ai-review-btn');
+    
+    if (runBtn) {
+      runBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        // Update textarea with editor content
+        if (editor) {
+          const code = editor.getValue();
+          editor.save();
+        }
+        
+        // Create hidden input for action
+        let actionInput = document.querySelector('input[name="action"]');
+        if (!actionInput) {
+          actionInput = document.createElement('input');
+          actionInput.type = 'hidden';
+          actionInput.name = 'action';
+          form.appendChild(actionInput);
+        }
+        actionInput.value = 'Run';
+        
+        // Show loading state
+        showLoadingState(runBtn);
+        
+        // Submit form
+        form.submit();
+      });
+    }
+    
+    if (submitBtn) {
+      submitBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        // Update textarea with editor content
+        if (editor) {
+          const code = editor.getValue();
+          editor.save();
+        }
+        
+        // Create hidden input for action
+        let actionInput = document.querySelector('input[name="action"]');
+        if (!actionInput) {
+          actionInput = document.createElement('input');
+          actionInput.type = 'hidden';
+          actionInput.name = 'action';
+          form.appendChild(actionInput);
+        }
+        actionInput.value = 'Submit';
+        
+        // Show loading state
+        showLoadingState(submitBtn);
+        
+        // Submit form
+        form.submit();
+      });
+    }
+    
+    // NEW: AI Review button handler
+    if (aiReviewBtn) {
+      aiReviewBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        // Check if code is not empty
+        const code = editor ? editor.getValue().trim() : document.getElementById('id_source_code').value.trim();
+        if (!code || code === '# Write your solution here...' || code === languageConfigs[currentLanguage].defaultCode.trim()) {
+          alert('Please write some code before requesting an AI review.');
+          return;
+        }
+        
+        // Show loading state
+        showLoadingState(aiReviewBtn);
+        
+        // Request AI review
+        requestAIReview().finally(() => {
+          // Hide loading state
+          const allButtons = document.querySelectorAll('#run-btn, #submit-btn, #ai-review-btn');
+          allButtons.forEach(btn => {
+            btn.disabled = false;
+          });
+          document.querySelectorAll('.loading-spinner').forEach(s => {
+            s.style.display = 'none';
+          });
+        });
+      });
+    }
+  }
+
+  // Handle window resize
+  window.addEventListener('resize', function() {
+    if (editor) {
+      setTimeout(() => {
+        editor.refresh();
+      }, 100);
+    }
+  });
+
+  // Handle page visibility changes
+  document.addEventListener('visibilitychange', function() {
+    if (!document.hidden && editor) {
+      setTimeout(() => {
+        editor.refresh();
+        editor.focus();
+      }, 100);
+    }
+  });
+
+  // FORCE output section visibility - this is critical
+  const outputSection = document.getElementById('output-section');
+  if (outputSection) {
+    // Remove any potentially conflicting styles
+    outputSection.style.cssText = `
+      display: block !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+      position: static !important;
+      z-index: auto !important;
+      clear: both !important;
+      background: white !important;
+      border: 2px solid var(--border-color) !important;
+      border-radius: var(--border-radius) !important;
+      padding: 1.5rem !important;
+      margin-top: 2rem !important;
+    `;
+    
+    // Ensure all child elements are visible
+    const allElements = outputSection.querySelectorAll('*');
+    allElements.forEach(el => {
+      el.style.visibility = 'visible';
+      el.style.opacity = '1';
+    });
+  }
+});
+
+// Auto-save functionality
+setInterval(function() {
+  if (editor) {
+    editor.save();
+  }
+}, 2000);
+</script>
+{% endblock %}

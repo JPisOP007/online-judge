@@ -1,0 +1,211 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Edit Contest - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="card-section fade-in">
+    <div class="d-flex justify-content-between align-items-start mb-4">
+        <div class="d-flex align-items-center">
+            <i class="bi bi-pencil-square text-warning fs-3 me-3"></i>
+            <div>
+                <h2 class="card-title mb-1">Edit Contest</h2>
+                <p class="text-muted mb-0">Modify contest settings and problems</p>
+            </div>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'contest_detail' contest.uuid %}" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-eye me-1"></i>View Contest
+            </a>
+            <a href="{% url 'contest_list' %}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-list me-1"></i>All Contests
+            </a>
+        </div>
+    </div>
+
+    <!-- Contest Status Alert -->
+    <div class="alert alert-info mb-4">
+        <i class="bi bi-info-circle me-2"></i>
+        <strong>Contest Status:</strong> 
+        {% if contest.is_upcoming %}
+            <span class="badge bg-secondary">Upcoming</span>
+        {% elif contest.is_running %}
+            <span class="badge bg-success">Running</span>
+        {% else %}
+            <span class="badge bg-dark">Ended</span>
+        {% endif %}
+        <br>
+        <small class="text-muted">
+            Be careful when editing running or ended contests as it may affect participants.
+        </small>
+    </div>
+
+    <form method="post" class="needs-validation" novalidate>
+        {% csrf_token %}
+        
+        <!-- Contest Basic Info -->
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <label for="{{ form.title.id_for_label }}" class="form-label">Contest Title</label>
+                {{ form.title }}
+                {% if form.title.errors %}
+                    <div class="text-danger small mt-1">{{ form.title.errors.0 }}</div>
+                {% endif %}
+            </div>
+            <div class="col-md-4">
+                <label for="{{ form.contest_type.id_for_label }}" class="form-label">Contest Type</label>
+                {{ form.contest_type }}
+                {% if form.contest_type.errors %}
+                    <div class="text-danger small mt-1">{{ form.contest_type.errors.0 }}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Description -->
+        <div class="mb-4">
+            <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+            {{ form.description }}
+            {% if form.description.errors %}
+                <div class="text-danger small mt-1">{{ form.description.errors.0 }}</div>
+            {% endif %}
+        </div>
+
+        <!-- Time Settings -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <label for="{{ form.start_time.id_for_label }}" class="form-label">Start Time</label>
+                {{ form.start_time }}
+                {% if contest.is_running or contest.is_ended %}
+                    <small class="form-text text-warning">
+                        <i class="bi bi-exclamation-triangle me-1"></i>
+                        Contest has already started/ended
+                    </small>
+                {% endif %}
+                {% if form.start_time.errors %}
+                    <div class="text-danger small mt-1">{{ form.start_time.errors.0 }}</div>
+                {% endif %}
+            </div>
+            <div class="col-md-6">
+                <label for="{{ form.end_time.id_for_label }}" class="form-label">End Time</label>
+                {{ form.end_time }}
+                {% if form.end_time.errors %}
+                    <div class="text-danger small mt-1">{{ form.end_time.errors.0 }}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Registration Settings -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="form-check mb-3">
+                    {{ form.registration_required }}
+                    <label class="form-check-label" for="{{ form.registration_required.id_for_label }}">
+                        Registration Required
+                    </label>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <label for="{{ form.max_participants.id_for_label }}" class="form-label">Max Participants</label>
+                {{ form.max_participants }}
+                <small class="form-text text-muted">
+                    Current: {{ contest.participants.count }} registered
+                </small>
+                {% if form.max_participants.errors %}
+                    <div class="text-danger small mt-1">{{ form.max_participants.errors.0 }}</div>
+                {% endif %}
+            </div>
+            <div class="col-md-4">
+                <label for="{{ form.password.id_for_label }}" class="form-label">Contest Password</label>
+                {{ form.password }}
+                <small class="form-text text-muted">Optional</small>
+                {% if form.password.errors %}
+                    <div class="text-danger small mt-1">{{ form.password.errors.0 }}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Problems Selection -->
+        <div class="mb-4">
+            <label for="{{ form.problems.id_for_label }}" class="form-label">Select Problems</label>
+            {{ form.problems }}
+            <small class="form-text text-muted">
+                Hold Ctrl/Cmd to select multiple problems. 
+                Current: {{ contest.contest_problems.count }} problems selected
+            </small>
+            {% if contest.is_running %}
+                <div class="alert alert-warning mt-2">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    <small>Removing problems during contest may affect ongoing submissions</small>
+                </div>
+            {% endif %}
+            {% if form.problems.errors %}
+                <div class="text-danger small mt-1">{{ form.problems.errors.0 }}</div>
+            {% endif %}
+        </div>
+
+        <!-- Current Contest Stats -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card bg-light">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">{{ contest.participants.count }}</h5>
+                        <small class="text-muted">Participants</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-light">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">{{ contest.contest_problems.count }}</h5>
+                        <small class="text-muted">Problems</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-light">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">{{ contest.announcements.count }}</h5>
+                        <small class="text-muted">Announcements</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-light">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">{{ contest.duration.total_seconds|floatformat:0 }}</h5>
+                        <small class="text-muted">Duration (seconds)</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="d-flex gap-3">
+            <button type="submit" class="btn btn-warning">
+                <i class="bi bi-check-circle me-2"></i>Update Contest
+            </button>
+            <a href="{% url 'contest_detail' contest.uuid %}" class="btn btn-outline-primary">
+                <i class="bi bi-eye me-2"></i>View Contest
+            </a>
+            <a href="{% url 'contest_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-2"></i>Back to Contests
+            </a>
+        </div>
+    </form>
+</div>
+
+<script>
+// Add form validation styles
+document.addEventListener('DOMContentLoaded', function() {
+    const forms = document.querySelectorAll('.needs-validation');
+    forms.forEach(function(form) {
+        form.addEventListener('submit', function(event) {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            form.classList.add('was-validated');
+        });
+    });
+});
+</script>
+{% endblock %}

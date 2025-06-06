@@ -1,0 +1,9 @@
+/credentials/gemini-service-key.json
+*.pyc
+__pycache__/
+db.sqlite3
+.env
+/staticfiles/
+/media/
+/venv/
+/.env/

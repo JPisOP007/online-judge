@@ -1,0 +1,347 @@
+{% extends 'core/base.html' %}
+
+{% block title %}{{ problem.title }} - {{ contest.title }}{% endblock %}
+
+{% block content %}
+<div class="row">
+  <!-- Contest Info Bar -->
+  <div class="col-12 mb-4">
+    <div class="card-section">
+      <div class="row align-items-center">
+        <div class="col-md-8">
+          <h5 class="mb-1">
+            <i class="bi bi-trophy text-warning me-2"></i>
+            <a href="{% url 'contest_detail' contest.uuid %}" class="text-decoration-none">{{ contest.title }}</a>
+          </h5>
+          <small class="text-muted">
+            <i class="bi bi-clock me-1"></i>
+            {% if contest.is_running %}
+              <span class="text-success">Contest Running</span> - 
+              <span id="time-remaining" data-end-time="{{ contest.end_time|date:'c' }}">Calculating...</span>
+            {% elif contest.is_upcoming %}
+              <span class="text-info">Contest Starts In</span> - 
+              <span id="time-until-start" data-start-time="{{ contest.start_time|date:'c' }}">Calculating...</span>
+            {% else %}
+              <span class="text-secondary">Contest Ended</span>
+            {% endif %}
+          </small>
+        </div>
+        <div class="col-md-4 text-end">
+          <a href="{% url 'contest_problems' contest.uuid %}" class="btn btn-outline-primary btn-sm me-2">
+            <i class="bi bi-list-task me-1"></i>All Problems
+          </a>
+          <a href="{% url 'contest_standings' contest.uuid %}" class="btn btn-outline-success btn-sm">
+            <i class="bi bi-trophy me-1"></i>Standings
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Problem Content -->
+  <div class="col-lg-8">
+    <div class="card-section">
+      <div class="d-flex justify-content-between align-items-start mb-4">
+        <div>
+          <h2 class="mb-2">{{ problem.title }}</h2>
+          <div class="d-flex align-items-center gap-3 mb-3">
+            <span class="difficulty-{{ problem.difficulty|lower }}">{{ problem.get_difficulty_display }}</span>
+            <span class="badge bg-primary">{{ contest_problem.points }} points</span>
+            <small class="text-muted"><i class="bi bi-clock me-1"></i>{{ problem.time_limit }}s</small>
+            <small class="text-muted"><i class="bi bi-memory me-1"></i>{{ problem.memory_limit }}MB</small>
+          </div>
+        </div>
+      </div>
+
+      <div class="mb-4">
+        <h5><i class="bi bi-file-text me-2"></i>Problem Statement</h5>
+        <div class="problem-content">{{ problem.description|linebreaks }}</div>
+      </div>
+
+      {% if problem.input_format %}
+      <div class="mb-4">
+        <h5><i class="bi bi-arrow-down-circle me-2"></i>Input Format</h5>
+        <div class="problem-content">{{ problem.input_format|linebreaks }}</div>
+      </div>
+      {% endif %}
+
+      {% if problem.output_format %}
+      <div class="mb-4">
+        <h5><i class="bi bi-arrow-up-circle me-2"></i>Output Format</h5>
+        <div class="problem-content">{{ problem.output_format|linebreaks }}</div>
+      </div>
+      {% endif %}
+
+      {% if problem.sample_input or problem.sample_output %}
+      <div class="row mb-4">
+        {% if problem.sample_input %}
+        <div class="col-md-6">
+          <h5><i class="bi bi-input-cursor me-2"></i>Sample Input</h5>
+          <pre class="bg-light p-3 border rounded"><code>{{ problem.sample_input }}</code></pre>
+        </div>
+        {% endif %}
+        {% if problem.sample_output %}
+        <div class="col-md-6">
+          <h5><i class="bi bi-output me-2"></i>Sample Output</h5>
+          <pre class="bg-light p-3 border rounded"><code>{{ problem.sample_output }}</code></pre>
+        </div>
+        {% endif %}
+      </div>
+      {% endif %}
+
+      {% if problem.constraints %}
+      <div class="mb-4">
+        <h5><i class="bi bi-shield-check me-2"></i>Constraints</h5>
+        <div class="problem-content">{{ problem.constraints|linebreaks }}</div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Submission Panel -->
+  <div class="col-lg-4">
+    <div class="card-section sticky-top" style="top: 20px;">
+      <h5 class="mb-3">
+        <i class="bi bi-code-slash me-2"></i>Submit Solution
+      </h5>
+
+      <!-- Submission Results -->
+      {% if verdict or output %}
+<div class="mb-3">
+  {% if verdict == 'AC' %}
+    <div class="alert alert-success">
+      <i class="bi bi-check-circle me-2"></i>
+      <strong>Accepted!</strong>
+      {% if feedback_message %}
+        <br>{{ feedback_message }}
+      {% endif %}
+    </div>
+  {% elif verdict == 'WA' %}
+    <div class="alert alert-warning">
+      <i class="bi bi-x-circle me-2"></i>
+      <strong>Wrong Answer</strong>
+      {% if feedback_message %}
+        <br>{{ feedback_message }}
+      {% endif %}
+    </div>
+  {% elif verdict == 'TLE' %}
+    <div class="alert alert-info">
+      <i class="bi bi-clock me-2"></i>
+      <strong>Time Limit Exceeded</strong>
+      {% if feedback_message %}
+        <br>{{ feedback_message }}
+      {% endif %}
+    </div>
+  {% elif verdict == 'CE' %}
+    <div class="alert alert-danger">
+      <i class="bi bi-exclamation-triangle me-2"></i>
+      <strong>Compilation Error</strong>
+      {% if feedback_message %}
+        <br>{{ feedback_message }}
+      {% endif %}
+    </div>
+  {% elif verdict == 'RE' %}
+    <div class="alert alert-danger">
+      <i class="bi bi-bug me-2"></i>
+      <strong>Runtime Error</strong>
+      {% if feedback_message %}
+        <br>{{ feedback_message }}
+      {% endif %}
+    </div>
+  {% elif verdict == 'IE' %}
+    <div class="alert alert-secondary">
+      <i class="bi bi-gear me-2"></i>
+      <strong>Internal Error</strong>
+      {% if feedback_message %}
+        <br>{{ feedback_message }}
+      {% endif %}
+    </div>
+  {% elif verdict %}
+    <div class="alert alert-secondary">
+      <i class="bi bi-info-circle me-2"></i>
+      <strong>Verdict: {{ verdict }}</strong>
+      {% if feedback_message %}
+        <br>{{ feedback_message }}
+      {% endif %}
+    </div>
+  {% endif %}
+
+  {% if output %}
+  <div class="mt-3">
+    <div class="card">
+      <div class="card-header">
+        <small class="text-muted"><i class="bi bi-terminal me-1"></i>Output:</small>
+      </div>
+      <div class="card-body">
+        <pre class="mb-0"><code>{{ output|truncatechars:1000 }}</code></pre>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+
+      {% if user.is_staff %}
+<div class="mb-3">
+  <div class="alert alert-info">
+    <small class="text-muted">
+      <strong>Debug Info:</strong><br>
+      Verdict: '{{ verdict }}'<br>
+      Output Length: {{ output|length }} chars<br>
+      Feedback: '{{ feedback_message }}'<br>
+      Form Valid: {{ form.is_valid }}<br>
+      Form Errors: {{ form.errors }}<br>
+      Request Method: {{ request.method }}<br>
+      POST Data: {{ request.POST }}
+    </small>
+  </div>
+</div>
+{% endif %}
+
+      <!-- Submission Form -->
+      <form method="post" id="solution-form">
+        {% csrf_token %}
+        <input type="hidden" name="problem_id" value="{{ problem.uuid }}">
+        <input type="hidden" name="action" id="action-input" value="">
+        
+        <div class="mb-3">
+          <label class="form-label">Programming Language</label>
+          {{ form.language }}
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Source Code</label>
+          {{ form.source_code }}
+        </div>
+        
+        <div class="d-grid gap-2 mb-3">
+          <button type="button" class="btn btn-outline-primary" id="run-btn">
+            <i class="bi bi-play me-1"></i>Run on Sample
+          </button>
+          <button type="button" class="btn btn-success" id="submit-btn">
+           <i class="bi bi-upload me-1"></i>Submit Solution
+          </button>
+        </div>
+      </form>
+
+      {% if user_submissions %}
+      <div class="mt-4">
+        <h6 class="mb-3">
+          <i class="bi bi-clock-history me-2"></i>Your Submissions
+        </h6>
+        <div class="table-responsive">
+          <table class="table table-sm">
+            <thead>
+              <tr><th>Time</th><th>Verdict</th><th>Points</th></tr>
+            </thead>
+            <tbody>
+              {% for submission in user_submissions %}
+              <tr>
+                <td><small>{{ submission.submitted_at|date:"H:i" }}</small></td>
+                <td>
+                  {% if submission.solution.verdict == 'AC' %}
+                    <span class="badge bg-success">AC</span>
+                  {% elif submission.solution.verdict == 'WA' %}
+                    <span class="badge bg-warning">WA</span>
+                  {% elif submission.solution.verdict == 'TLE' %}
+                    <span class="badge bg-info">TLE</span>
+                  {% elif submission.solution.verdict == 'CE' %}
+                    <span class="badge bg-danger">CE</span>
+                  {% elif submission.solution.verdict == 'RE' %}
+                    <span class="badge bg-danger">RE</span>
+                  {% else %}
+                    <span class="badge bg-secondary">{{ submission.solution.verdict }}</span>
+                  {% endif %}
+                </td>
+                <td><strong>{{ submission.points_awarded }}</strong></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  .problem-content { line-height: 1.7; }
+  .sticky-top { position: sticky; z-index: 1020; }
+  @media (max-width: 991.98px) {
+    .sticky-top { position: static; }
+  }
+  .difficulty-easy { color: #28a745; font-weight: bold; }
+  .difficulty-medium { color: #ffc107; font-weight: bold; }
+  .difficulty-hard { color: #dc3545; font-weight: bold; }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  function updateTimer() {
+    const timeRemainingEl = document.getElementById('time-remaining');
+    const timeUntilStartEl = document.getElementById('time-until-start');
+    const now = new Date();
+
+    if (timeRemainingEl) {
+      const endTime = new Date(timeRemainingEl.dataset.endTime);
+      const diff = endTime - now;
+      if (diff > 0) {
+        const hours = Math.floor(diff / 3600000);
+        const minutes = Math.floor((diff % 3600000) / 60000);
+        const seconds = Math.floor((diff % 60000) / 1000);
+        timeRemainingEl.textContent = `${hours}h ${minutes}m ${seconds}s remaining`;
+      } else {
+        timeRemainingEl.parentElement.innerHTML = '<span class="text-secondary">Contest Ended</span>';
+      }
+    }
+
+    if (timeUntilStartEl) {
+      const startTime = new Date(timeUntilStartEl.dataset.startTime);
+      const diff = startTime - now;
+      if (diff > 0) {
+        const hours = Math.floor(diff / 3600000);
+        const minutes = Math.floor((diff % 3600000) / 60000);
+        const seconds = Math.floor((diff % 60000) / 1000);
+        timeUntilStartEl.textContent = `${hours}h ${minutes}m ${seconds}s`;
+      } else {
+        location.reload();
+      }
+    }
+  }
+
+  setInterval(updateTimer, 1000);
+  updateTimer();
+
+  // Handle form submission with proper action
+  document.getElementById('run-btn').addEventListener('click', function(e) {
+    e.preventDefault();
+    
+    // Set the action
+    document.getElementById('action-input').value = 'run';
+    
+    // Update button state
+    this.disabled = true;
+    this.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Running...';
+    
+    // Submit the form
+    document.getElementById('solution-form').submit();
+  });
+
+  document.getElementById('submit-btn').addEventListener('click', function(e) {
+    e.preventDefault();
+    
+    // Set the action
+    document.getElementById('action-input').value = 'submit';
+    
+    // Update button state
+    this.disabled = true;
+    this.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Submitting...';
+    
+    // Submit the form
+    document.getElementById('solution-form').submit();
+  });
+</script>
+{% endblock %}

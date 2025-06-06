@@ -1,0 +1,33 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Register{% endblock %}
+
+{% block content %}
+<div style="max-width: 450px; margin: 2em auto; padding: 2em; border: 1px solid #ccc; border-radius: 8px; background-color: #f9f9f9; box-shadow: 2px 2px 10px rgba(0,0,0,0.1);">
+    <h2 style="text-align: center;">Register</h2>
+
+    {% if messages %}
+        {% for message in messages %}
+            <p style="color: red; text-align: center;">{{ message }}</p>
+        {% endfor %}
+    {% endif %}
+
+    <form method="post" style="display: flex; flex-direction: column;">
+        {% csrf_token %}
+
+        <label for="username" style="margin-top: 1em;">Username:</label>
+        <input type="text" name="username" id="username" required style="padding: 0.5em; border-radius: 4px; border: 1px solid #ccc;">
+
+        <label for="password" style="margin-top: 1em;">Password:</label>
+        <input type="password" name="password" id="password" required style="padding: 0.5em; border-radius: 4px; border: 1px solid #ccc;">
+
+        <button type="submit" style="margin-top: 1.5em; padding: 0.7em; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">
+            Register
+        </button>
+    </form>
+
+    <p style="text-align: center; margin-top: 1.5em;">
+        Already have an account? <a href="{% url 'login' %}">Login</a>
+    </p>
+</div>
+{% endblock %}

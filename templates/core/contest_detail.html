@@ -1,0 +1,390 @@
+{% extends 'core/base.html' %}
+{% load custom_filters %}
+{% load static %}
+
+{% block title %}{{ contest.title }} - MyOJ{% endblock %}
+
+{% block extra_css %}
+<style>
+    .contest-timer {
+        background: linear-gradient(135deg, var(--primary-color), #1d4ed8);
+        color: white;
+        padding: 1rem;
+        border-radius: 12px;
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    .timer-display {
+        font-size: 2rem;
+        font-weight: bold;
+        font-family: 'Courier New', monospace;
+    }
+    .contest-status-badge {
+        font-size: 1rem;
+        padding: 0.5rem 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+{% if contest.is_running or contest.is_upcoming %}
+<script>
+    // Contest timer functionality
+    function updateTimer() {
+        fetch('{% url "contest_timer_api" contest.uuid %}')
+            .then(function(response) {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(function(data) {
+                console.log('Timer data received:', data); // Debug log
+                
+                const timerDisplay = document.getElementById('timerDisplay');
+                const statusBadge = document.getElementById('contestStatusBadge');
+                
+                if (!timerDisplay) {
+                    console.log('Timer display element not found');
+                    return;
+                }
+                
+                let seconds = 0;
+                let statusText = 'Unknown';
+                let statusClass = 'bg-secondary';
+                
+                // Update status badge
+                if (data.status === 'upcoming') {
+                    seconds = data.time_until_start || 0;
+                    statusText = 'Upcoming';
+                    statusClass = 'bg-info';
+                } else if (data.status === 'running') {
+                    seconds = data.time_remaining || 0;
+                    statusText = 'Running';
+                    statusClass = 'bg-success';
+                } else if (data.status === 'ended') {
+                    statusText = 'Ended';
+                    statusClass = 'bg-secondary';
+                }
+                
+                // Update status badge if it exists
+                if (statusBadge) {
+                    statusBadge.textContent = statusText;
+                    statusBadge.className = 'badge contest-status-badge ' + statusClass;
+                }
+                
+                // Update timer display
+                if (seconds > 0) {
+                    const hours = Math.floor(seconds / 3600);
+                    const minutes = Math.floor((seconds % 3600) / 60);
+                    const secs = seconds % 60;
+                    
+                    const timeString = 
+                        hours.toString().padStart(2, '0') + ':' +
+                        minutes.toString().padStart(2, '0') + ':' +
+                        secs.toString().padStart(2, '0');
+                    
+                    timerDisplay.textContent = timeString;
+                    
+                    // Update timer label
+                    const timerLabel = document.querySelector('.timer-label');
+                    if (timerLabel) {
+                        if (data.status === 'upcoming') {
+                            timerLabel.textContent = 'Contest starts in:';
+                        } else if (data.status === 'running') {
+                            timerLabel.textContent = 'Time remaining:';
+                        }
+                    }
+                } else {
+                    if (data.status === 'ended') {
+                        timerDisplay.textContent = 'Contest ended';
+                    } else {
+                        timerDisplay.textContent = '00:00:00';
+                    }
+                    
+                    // Reload page when contest status changes
+                    if ((data.status === 'running' && '{{ contest.status }}' === 'upcoming') ||
+                        (data.status === 'ended' && '{{ contest.status }}' === 'running')) {
+                        console.log('Contest status changed, reloading page...');
+                        setTimeout(function() {
+                            location.reload();
+                        }, 2000);
+                    }
+                }
+            })
+            .catch(function(error) {
+                console.error('Timer update failed:', error);
+                const timerDisplay = document.getElementById('timerDisplay');
+                if (timerDisplay) {
+                    timerDisplay.textContent = 'Timer error';
+                }
+            });
+    }
+    
+    // Update timer every second
+    const timerInterval = setInterval(updateTimer, 1000);
+    updateTimer(); // Initial call
+    
+    // Clear interval when page is about to unload
+    window.addEventListener('beforeunload', function() {
+        clearInterval(timerInterval);
+    });
+</script>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="card-section">
+    <div class="d-flex justify-content-between align-items-start mb-4">
+        <div>
+            <h1 class="card-title">{{ contest.title }}</h1>
+            <div class="d-flex gap-2 mt-2">
+                <span id="contestStatusBadge" class="badge contest-status-badge 
+                    {% if contest.is_upcoming %}bg-info{% elif contest.is_running %}bg-success{% else %}bg-secondary{% endif %}">
+                    {% if contest.is_upcoming %}Upcoming{% elif contest.is_running %}Running{% else %}Ended{% endif %}
+                </span>
+                
+                <span class="badge bg-light text-dark">{{ contest.contest_type|title }}</span>
+            </div>
+        </div>
+        
+        <div class="text-end">
+            {% if user.is_staff %}
+                <a href="{% url 'edit_contest' contest.uuid %}" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-pencil me-1"></i>Edit
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Contest Timer -->
+    {% if contest.is_running or contest.is_upcoming %}
+    <div class="contest-timer" id="contestTimer">
+        <div class="timer-label">
+            {% if contest.is_upcoming %}
+                Contest starts in:
+            {% else %}
+                Time remaining:
+            {% endif %}
+        </div>
+        <div class="timer-display" id="timerDisplay">Loading...</div>
+    </div>
+    {% endif %}
+
+    <!-- Registration Section -->
+    {% if can_register %}
+    <div class="alert alert-info">
+        <h5><i class="bi bi-info-circle me-2"></i>Registration Required</h5>
+        <form method="post" class="mt-3">
+            {% csrf_token %}
+            {% if contest.password %}
+            <div class="mb-3">
+                <label for="password" class="form-label">Contest Password</label>
+                <input type="password" class="form-control" id="password" name="password" required>
+            </div>
+            {% endif %}
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-person-plus me-1"></i>Register for Contest
+            </button>
+        </form>
+    </div>
+    {% elif is_registered %}
+    <div class="alert alert-success">
+        <i class="bi bi-check-circle me-2"></i>You are registered for this contest!
+    </div>
+    {% endif %}
+
+    <!-- Contest Information -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h4>Description</h4>
+            <p>{{ contest.description|linebreaks }}</p>
+            
+            {% if contest.rules %}
+            <h4>Rules</h4>
+            <div>{{ contest.rules|linebreaks }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Contest Details</h5>
+                    
+                    <div class="mb-3">
+                        <strong>Start Time:</strong><br>
+                        <small>{{ contest.start_time|date:"M d, Y H:i" }}</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <strong>End Time:</strong><br>
+                        <small>{{ contest.end_time|date:"M d, Y H:i" }}</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <strong>Duration:</strong><br>
+                        <small>{{ contest.duration_display }}</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <strong>Participants:</strong><br>
+                        <small>{{ contest.participants.count }}{% if contest.max_participants %} / {{ contest.max_participants }}{% endif %}</small>
+                    </div>
+                    
+                    {% if contest.created_by %}
+                    <div class="mb-3">
+                        <strong>Created by:</strong><br>
+                        <small>{{ contest.created_by.username }}</small>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    {% if is_registered %}
+    <ul class="nav nav-tabs mb-4">
+        <li class="nav-item">
+            <a class="nav-link active" href="#overview" data-bs-toggle="tab">Overview</a>
+        </li>
+        {% if not contest.is_upcoming %}
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'contest_problems' contest.uuid %}">Problems</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'contest_standings' contest.uuid %}">Standings</a>
+        </li>
+        {% endif %}
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'contest_announcements' contest.uuid %}">Announcements</a>
+        </li>
+    </ul>
+    {% endif %}
+
+    <!-- Problems Preview -->
+    {% if contest_problems %}
+    <div class="mb-4">
+        <h4>Problems ({{ contest_problems.count }})</h4>
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Problem</th>
+                        <th>Points</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for contest_problem in contest_problems %}
+                    <tr>
+                        <td>{{ contest_problem.order }}</td>
+                        <td>
+                            {% if is_registered and not contest.is_upcoming %}
+                                <a href="{% url 'contest_problem_detail' contest.uuid contest_problem.problem.uuid %}">
+                                    {{ contest_problem.problem.title }}
+                                </a>
+                            {% else %}
+                                {{ contest_problem.problem.title }}
+                            {% endif %}
+                        </td>
+                        <td>{{ contest_problem.points }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Recent Announcements -->
+    {% if announcements %}
+    <div class="mb-4">
+        <h4>Recent Announcements</h4>
+        {% for announcement in announcements %}
+        <div class="alert alert-info">
+            <div class="d-flex justify-content-between">
+                <strong>{{ announcement.title }}</strong>
+                <small class="text-muted">{{ announcement.created_at|date:"M d, H:i" }}</small>
+            </div>
+            <p class="mb-0 mt-2">{{ announcement.content|linebreaks }}</p>
+        </div>
+        {% endfor %}
+        
+        {% if announcements.count >= 5 %}
+        <a href="{% url 'contest_announcements' contest.uuid %}" class="btn btn-outline-primary btn-sm">
+            View All Announcements
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Contest Statistics (if contest has ended) -->
+    {% if contest.is_ended and is_registered %}
+    <div class="mb-4">
+        <h4>Contest Statistics</h4>
+        <div class="row">
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ contest.participants.count }}</h5>
+                        <p class="card-text">Total Participants</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ contest_problems.count }}</h5>
+                        <p class="card-text">Problems</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ contest.duration_display }}</h5>
+                        <p class="card-text">Duration</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ contest.contest_type|title }}</h5>
+                        <p class="card-text">Type</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Quick Actions -->
+    {% if is_registered %}
+    <div class="mb-4">
+        <h4>Quick Actions</h4>
+        <div class="d-flex gap-2 flex-wrap">
+            {% if not contest.is_upcoming %}
+            <a href="{% url 'contest_problems' contest.uuid %}" class="btn btn-primary">
+                <i class="bi bi-code-slash me-1"></i>View Problems
+            </a>
+            <a href="{% url 'contest_standings' contest.uuid %}" class="btn btn-outline-primary">
+                <i class="bi bi-trophy me-1"></i>Standings
+            </a>
+            {% endif %}
+            <a href="{% url 'contest_announcements' contest.uuid %}" class="btn btn-outline-secondary">
+                <i class="bi bi-megaphone me-1"></i>Announcements
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Back to Contests List -->
+    <div class="mt-4">
+        <a href="{% url 'contest_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Back to Contests
+        </a>
+    </div>
+</div>
+{% endblock %}

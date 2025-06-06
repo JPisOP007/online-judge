@@ -1,0 +1,39 @@
+{% extends 'core/base.html' %}
+{% block title %}Problems - MyOJ{% endblock %}
+{% block content %}
+<div class="container mt-5">
+  <h1 class="mb-4 fw-semibold">All Problems</h1>
+  {% if problem_data %}
+    <div class="list-group">
+      {% for problem, tags in problem_data %}
+        <div class="list-group-item d-flex justify-content-between align-items-center py-4 px-4 border-bottom">
+          <!-- Left Side: Problem Title and Tags -->
+          <div class="flex-grow-1">
+            <h5 class="mb-2 text-dark">{{ problem.title }}</h5>
+            {% if tags %}
+              <div>
+                {% for tag in tags %}
+                  <span class="badge bg-light text-dark border me-1">{{ tag }}</span>
+                {% endfor %}
+              </div>
+            {% endif %}
+          </div>
+          <!-- Right Side: Difficulty and View Button -->
+          <div class="d-flex align-items-center">
+            <span class="difficulty-{{ problem.difficulty|lower }} me-3">
+              {{ problem.get_difficulty_display }}
+            </span>
+            <a href="{% url 'problem_detail' problem.uuid %}" class="btn btn-outline-primary btn-sm">
+              View
+            </a>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="alert alert-secondary mt-4" role="alert">
+      No problems found.
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
