@@ -1,0 +1,104 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+  
+  .difficulty-easy {
+    color: #155724;
+    background-color: #d4edda;
+    border-radius: 0.25rem;
+    padding: 0.25em 0.5em;
+    font-weight: 600;
+    margin-left: 0.5rem;
+  }
+  .difficulty-medium {
+    color: #856404;
+    background-color: #fff3cd;
+    border-radius: 0.25rem;
+    padding: 0.25em 0.5em;
+    font-weight: 600;
+    margin-left: 0.5rem;
+  }
+  .difficulty-hard {
+    color: #721c24;
+    background-color: #f8d7da;
+    border-radius: 0.25rem;
+    padding: 0.25em 0.5em;
+    font-weight: 600;
+    margin-left: 0.5rem;
+  }
+</style>
+
+<div class="container mt-5">
+  <h2 class="mb-4">Add New Problem</h2>
+  <form method="post">
+    {% csrf_token %}
+
+    <div class="mb-3">
+      <label for="{{ form.title.id_for_label }}" class="form-label">Title</label>
+      {{ form.title }}
+    </div>
+
+    <div class="mb-3">
+      <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+      {{ form.description }}
+    </div>
+
+    <div class="mb-3">
+      <label for="{{ form.constraints.id_for_label }}" class="form-label">Constraints</label>
+      {{ form.constraints }}
+    </div>
+
+    <div class="mb-3">
+      <label for="{{ form.input_format.id_for_label }}" class="form-label">Input Format</label>
+      {{ form.input_format }}
+    </div>
+
+    <div class="mb-3">
+      <label for="{{ form.output_format.id_for_label }}" class="form-label">Output Format</label>
+      {{ form.output_format }}
+    </div>
+
+    <div class="mb-3">
+      <label for="{{ form.sample_input.id_for_label }}" class="form-label">Sample Input</label>
+      {{ form.sample_input }}
+    </div>
+
+    <div class="mb-3">
+      <label for="{{ form.sample_output.id_for_label }}" class="form-label">Sample Output</label>
+      {{ form.sample_output }}
+    </div>
+
+    <div class="mb-3">
+      <label for="{{ form.tags.id_for_label }}" class="form-label">Tags</label>
+      {{ form.tags }}
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label" for="{{ form.difficulty.id_for_label }}">Difficulty</label>
+      <div>
+        {{ form.difficulty }}
+        {% comment %}
+        Add badges or colored labels next to difficulty choices. This assumes you have 
+        values like 'easy', 'medium', 'hard' as choices in your form field.
+        {% endcomment %}
+        <span class="difficulty-easy">Easy</span>
+        <span class="difficulty-medium">Medium</span>
+        <span class="difficulty-hard">Hard</span>
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label for="{{ form.test_cases.id_for_label }}" class="form-label">Test Cases (JSON)</label>
+      {{ form.test_cases }}
+      <div class="form-text">
+        Enter a list of test cases in JSON format:<br>
+        Example: <code>[{"input": "2 3\\n", "output": "5\\n"}, {"input": "10 20\\n", "output": "30\\n"}]</code>
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-success">Create Problem</button>
+  </form>
+</div>
+{% endblock %}

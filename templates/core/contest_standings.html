@@ -1,0 +1,327 @@
+{% extends 'core/base.html' %}
+{% load custom_filters %}
+{% block title %}Standings - {{ contest.title }}{% endblock %}
+
+{% block content %}
+<div class="row">
+  <!-- Contest Header -->
+  <div class="col-12 mb-4">
+    <div class="card-section">
+      <div class="row align-items-center">
+        <div class="col-md-8">
+          <h3 class="mb-2">
+            <i class="bi bi-trophy text-warning me-2"></i>
+            {{ contest.title }} - Standings
+          </h3>
+          <div class="d-flex align-items-center gap-4">
+            <small class="text-muted">
+              <i class="bi bi-people me-1"></i>
+              {{ standings|length }} Participants
+            </small>
+            <small class="text-muted">
+              <i class="bi bi-list-task me-1"></i>
+              {{ contest_problems|length }} Problems
+            </small>
+            <small class="text-muted">
+              <i class="bi bi-clock me-1"></i>
+              {% if contest.is_running %}
+                <span class="text-success">Running</span> - 
+                <span id="time-remaining" data-end-time="{{ contest.end_time|date:'c' }}">Calculating...</span>
+              {% elif contest.is_upcoming %}
+                <span class="text-info">Starts in</span> - 
+                <span id="time-until-start" data-start-time="{{ contest.start_time|date:'c' }}">Calculating...</span>
+              {% else %}
+                <span class="text-secondary">Ended</span>
+              {% endif %}
+            </small>
+          </div>
+        </div>
+        <div class="col-md-4 text-end">
+          <a href="{% url 'contest_detail' contest.uuid %}" class="btn btn-outline-primary btn-sm me-2">
+            <i class="bi bi-info-circle me-1"></i>Contest Info
+          </a>
+          {% if contest.is_running %}
+          <a href="{% url 'contest_problems' contest.uuid %}" class="btn btn-primary btn-sm">
+            <i class="bi bi-list-task me-1"></i>Problems
+          </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Standings Table -->
+  <div class="col-12">
+    <div class="card-section">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead class="table-light">
+            <tr>
+              <th class="text-center" style="width: 60px;">
+                <i class="bi bi-hash"></i>
+              </th>
+              <th style="min-width: 200px;">
+                <i class="bi bi-person me-1"></i>Participant
+              </th>
+              <th class="text-center" style="width: 100px;">
+                <i class="bi bi-check-circle me-1"></i>Solved
+              </th>
+              <th class="text-center" style="width: 120px;">
+                <i class="bi bi-star me-1"></i>Points
+              </th>
+              {% for contest_problem in contest_problems %}
+              <th class="text-center problem-header" style="width: 80px;">
+                <div class="d-flex flex-column align-items-center">
+                  <small class="fw-bold">{{ contest_problem.order }}</small>
+                  <small class="text-muted">{{ contest_problem.points }}pts</small>
+                </div>
+              </th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for standing in standings %}
+            <tr class="{% if standing.rank <= 3 %}table-warning{% endif %}">
+              <!-- Rank -->
+              <td class="text-center">
+                <div class="rank-badge">
+                  {% if standing.rank == 1 %}
+                    <i class="bi bi-trophy-fill text-warning fs-4"></i>
+                  {% elif standing.rank == 2 %}
+                    <i class="bi bi-award-fill" style="color: #c0c0c0;"></i>
+                  {% elif standing.rank == 3 %}
+                    <i class="bi bi-award-fill" style="color: #cd7f32;"></i>
+                  {% else %}
+                    <span class="fw-bold">{{ standing.rank }}</span>
+                  {% endif %}
+                </div>
+              </td>
+
+              <!-- Participant -->
+              <td>
+                <div class="d-flex align-items-center">
+                  <div class="avatar-circle me-3">
+                    {{ standing.participant.user.username|first|upper }}
+                  </div>
+                  <div>
+                    <div class="fw-semibold">{{ standing.participant.user.username }}</div>
+                    {% if standing.participant.user.first_name %}
+                    <small class="text-muted">{{ standing.participant.user.first_name }} {{ standing.participant.user.last_name }}</small>
+                    {% endif %}
+                  </div>
+                </div>
+              </td>
+
+              <!-- Solved Problems -->
+              <td class="text-center">
+                <span class="badge bg-success fs-6">{{ standing.solved_problems }}</span>
+              </td>
+
+              <!-- Total Points -->
+              <td class="text-center">
+                <div class="fw-bold text-primary fs-5">{{ standing.total_points }}</div>
+                <small class="text-muted">{{ standing.submissions_count }} submissions</small>
+              </td>
+
+              <!-- Problem Scores -->
+              {% for contest_problem in contest_problems %}
+              <td class="text-center problem-cell">
+                {% with problem_score=standing.problem_scores|get_item:contest_problem.problem.uuid %}
+                {% if problem_score.points > 0 %}
+                  <div class="problem-accepted">
+                    <div class="fw-bold text-success">{{ problem_score.points }}</div>
+                    {% if problem_score.submissions > 1 %}
+                    <small class="text-muted">({{ problem_score.submissions }})</small>
+                    {% endif %}
+                  </div>
+                {% elif problem_score.submissions > 0 %}
+                  <div class="problem-attempted">
+                    <div class="text-danger">-</div>
+                    <small class="text-muted">({{ problem_score.submissions }})</small>
+                  </div>
+                {% else %}
+                  <div class="problem-not-attempted">
+                    <span class="text-muted">-</span>
+                  </div>
+                {% endif %}
+                {% endwith %}
+              </td>
+              {% endfor %}
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="{{ contest_problems|length|add:4 }}" class="text-center py-5">
+                <i class="bi bi-people fs-1 text-muted"></i>
+                <h5 class="text-muted mt-3">No participants yet</h5>
+                <p class="text-muted">Participants will appear here once they register and start solving problems.</p>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Legend -->
+      {% if standings %}
+      <div class="mt-4 pt-3 border-top">
+        <h6 class="mb-3">
+          <i class="bi bi-info-circle me-2"></i>Legend
+        </h6>
+        <div class="row">
+          <div class="col-md-6">
+            <div class="d-flex align-items-center mb-2">
+              <div class="problem-accepted me-3" style="width: 40px; height: 30px; display: flex; align-items: center; justify-content: center;">
+                <span class="fw-bold text-success">100</span>
+              </div>
+              <span>Accepted solution with points earned</span>
+            </div>
+            <div class="d-flex align-items-center mb-2">
+              <div class="problem-attempted me-3" style="width: 40px; height: 30px; display: flex; align-items: center; justify-content: center;">
+                <span class="text-danger">-</span>
+              </div>
+              <span>Attempted but not solved</span>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="d-flex align-items-center mb-2">
+              <div class="problem-not-attempted me-3" style="width: 40px; height: 30px; display: flex; align-items: center; justify-content: center;">
+                <span class="text-muted">-</span>
+              </div>
+              <span>Not attempted</span>
+            </div>
+            <div class="d-flex align-items-center mb-2">
+              <small class="text-muted me-3">(3)</small>
+              <span>Number of submissions</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  .avatar-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-color) 0%, #1d4ed8 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 1.1rem;
+  }
+
+  .rank-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+  }
+
+  .problem-header {
+    background-color: var(--light-bg);
+    border-left: 1px solid var(--border-color);
+  }
+
+  .problem-cell {
+    border-left: 1px solid var(--border-color);
+    padding: 12px 8px;
+    min-height: 60px;
+    vertical-align: middle;
+  }
+
+  .problem-accepted {
+    background-color: rgba(34, 197, 94, 0.1);
+    border-radius: 8px;
+    padding: 8px 4px;
+    border: 2px solid rgba(34, 197, 94, 0.3);
+  }
+
+  .problem-attempted {
+    background-color: rgba(239, 68, 68, 0.1);
+    border-radius: 8px;
+    padding: 8px 4px;
+    border: 2px solid rgba(239, 68, 68, 0.3);
+  }
+
+  .problem-not-attempted {
+    padding: 8px 4px;
+  }
+
+  .table-hover tbody tr:hover {
+    background-color: rgba(var(--primary-color), 0.05);
+  }
+
+  .table-warning {
+    background-color: rgba(255, 193, 7, 0.1);
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .problem-header,
+    .problem-cell {
+      width: 60px !important;
+      font-size: 0.8rem;
+    }
+    
+    .avatar-circle {
+      width: 32px;
+      height: 32px;
+      font-size: 0.9rem;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Contest timer functionality
+  function updateTimer() {
+    const timeRemainingEl = document.getElementById('time-remaining');
+    const timeUntilStartEl = document.getElementById('time-until-start');
+    
+    if (timeRemainingEl) {
+      const endTime = new Date(timeRemainingEl.dataset.endTime);
+      const now = new Date();
+      const diff = endTime - now;
+      
+      if (diff > 0) {
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+        timeRemainingEl.textContent = `${hours}h ${minutes}m ${seconds}s`;
+      } else {
+        timeRemainingEl.textContent = 'Contest ended';
+        location.reload(); // Refresh when contest ends
+      }
+    }
+    
+    if (timeUntilStartEl) {
+      const startTime = new Date(timeUntilStartEl.dataset.startTime);
+      const now = new Date();
+      const diff = startTime - now;
+      
+      if (diff > 0) {
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+        timeUntilStartEl.textContent = `${hours}h ${minutes}m ${seconds}s`;
+      } else {
+        location.reload(); // Refresh when contest starts
+      }
+    }
+  }
+  
+  // Update timer every second
+  setInterval(updateTimer, 1000);
+  updateTimer(); // Initial call
+
+  // Auto-refresh standings every 30 seconds during active contest
+</script>
+{% endblock %}

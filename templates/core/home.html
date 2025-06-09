@@ -1,0 +1,45 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Home | Online Judge{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="card shadow-sm border-0">
+        <div class="card-body">
+          <h2 class="card-title mb-4 text-primary">🏁 Welcome to the Online Judge</h2>
+
+          {% if request.user.is_authenticated %}
+            <p class="fs-5">Hello, <strong>{{ request.user.username }}</strong>!</p>
+            <p>Your current role: 
+              <span class="badge bg-secondary text-capitalize">{{ request.user.userprofile.role }}</span>
+            </p>
+
+            <hr class="my-4">
+
+            <div class="d-flex flex-wrap gap-3">
+              {% if request.user.userprofile.role == 'setter' %}
+                <a href="{% url 'add_problem' %}" class="btn btn-success">
+                  ➕ Add New Problem
+                </a>
+                <a href="{% url 'problem_list' %}" class="btn btn-outline-success">
+                  📘 View All Problems
+                </a>
+              {% elif request.user.userprofile.role == 'participant' %}
+                <a href="{% url 'problem_list' %}" class="btn btn-primary">
+                  🧠 Start Solving Problems
+                </a>
+              {% endif %}
+            </div>
+          {% else %}
+            <p class="fs-5">Please <a href="{% url 'login' %}" class="text-decoration-underline">log in</a> or 
+              <a href="{% url 'register' %}" class="text-decoration-underline">register</a> to get started.
+            </p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

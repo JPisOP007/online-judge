@@ -1,0 +1,138 @@
+{% extends 'core/base.html' %}
+{% block title %}Announcements - {{ contest.title }}{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12">
+    <div class="card-section">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h3 class="mb-2">
+            <i class="bi bi-megaphone text-primary me-2"></i>
+            Announcements
+          </h3>
+          <p class="text-muted mb-0">{{ contest.title }}</p>
+        </div>
+        <div>
+          {% if can_manage %}
+            <a href="{% url 'create_announcement' contest.uuid %}" class="btn btn-primary btn-sm me-2">
+              <i class="bi bi-plus-circle me-1"></i>New Announcement
+            </a>
+          {% endif %}
+          <a href="{% url 'contest_detail' contest.uuid %}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i>Back to Contest
+          </a>
+        </div>
+      </div>
+
+      {% if announcements %}
+        <div class="announcements-list">
+          {% for announcement in announcements %}
+            <div class="announcement-card mb-3 {% if announcement.is_important %}border-warning{% endif %}">
+              <div class="card-header d-flex justify-content-between align-items-start">
+                <div class="flex-grow-1">
+                  <h5 class="mb-1 d-flex align-items-center">
+                    {% if announcement.is_important %}
+                      <i class="bi bi-exclamation-triangle text-warning me-2"></i>
+                    {% else %}
+                      <i class="bi bi-info-circle text-primary me-2"></i>
+                    {% endif %}
+                    {{ announcement.title }}
+                  </h5>
+                  <small class="text-muted">
+                    <i class="bi bi-person me-1"></i>{{ announcement.author.username }}
+                    <span class="mx-2">•</span>
+                    <i class="bi bi-clock me-1"></i>{{ announcement.created_at|date:"M d, Y H:i" }}
+                    {% if announcement.updated_at and announcement.updated_at != announcement.created_at %}
+                      <span class="mx-2">•</span>
+                      <i class="bi bi-pencil me-1"></i>Updated {{ announcement.updated_at|date:"M d, Y H:i" }}
+                    {% endif %}
+                  </small>
+                </div>
+                
+                {% if can_manage %}
+                  <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                      <i class="bi bi-three-dots"></i>
+                    </button>
+                    <ul class="dropdown-menu">
+                      <li>
+                        <a class="dropdown-item" href="{% url 'edit_announcement' contest.uuid announcement.id %}">
+                          <i class="bi bi-pencil me-2"></i>Edit
+                        </a>
+                      </li>
+                      <li><hr class="dropdown-divider"></li>
+                      <li>
+                        <a class="dropdown-item text-danger" href="{% url 'delete_announcement' contest.uuid announcement.id %}">
+                          <i class="bi bi-trash me-2"></i>Delete
+                        </a>
+                      </li>
+                    </ul>
+                  </div>
+                {% endif %}
+              </div>
+              
+              <div class="card-body">
+                <div class="announcement-content">
+                  {{ announcement.content|linebreaks }}
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="text-center py-5">
+          <i class="bi bi-megaphone fs-1 text-muted"></i>
+          <h5 class="text-muted mt-3">No announcements yet</h5>
+          <p class="text-muted">
+            {% if can_manage %}
+              Create your first announcement to communicate with participants.
+            {% else %}
+              Announcements from contest organizers will appear here.
+            {% endif %}
+          </p>
+          {% if can_manage %}
+            <a href="{% url 'create_announcement' contest.uuid %}" class="btn btn-primary">
+              <i class="bi bi-plus-circle me-1"></i>Create Announcement
+            </a>
+          {% endif %}
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  .announcement-card {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: white;
+    transition: box-shadow 0.2s ease;
+  }
+  
+  .announcement-card:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+  
+  .announcement-card.border-warning {
+    border-left: 4px solid #ffc107;
+  }
+  
+  .card-header {
+    background-color: rgba(var(--primary-color), 0.05);
+    border-bottom: 1px solid var(--border-color);
+    padding: 1rem;
+  }
+  
+  .card-body {
+    padding: 1rem;
+  }
+  
+  .announcement-content {
+    font-size: 0.95rem;
+    line-height: 1.6;
+  }
+</style>
+{% endblock %}

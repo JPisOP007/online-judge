@@ -1,0 +1,294 @@
+{% extends 'core/base.html' %}
+{% block title %}Your Profile{% endblock %}
+{% load widget_tweaks %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Profile Header Card -->
+    <div class="card-section fade-in">
+        <div class="row align-items-center">
+            <div class="col-md-3 text-center">
+                {% if user_profile.photo %}
+                    <img src="{{ user_profile.photo.url }}" class="rounded-circle shadow-lg" 
+                         alt="Profile Photo" style="width: 120px; height: 120px; object-fit: cover; border: 4px solid var(--primary-color);">
+                {% else %}
+                    <div class="bg-gradient-primary rounded-circle shadow-lg mx-auto d-flex align-items-center justify-content-center" 
+                         style="width: 120px; height: 120px; background: linear-gradient(135deg, var(--primary-color) 0%, #1d4ed8 100%);">
+                        <i class="bi bi-person-fill text-white" style="font-size: 3rem;"></i>
+                    </div>
+                {% endif %}
+            </div>
+            <div class="col-md-9">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h2 class="fw-bold mb-1">{{ request.user.username }}</h2>
+                        <p class="text-muted mb-2">{{ request.user.email }}</p>
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="badge bg-primary">{{ user_profile.get_role_display }}</span>
+                            <small class="text-muted">Member since {{ request.user.date_joined|date:"M Y" }}</small>
+                        </div>
+                    </div>
+                    <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+                        <i class="bi bi-pencil me-1"></i>Edit Profile
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <div class="text-primary mb-2">
+                        <i class="bi bi-trophy-fill" style="font-size: 2rem;"></i>
+                    </div>
+                    <h4 class="fw-bold mb-0">{{ contest_stats.contests_participated }}</h4>
+                    <small class="text-muted">Contests Participated</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <div class="text-success mb-2">
+                        <i class="bi bi-award-fill" style="font-size: 2rem;"></i>
+                    </div>
+                    <h4 class="fw-bold mb-0">{{ contest_stats.top_3_finishes }}</h4>
+                    <small class="text-muted">Top 3 Finishes</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <div class="text-warning mb-2">
+                        <i class="bi bi-star-fill" style="font-size: 2rem;"></i>
+                    </div>
+                    <h4 class="fw-bold mb-0">{{ contest_stats.total_points }}</h4>
+                    <small class="text-muted">Total Contest Points</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <div class="text-info mb-2">
+                        <i class="bi bi-code-slash" style="font-size: 2rem;"></i>
+                    </div>
+                    <h4 class="fw-bold mb-0">{{ problem_stats.problems_solved }}</h4>
+                    <small class="text-muted">Problems Solved</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Recent Contest Participation -->
+        <div class="col-lg-6 mb-4">
+            <div class="card-section">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0">Recent Contest Participation</h5>
+                    <a href="{% url 'contest_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                {% if recent_contests %}
+                    <div class="list-group list-group-flush">
+                        {% for participation in recent_contests %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center border-0 px-0">
+                                <div>
+                                    <h6 class="mb-1">{{ participation.contest.title }}</h6>
+                                    <small class="text-muted">{{ participation.contest.start_time|date:"M d, Y" }}</small>
+                                </div>
+                                <div class="text-end">
+                                    {% if participation.rank %}
+                                        {% if participation.rank <= 3 %}
+                                            <span class="badge bg-success">
+                                                Rank #{{ participation.rank }}
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">
+                                                Rank #{{ participation.rank }}
+                                            </span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="badge bg-secondary">Participated</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-trophy text-muted" style="font-size: 3rem;"></i>
+                        <p class="text-muted mt-2">No contest participation yet</p>
+                        <a href="{% url 'contest_list' %}" class="btn btn-primary">Browse Contests</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Problem Solving Stats -->
+        <div class="col-lg-6 mb-4">
+            <div class="card-section">
+                <h5 class="fw-bold mb-3">Problem Solving Statistics</h5>
+                <div class="row">
+                    <div class="col-6">
+                        <div class="text-center p-3 bg-light rounded">
+                            <div class="difficulty-easy mb-2">Easy</div>
+                            <h6 class="fw-bold">{{ problem_stats.easy_solved }}</h6>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-center p-3 bg-light rounded">
+                            <div class="difficulty-medium mb-2">Medium</div>
+                            <h6 class="fw-bold">{{ problem_stats.medium_solved }}</h6>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-6">
+                        <div class="text-center p-3 bg-light rounded">
+                            <div class="difficulty-hard mb-2">Hard</div>
+                            <h6 class="fw-bold">{{ problem_stats.hard_solved }}</h6>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-center p-3 bg-light rounded">
+                            <div class="text-muted mb-2">Total</div>
+                            <h6 class="fw-bold">{{ problem_stats.total_submissions }}</h6>
+                            <small class="text-muted">Submissions</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Submissions -->
+    <div class="card-section">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold mb-0">Recent Submissions</h5>
+            <a href="{% url 'problem_list' %}" class="btn btn-sm btn-outline-primary">View Problems</a>
+        </div>
+        {% if recent_submissions %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Problem</th>
+                            <th>Language</th>
+                            <th>Verdict</th>
+                            <th>Submitted At</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for submission in recent_submissions %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'problem_detail' submission.problem.uuid %}" class="text-decoration-none">
+                                        {{ submission.problem.title }}
+                                    </a>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary">{{ submission.language|upper }}</span>
+                                </td>
+                                <td>
+                                    {% if submission.verdict == 'AC' %}
+                                        <span class="badge bg-success">Accepted</span>
+                                    {% elif submission.verdict == 'WA' %}
+                                        <span class="badge bg-danger">Wrong Answer</span>
+                                    {% elif submission.verdict == 'TLE' %}
+                                        <span class="badge bg-warning">Time Limit</span>
+                                    {% elif submission.verdict == 'RE' %}
+                                        <span class="badge bg-danger">Runtime Error</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ submission.verdict }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ submission.submitted_at|timesince }} ago</td>
+                                <td>
+                                    <a href="{% url 'submission_detail' submission.id %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-4">
+                <i class="bi bi-code-slash text-muted" style="font-size: 3rem;"></i>
+                <p class="text-muted mt-2">No submissions yet</p>
+                <a href="{% url 'problem_list' %}" class="btn btn-primary">Start Solving Problems</a>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Achievement Badges -->
+    <div class="card-section">
+        <h5 class="fw-bold mb-3">Achievements</h5>
+        <div class="d-flex flex-wrap gap-2">
+            {% if contest_stats.contests_participated >= 1 %}
+                <span class="badge bg-primary fs-6 py-2 px-3">
+                    <i class="bi bi-trophy me-1"></i>Contest Participant
+                </span>
+            {% endif %}
+            {% if contest_stats.top_3_finishes >= 1 %}
+                <span class="badge bg-success fs-6 py-2 px-3">
+                    <i class="bi bi-award me-1"></i>Top Performer
+                </span>
+            {% endif %}
+            {% if problem_stats.problems_solved >= 10 %}
+                <span class="badge bg-info fs-6 py-2 px-3">
+                    <i class="bi bi-code-square me-1"></i>Problem Solver
+                </span>
+            {% endif %}
+            {% if problem_stats.problems_solved >= 50 %}
+                <span class="badge bg-warning fs-6 py-2 px-3">
+                    <i class="bi bi-star me-1"></i>Coding Expert
+                </span>
+            {% endif %}
+            {% if not contest_stats.contests_participated and not problem_stats.problems_solved %}
+                <span class="text-muted">Complete your first contest or solve problems to earn achievements!</span>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Edit Profile Modal -->
+<div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editProfileModalLabel">Edit Profile</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="id_username" class="form-label">Username</label>
+                        {{ form.username|add_class:"form-control" }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_email" class="form-label">Email</label>
+                        {{ form.email|add_class:"form-control" }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_photo" class="form-label">Profile Photo</label>
+                        {{ form.photo|add_class:"form-control" }}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Profile</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
