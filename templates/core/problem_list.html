@@ -5,7 +5,7 @@
   <h1 class="mb-4 fw-semibold">All Problems</h1>
   {% if problem_data %}
     <div class="list-group">
-      {% for problem, tags in problem_data %}
+      {% for item in problem_data %}
         <div class="list-group-item d-flex justify-content-between align-items-center py-4 px-4 border-bottom">
           <!-- Left Side: Problem Title and Tags -->
           <div class="flex-grow-1">
