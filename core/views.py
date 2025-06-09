@@ -870,8 +870,7 @@ def contest_standings(request, contest_uuid):
     return render(request, 'core/contest_standings.html', context)
 
 
-@staff_member_required
-@role_required(['admin'])  # Only admins can create contests
+@staff_member_required # Only admins can create contests
 def create_contest(request):
     if request.method == 'POST':
         form = ContestForm(request.POST)
@@ -913,8 +912,7 @@ def create_contest(request):
 
 
 
-@staff_member_required
-@role_required(['admin'])  
+@staff_member_required  
 def edit_contest(request, contest_uuid):
     contest = get_object_or_404(Contest, uuid=contest_uuid)
     
