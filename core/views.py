@@ -472,7 +472,6 @@ def profile_view(request):
 
 
 @staff_member_required
-@role_required(['admin'])
 def manage_roles(request):
     users = User.objects.all()
     
