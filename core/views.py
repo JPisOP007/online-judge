@@ -111,7 +111,7 @@ def logout_view(request):
     return redirect('home')
 
 
-@role_required(['problem_setter', 'admin'])
+@role_required(['setter', 'admin'])
 def add_problem(request):
     if request.method == 'POST':
         form = ProblemForm(request.POST)
@@ -135,7 +135,7 @@ def add_problem(request):
     return render(request, 'core/add_problem.html', {'form': form})
 
 
-@role_required(['participant', 'problem_setter', 'admin'])
+@role_required(['participant', 'setter', 'admin'])
 def problem_list(request):
     problems = Problem.objects.all().order_by('-created_at')
     
@@ -185,7 +185,7 @@ def problem_list(request):
     return render(request, "core/problem_list.html", context)
 
 
-@role_required(['participant', 'problem_setter', 'admin'])
+@role_required(['participant', 'setter', 'admin'])
 def problem_detail(request, problem_id):
     problem = get_object_or_404(Problem, uuid=problem_id)
     form = SubmitSolutionForm(initial={'problem_id': str(problem.uuid)})
@@ -349,7 +349,7 @@ def problem_detail(request, problem_id):
     })
 
 
-@role_required(['participant', 'problem_setter', 'admin'])
+@role_required(['participant', 'setter', 'admin'])
 def submit_solution(request, problem_id):
     problem = get_object_or_404(Problem, uuid=problem_id)
     if request.method == 'POST':
@@ -368,7 +368,7 @@ def submit_solution(request, problem_id):
     return render(request, 'core/submit_solution.html', {'problem': problem, 'form': form})
 
 
-@role_required(['participant', 'problem_setter', 'admin'])
+@role_required(['participant', 'setter', 'admin'])
 def submission_detail(request, submission_id):
     submission = get_object_or_404(Solution, pk=submission_id)
     if request.user != submission.user and not request.user.is_staff:
@@ -377,7 +377,7 @@ def submission_detail(request, submission_id):
     return render(request, 'core/submission_detail.html', {'submission': submission})
 
 
-@role_required(['participant', 'problem_setter', 'admin'])
+@role_required(['participant', 'setter', 'admin'])
 def profile_view(request):
     user_profile, _ = UserProfile.objects.get_or_create(
         user=request.user,
@@ -567,7 +567,7 @@ def contest_list(request):
 # Rest of the contest views remain the same...
 # (I'll keep the existing contest views as they are since they seem to work properly)
 
-@role_required(['participant', 'problem_setter', 'admin'])
+@role_required(['participant', 'setter', 'admin'])
 def contest_detail(request, contest_uuid):
     contest = get_object_or_404(Contest, uuid=contest_uuid)
     is_registered = contest.participants.filter(id=request.user.id).exists()
@@ -627,7 +627,7 @@ def contest_detail(request, contest_uuid):
 
 
 @login_required
-@role_required(['participant', 'problem_setter', 'admin'])  # All authenticated users can view contest problems
+@role_required(['participant', 'setter', 'admin'])  # All authenticated users can view contest problems
 def contest_problems(request, contest_uuid):
     contest = get_object_or_404(Contest, uuid=contest_uuid)
     
@@ -687,7 +687,7 @@ def contest_problems(request, contest_uuid):
 
 
 @login_required
-@role_required(['participant', 'problem_setter', 'admin'])  # All authenticated users can participate in contests
+@role_required(['participant', 'setter', 'admin'])  # All authenticated users can participate in contests
 def contest_problem_detail(request, contest_uuid, problem_uuid):
     contest = get_object_or_404(Contest, uuid=contest_uuid)
     problem = get_object_or_404(Problem, uuid=problem_uuid)
@@ -804,7 +804,7 @@ def contest_problem_detail(request, contest_uuid, problem_uuid):
 
 
 @login_required
-@role_required(['participant', 'problem_setter', 'admin'])  # All authenticated users can view standings
+@role_required(['participant', 'setter', 'admin'])  # All authenticated users can view standings
 def contest_standings(request, contest_uuid):
     contest = get_object_or_404(Contest, uuid=contest_uuid)
     
