@@ -10,6 +10,7 @@ from django.db.models import Sum, Count, Q
 from django.core.paginator import Paginator
 from django.conf import settings
 from functools import wraps
+from django.db import IntegrityError
 
 from .models import (
     UserProfile, Problem, Solution, Contest, ContestParticipant,
@@ -69,20 +70,33 @@ def register(request):
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
-        email = request.POST.get('email', '')  # Optional email
+        email = request.POST.get('email', '')  # Optional
 
+        # Check if username already exists
         if User.objects.filter(username=username).exists():
-            messages.error(request, 'Username already exists')
-        else:
+            messages.error(request, 'Username already exists.')
+            return render(request, 'core/register.html')
+
+        try:
+            # Create user
             user = User.objects.create_user(
                 username=username, 
                 password=password,
                 email=email
             )
-            # Create user profile
-            UserProfile.objects.create(user=user, role='participant')
+
+            # Check if profile already exists (shouldn't happen, but safety net)
+            if not UserProfile.objects.filter(user=user).exists():
+                UserProfile.objects.create(user=user, role='participant')
+            else:
+                messages.warning(request, 'User created, but profile already existed.')
+
             messages.success(request, 'Registration successful! Please login.')
             return redirect('login')
+
+        except IntegrityError as e:
+            messages.error(request, f'Registration failed: {str(e)}')
+
     return render(request, 'core/register.html')
 
 
