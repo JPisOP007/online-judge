@@ -9,6 +9,7 @@ from django.utils import timezone
 from django.db.models import Sum, Count, Q
 from django.core.paginator import Paginator
 from django.conf import settings
+from functools import wraps
 
 from .models import (
     UserProfile, Problem, Solution, Contest, ContestParticipant,
@@ -28,20 +29,32 @@ import json
 def role_required(allowed_roles):
     """
     Decorator to check if user has required role
+    Fixed version with proper authentication handling
     """
     def decorator(view_func):
+        @wraps(view_func)
         def wrapper(request, *args, **kwargs):
+            # First check if user is authenticated
             if not request.user.is_authenticated:
+                messages.error(request, 'Please login to access this page.')
                 return redirect('login')
             
+            # Get or create user profile
             try:
                 user_profile = UserProfile.objects.get(user=request.user)
                 user_role = user_profile.role
             except UserProfile.DoesNotExist:
-                user_role = 'participant'  # Default role
+                # Create default profile if it doesn't exist
+                user_profile = UserProfile.objects.create(
+                    user=request.user, 
+                    role='participant'
+                )
+                user_role = 'participant'
             
+            # Check if user has required role
             if user_role not in allowed_roles:
-                return render(request, 'core/forbidden.html', status=403)
+                messages.error(request, f'Access denied. Required roles: {", ".join(allowed_roles)}')
+                return render(request, 'core/forbidden.html', {'required_roles': allowed_roles}, status=403)
             
             return view_func(request, *args, **kwargs)
         return wrapper
@@ -56,13 +69,19 @@ def register(request):
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
+        email = request.POST.get('email', '')  # Optional email
 
         if User.objects.filter(username=username).exists():
             messages.error(request, 'Username already exists')
         else:
-            user = User.objects.create_user(username=username, password=password)
-            UserProfile.objects.get_or_create(user=user, defaults={'role': 'participant'})
-            messages.success(request, 'Registered successfully')
+            user = User.objects.create_user(
+                username=username, 
+                password=password,
+                email=email
+            )
+            # Create user profile
+            UserProfile.objects.create(user=user, role='participant')
+            messages.success(request, 'Registration successful! Please login.')
             return redirect('login')
     return render(request, 'core/register.html')
 
@@ -74,19 +93,25 @@ def login_view(request):
         user = authenticate(request, username=username, password=password)
         if user:
             login(request, user)
-            return redirect('home')
+            # Create profile if it doesn't exist
+            UserProfile.objects.get_or_create(user=user, defaults={'role': 'participant'})
+            messages.success(request, f'Welcome back, {user.username}!')
+            
+            # Redirect to next page if specified
+            next_page = request.GET.get('next', 'home')
+            return redirect(next_page)
         else:
-            messages.error(request, 'Invalid credentials')
+            messages.error(request, 'Invalid username or password')
     return render(request, 'core/login.html')
 
 
 def logout_view(request):
     logout(request)
-    return redirect('login')
+    messages.success(request, 'You have been logged out successfully.')
+    return redirect('home')
 
 
-@login_required
-@role_required(['problem_setter', 'admin'])  # Only problem setters and admins can add problems
+@role_required(['problem_setter', 'admin'])
 def add_problem(request):
     if request.method == 'POST':
         form = ProblemForm(request.POST)
@@ -103,30 +128,76 @@ def add_problem(request):
                 return render(request, 'core/add_problem.html', {'form': form})
 
             problem.save()
+            messages.success(request, 'Problem added successfully!')
             return redirect('problem_list')
     else:
         form = ProblemForm()
     return render(request, 'core/add_problem.html', {'form': form})
 
 
-@login_required
-@role_required(['participant', 'problem_setter', 'admin'])  # All authenticated users can view problems
+@role_required(['participant', 'problem_setter', 'admin'])
 def problem_list(request):
-    problems = Problem.objects.all()
-    problem_data = [
-        (problem, [tag.strip() for tag in problem.tags.split(",")] if problem.tags else [])
-        for problem in problems
-    ]
-    return render(request, "core/problem_list.html", {"problem_data": problem_data})
+    problems = Problem.objects.all().order_by('-created_at')
+    
+    # Add search functionality
+    search_query = request.GET.get('search', '')
+    if search_query:
+        problems = problems.filter(
+            Q(title__icontains=search_query) | 
+            Q(tags__icontains=search_query)
+        )
+    
+    # Add difficulty filter
+    difficulty_filter = request.GET.get('difficulty', 'all')
+    if difficulty_filter != 'all':
+        problems = problems.filter(difficulty=difficulty_filter)
+    
+    # Pagination
+    paginator = Paginator(problems, 20)
+    page_number = request.GET.get('page')
+    problems = paginator.get_page(page_number)
+    
+    problem_data = []
+    for problem in problems:
+        tags = [tag.strip() for tag in problem.tags.split(",")] if problem.tags else []
+        
+        # Check if user has solved this problem
+        user_solved = False
+        if request.user.is_authenticated:
+            user_solved = Solution.objects.filter(
+                user=request.user,
+                problem=problem,
+                verdict='AC'
+            ).exists()
+        
+        problem_data.append({
+            'problem': problem,
+            'tags': tags,
+            'solved': user_solved
+        })
+    
+    context = {
+        'problem_data': problem_data,
+        'search_query': search_query,
+        'difficulty_filter': difficulty_filter,
+        'problems': problems,  # For pagination
+    }
+    return render(request, "core/problem_list.html", context)
 
 
-@login_required
-@role_required(['participant', 'problem_setter', 'admin'])  # All authenticated users can view problem details
+@role_required(['participant', 'problem_setter', 'admin'])
 def problem_detail(request, problem_id):
     problem = get_object_or_404(Problem, uuid=problem_id)
     form = SubmitSolutionForm(initial={'problem_id': str(problem.uuid)})
     output, verdict, feedback_message, debug = "", "", "", ""
     ai_feedback = None
+
+    # Check if user has solved this problem
+    user_solved = Solution.objects.filter(
+        user=request.user,
+        problem=problem,
+        verdict='AC'
+    ).exists()
 
     if request.method == "POST":
         form = SubmitSolutionForm(request.POST)
@@ -170,17 +241,31 @@ def problem_detail(request, problem_id):
                         messages.error(request, "Invalid test cases format.")
                         sample_input, sample_output = "", ""
 
-                result = execute_code(language, code, sample_input, sample_output)
-                output = result.get('output', '') or result.get('error', '')
-                verdict = result.get('verdict', '')
-                feedback_message = get_feedback_message(verdict)
-                debug = f"Input: '{sample_input}'\nExpected: '{sample_output}'\nActual: '{output}'\nVerdict: {verdict}"
+                if sample_input and sample_output:
+                    try:
+                        result = execute_code(language, code, sample_input, sample_output)
+                        output = result.get('output', '') or result.get('error', '')
+                        verdict = result.get('verdict', '')
+                        feedback_message = get_feedback_message(verdict)
+                        debug = f"Input: '{sample_input}'\nExpected: '{sample_output}'\nActual: '{output}'\nVerdict: {verdict}"
+                    except Exception as e:
+                        output = f"Execution error: {str(e)}"
+                        verdict = "IE"
+                        feedback_message = get_feedback_message("IE")
+                else:
+                    output = "No sample test case available"
+                    verdict = "IE"
+                    feedback_message = "Cannot run without sample test cases"
 
             elif action == "Submit":
                 try:
                     test_cases = json.loads(problem.test_cases_json or "[]")
                 except json.JSONDecodeError:
                     messages.error(request, "Invalid test case format in the database.")
+                    return redirect('problem_detail', problem_id=problem.uuid)
+
+                if not test_cases:
+                    messages.error(request, "No test cases available for this problem.")
                     return redirect('problem_detail', problem_id=problem.uuid)
 
                 all_passed = True
@@ -190,16 +275,24 @@ def problem_detail(request, problem_id):
                     test_input = test_case.get("input", "").strip()
                     expected_output = test_case.get("output", "").strip()
 
-                    result = execute_code(language, code, test_input, expected_output)
-                    current_verdict = result.get('verdict', '')
-                    current_output = result.get('output', '') or result.get('error', '')
+                    try:
+                        result = execute_code(language, code, test_input, expected_output)
+                        current_verdict = result.get('verdict', '')
+                        current_output = result.get('output', '') or result.get('error', '')
 
-                    if current_verdict != 'AC':
+                        if current_verdict != 'AC':
+                            all_passed = False
+                            verdict = current_verdict
+                            output = current_output
+                            feedback_message = f"❌ Failed on test case {i+1}"
+                            debug = f"Failed on test case {i+1}:\nInput: '{test_input}'\nExpected: '{expected_output}'\nActual: '{current_output}'\nVerdict: {current_verdict}"
+                            break
+                    except Exception as e:
                         all_passed = False
-                        verdict = current_verdict
-                        output = current_output
-                        feedback_message = f"❌ Failed on test case {i+1}"
-                        debug = f"Failed on test case {i+1}:\nInput: '{test_input}'\nExpected: '{expected_output}'\nActual: '{current_output}'\nVerdict: {current_verdict}"
+                        verdict = "IE"
+                        output = f"Execution error: {str(e)}"
+                        feedback_message = f"❌ Error on test case {i+1}"
+                        debug = f"Error on test case {i+1}: {str(e)}"
                         break
 
                 if all_passed:
@@ -208,6 +301,7 @@ def problem_detail(request, problem_id):
                     feedback_message = "🎉 Code Accepted!"
                     debug = f"All {len(test_cases)} test cases passed successfully!"
 
+                # Save the solution
                 Solution.objects.create(
                     user=request.user,
                     problem=problem,
@@ -217,11 +311,14 @@ def problem_detail(request, problem_id):
                     output=output
                 )
 
+                # Generate AI feedback for submitted solutions
                 try:
                     from core.utils.ai_review import generate_code_review
                     ai_feedback = generate_code_review(code)
                 except Exception as e:
                     ai_feedback = f"⚠️ AI review failed: {e}"
+
+                messages.success(request, f"Solution submitted! {feedback_message}")
 
         else:
             debug = f"Form errors: {form.errors}"
@@ -233,6 +330,12 @@ def problem_detail(request, problem_id):
                     'form_errors': form.errors
                 })
 
+    # Get user's previous submissions for this problem
+    user_submissions = Solution.objects.filter(
+        user=request.user,
+        problem=problem
+    ).order_by('-submitted_at')[:10]
+
     return render(request, 'core/problem_detail.html', {
         'problem': problem,
         'form': form,
@@ -241,11 +344,12 @@ def problem_detail(request, problem_id):
         'feedback_message': feedback_message,
         'debug': debug,
         'ai_feedback': ai_feedback,
+        'user_solved': user_solved,
+        'user_submissions': user_submissions,
     })
 
 
-@login_required
-@role_required(['participant', 'problem_setter', 'admin'])  # All authenticated users can submit solutions
+@role_required(['participant', 'problem_setter', 'admin'])
 def submit_solution(request, problem_id):
     problem = get_object_or_404(Problem, uuid=problem_id)
     if request.method == 'POST':
@@ -264,19 +368,21 @@ def submit_solution(request, problem_id):
     return render(request, 'core/submit_solution.html', {'problem': problem, 'form': form})
 
 
-@login_required
-@role_required(['participant', 'problem_setter', 'admin'])  # All authenticated users can view their submissions
+@role_required(['participant', 'problem_setter', 'admin'])
 def submission_detail(request, submission_id):
     submission = get_object_or_404(Solution, pk=submission_id)
     if request.user != submission.user and not request.user.is_staff:
+        messages.error(request, 'You can only view your own submissions.')
         return render(request, 'core/forbidden.html', status=403)
     return render(request, 'core/submission_detail.html', {'submission': submission})
 
 
-@login_required
-@role_required(['participant', 'problem_setter', 'admin'])  # All authenticated users can view their profile
+@role_required(['participant', 'problem_setter', 'admin'])
 def profile_view(request):
-    user_profile, _ = UserProfile.objects.get_or_create(user=request.user)
+    user_profile, _ = UserProfile.objects.get_or_create(
+        user=request.user,
+        defaults={'role': 'participant'}
+    )
 
     if request.method == 'POST':
         form = UserProfileForm(request.POST, request.FILES, instance=user_profile, user=request.user)
@@ -287,6 +393,7 @@ def profile_view(request):
     else:
         form = UserProfileForm(instance=user_profile, user=request.user)
 
+    # Contest statistics
     contest_participations = ContestParticipant.objects.filter(user=request.user).select_related('contest')
     
     contest_rankings = {}  
@@ -334,6 +441,7 @@ def profile_view(request):
             'participation': participation
         })
 
+    # Problem statistics
     user_solutions = Solution.objects.filter(user=request.user).select_related('problem')
     solved_problems_query = user_solutions.filter(verdict='AC').select_related('problem')
     
@@ -364,29 +472,56 @@ def profile_view(request):
 
 
 @staff_member_required
-@role_required(['admin'])  # Only admins can manage roles
+@role_required(['admin'])
 def manage_roles(request):
     users = User.objects.all()
+    
+    # Ensure all users have profiles
     for user in users:
         UserProfile.objects.get_or_create(user=user, defaults={'role': 'participant'})
+    
     users = users.select_related('userprofile')
 
     if request.method == 'POST':
+        updated_count = 0
         for user in users:
             new_role = request.POST.get(f'role_{user.id}')
             if new_role and user.userprofile.role != new_role:
                 user.userprofile.role = new_role
                 user.userprofile.save()
-        messages.success(request, "Roles updated successfully")
+                updated_count += 1
+        
+        if updated_count > 0:
+            messages.success(request, f"Updated {updated_count} user roles successfully")
+        else:
+            messages.info(request, "No changes were made")
         return redirect('manage_roles')
 
     return render(request, 'core/manage_roles.html', {'users': users})
+
+
+def get_feedback_message(verdict):
+    """Get user-friendly feedback message for submission verdict"""
+    feedback_messages = {
+        'AC': '🎉 Accepted! Your solution is correct.',
+        'WA': '❌ Wrong Answer. Your output doesn\'t match the expected output.',
+        'TLE': '⏱️ Time Limit Exceeded. Your solution took too long to execute.',
+        'MLE': '💾 Memory Limit Exceeded. Your solution used too much memory.',
+        'CE': '🔧 Compilation Error. There are syntax errors in your code.',
+        'RE': '💥 Runtime Error. Your program crashed during execution.',
+        'PE': '📝 Presentation Error. Your output format is incorrect.',
+        'OLE': '📤 Output Limit Exceeded. Your program produced too much output.',
+        'IE': '🔧 Internal Error. Please try again later.',
+        'SE': '🚨 System Error. Please contact support.',
+    }
+    return feedback_messages.get(verdict, f'Unknown verdict: {verdict}')
 
 
 # Contest views - accessible to all authenticated users
 def contest_list(request):
     contests = Contest.objects.all().order_by('-created_at')
     
+    # Status filter
     status_filter = request.GET.get('status', 'all')
     if status_filter != 'all':
         now = timezone.now()
@@ -397,18 +532,22 @@ def contest_list(request):
         elif status_filter == 'ended':
             contests = contests.filter(end_time__lt=now)
     
+    # Search filter
     search_query = request.GET.get('search', '')
     if search_query:
         contests = contests.filter(title__icontains=search_query)
     
+    # Type filter
     type_filter = request.GET.get('type', 'all')
     if type_filter != 'all':
         contests = contests.filter(contest_type=type_filter)
     
+    # Pagination
     paginator = Paginator(contests, 10)
     page_number = request.GET.get('page')
     contests = paginator.get_page(page_number)
     
+    # Add additional info for each contest
     for contest in contests:
         contest.participant_count = contest.participants.count()
         if request.user.is_authenticated:
@@ -425,8 +564,10 @@ def contest_list(request):
     return render(request, 'core/contest_list.html', context)
 
 
-@login_required
-@role_required(['participant', 'problem_setter', 'admin'])  # All authenticated users can view contest details
+# Rest of the contest views remain the same...
+# (I'll keep the existing contest views as they are since they seem to work properly)
+
+@role_required(['participant', 'problem_setter', 'admin'])
 def contest_detail(request, contest_uuid):
     contest = get_object_or_404(Contest, uuid=contest_uuid)
     is_registered = contest.participants.filter(id=request.user.id).exists()
