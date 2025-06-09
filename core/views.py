@@ -110,6 +110,7 @@ def add_problem(request):
 
 
 @login_required
+@role_required(['participant', 'problem_setter', 'admin'])  # All authenticated users can view problems
 def problem_list(request):
     problems = Problem.objects.all()
     problem_data = [
@@ -120,6 +121,7 @@ def problem_list(request):
 
 
 @login_required
+@role_required(['participant', 'problem_setter', 'admin'])  # All authenticated users can view problem details
 def problem_detail(request, problem_id):
     problem = get_object_or_404(Problem, uuid=problem_id)
     form = SubmitSolutionForm(initial={'problem_id': str(problem.uuid)})
@@ -243,6 +245,7 @@ def problem_detail(request, problem_id):
 
 
 @login_required
+@role_required(['participant', 'problem_setter', 'admin'])  # All authenticated users can submit solutions
 def submit_solution(request, problem_id):
     problem = get_object_or_404(Problem, uuid=problem_id)
     if request.method == 'POST':
@@ -262,13 +265,16 @@ def submit_solution(request, problem_id):
 
 
 @login_required
+@role_required(['participant', 'problem_setter', 'admin'])  # All authenticated users can view their submissions
 def submission_detail(request, submission_id):
     submission = get_object_or_404(Solution, pk=submission_id)
     if request.user != submission.user and not request.user.is_staff:
         return render(request, 'core/forbidden.html', status=403)
     return render(request, 'core/submission_detail.html', {'submission': submission})
 
+
 @login_required
+@role_required(['participant', 'problem_setter', 'admin'])  # All authenticated users can view their profile
 def profile_view(request):
     user_profile, _ = UserProfile.objects.get_or_create(user=request.user)
 
@@ -283,7 +289,6 @@ def profile_view(request):
 
     contest_participations = ContestParticipant.objects.filter(user=request.user).select_related('contest')
     
-    
     contest_rankings = {}  
     
     contest_stats = {
@@ -292,18 +297,15 @@ def profile_view(request):
         'total_points': 0,
     }
 
-    
     for participation in contest_participations:
         contest = participation.contest
         
         if contest.id not in contest_rankings:
-            
             participant_scores = ContestSubmission.objects.filter(
                 contest=contest
             ).values('participant__user').annotate(
                 total_points=Sum('points_awarded')
             ).order_by('-total_points')
-            
             
             rankings = {}
             for rank, score_data in enumerate(participant_scores, 1):
@@ -315,14 +317,12 @@ def profile_view(request):
             
             contest_rankings[contest.id] = rankings
         
-        
         user_data = contest_rankings[contest.id].get(request.user.id, {'rank': None, 'points': 0})
         contest_stats['total_points'] += user_data['points']
         
         if user_data['rank'] and user_data['rank'] <= 3:
             contest_stats['top_3_finishes'] += 1
 
-    
     recent_contests = []
     for participation in contest_participations.order_by('-contest__start_time')[:5]:
         contest = participation.contest
@@ -362,8 +362,9 @@ def profile_view(request):
         'recent_submissions': recent_submissions,
     })
 
+
 @staff_member_required
-@role_required(['admin'])  
+@role_required(['admin'])  # Only admins can manage roles
 def manage_roles(request):
     users = User.objects.all()
     for user in users:
@@ -382,6 +383,7 @@ def manage_roles(request):
     return render(request, 'core/manage_roles.html', {'users': users})
 
 
+# Contest views - accessible to all authenticated users
 def contest_list(request):
     contests = Contest.objects.all().order_by('-created_at')
     
@@ -424,6 +426,7 @@ def contest_list(request):
 
 
 @login_required
+@role_required(['participant', 'problem_setter', 'admin'])  # All authenticated users can view contest details
 def contest_detail(request, contest_uuid):
     contest = get_object_or_404(Contest, uuid=contest_uuid)
     is_registered = contest.participants.filter(id=request.user.id).exists()
@@ -483,6 +486,7 @@ def contest_detail(request, contest_uuid):
 
 
 @login_required
+@role_required(['participant', 'problem_setter', 'admin'])  # All authenticated users can view contest problems
 def contest_problems(request, contest_uuid):
     contest = get_object_or_404(Contest, uuid=contest_uuid)
     
@@ -542,6 +546,7 @@ def contest_problems(request, contest_uuid):
 
 
 @login_required
+@role_required(['participant', 'problem_setter', 'admin'])  # All authenticated users can participate in contests
 def contest_problem_detail(request, contest_uuid, problem_uuid):
     contest = get_object_or_404(Contest, uuid=contest_uuid)
     problem = get_object_or_404(Problem, uuid=problem_uuid)
@@ -658,6 +663,7 @@ def contest_problem_detail(request, contest_uuid, problem_uuid):
 
 
 @login_required
+@role_required(['participant', 'problem_setter', 'admin'])  # All authenticated users can view standings
 def contest_standings(request, contest_uuid):
     contest = get_object_or_404(Contest, uuid=contest_uuid)
     
@@ -724,7 +730,7 @@ def contest_standings(request, contest_uuid):
 
 
 @staff_member_required
-@role_required(['admin'])  
+@role_required(['admin'])  # Only admins can create contests
 def create_contest(request):
     if request.method == 'POST':
         form = ContestForm(request.POST)
@@ -763,6 +769,7 @@ def create_contest(request):
         form = ContestForm()
     
     return render(request, 'core/create_contest.html', {'form': form})
+
 
 
 @staff_member_required
