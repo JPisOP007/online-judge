@@ -7,5 +7,7 @@ services:
       - "80:8000"
     volumes:
       - .:/app
+      - /home/ubuntu/online_judge/credentials:/home/ubuntu/online_judge/credentials  
     environment:
       - DEBUG=1
+      - GOOGLE_APPLICATION_CREDENTIALS=/home/ubuntu/online_judge/credentials/gemini-service-key.json  
