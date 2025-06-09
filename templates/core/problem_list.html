@@ -6,6 +6,7 @@
   {% if problem_data %}
     <div class="list-group">
       {% for item in problem_data %}
+        {% with problem=item.problem tags=item.tags %}
         <div class="list-group-item d-flex justify-content-between align-items-center py-4 px-4 border-bottom">
           <!-- Left Side: Problem Title and Tags -->
           <div class="flex-grow-1">
@@ -23,11 +24,16 @@
             <span class="difficulty-{{ problem.difficulty|lower }} me-3">
               {{ problem.get_difficulty_display }}
             </span>
-            <a href="{% url 'problem_detail' problem.uuid %}" class="btn btn-outline-primary btn-sm">
-              View
-            </a>
+            {% if problem.uuid %}
+              <a href="{% url 'problem_detail' problem.uuid %}" class="btn btn-outline-primary btn-sm">
+                View
+              </a>
+            {% else %}
+              <span class="text-muted">No UUID</span>
+            {% endif %}
           </div>
         </div>
+        {% endwith %}
       {% endfor %}
     </div>
   {% else %}
