@@ -72,24 +72,15 @@ def register(request):
         password = request.POST.get('password')
         email = request.POST.get('email', '')  # Optional
 
-        # Check if username already exists
         if User.objects.filter(username=username).exists():
             messages.error(request, 'Username already exists.')
             return render(request, 'core/register.html')
 
         try:
-            # Create user
-            user = User.objects.create_user(
-                username=username, 
-                password=password,
-                email=email
-            )
+            user = User.objects.create_user(username=username, password=password, email=email)
 
-            # Check if profile already exists (shouldn't happen, but safety net)
-            if not UserProfile.objects.filter(user=user).exists():
-                UserProfile.objects.create(user=user, role='participant')
-            else:
-                messages.warning(request, 'User created, but profile already existed.')
+            # Safe profile creation
+            UserProfile.objects.get_or_create(user=user, defaults={'role': 'participant'})
 
             messages.success(request, 'Registration successful! Please login.')
             return redirect('login')
@@ -98,6 +89,7 @@ def register(request):
             messages.error(request, f'Registration failed: {str(e)}')
 
     return render(request, 'core/register.html')
+
 
 
 def login_view(request):
