@@ -9,7 +9,8 @@ import os
 from google.cloud import aiplatform
 
 # Set once in your app startup
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "credentials/gemini-service-key.json"
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/home/ubuntu/online_judge/credentials/gemini-service-key.json"
+
 
 aiplatform.init(project="gen-lang-client-0899179119", location="us-central1")
 
