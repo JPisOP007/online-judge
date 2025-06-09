@@ -1,6 +1,7 @@
 from django.contrib.auth.models import User
 from django.db import models
 import uuid
+from django.utils import timezone
 
 
 class UserProfile(models.Model):
@@ -34,6 +35,7 @@ class Problem(models.Model):
     tags = models.CharField(max_length=255, blank=True, null=True)  
     test_cases_json = models.TextField(blank=True) 
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    created_at = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
         return self.title
