@@ -22,6 +22,13 @@ SECRET_KEY = 'django-insecure-m0ugqpwnmv_4jjl^ljk)fjt^i4tzu6tb@o0%f9+1ecilme%e3#
 DEBUG = True
 ALLOWED_HOSTS = ['*']  # For development only
 
+# CSRF Settings - Add this to fix the 403 error
+CSRF_TRUSTED_ORIGINS = [
+    'https://myoj.work.gd',
+    'http://myoj.work.gd',  # Include HTTP version if needed
+    # Add any other domains you use
+]
+
 # Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
