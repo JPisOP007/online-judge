@@ -214,3 +214,12 @@ def evaluate_submission(language, code, problem):
             'output': last_output,
             'error': last_error
         }
+if __name__ == "__main__":
+    print("Checking available compilers/interpreters:")
+    compilers = ['g++', 'javac', 'java', 'node', 'python3', 'python']
+    for compiler in compilers:
+        path = find_compiler(compiler)
+        if path:
+            print(f"✓ {compiler}: {path}")
+        else:
+            print(f"✗ {compiler}: Not found")
