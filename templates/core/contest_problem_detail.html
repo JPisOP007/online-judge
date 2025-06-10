@@ -180,24 +180,6 @@
   {% endif %}
 </div>
 {% endif %}
-
-      {% if user.is_staff %}
-<div class="mb-3">
-  <div class="alert alert-info">
-    <small class="text-muted">
-      <strong>Debug Info:</strong><br>
-      Verdict: '{{ verdict }}'<br>
-      Output Length: {{ output|length }} chars<br>
-      Feedback: '{{ feedback_message }}'<br>
-      Form Valid: {{ form.is_valid }}<br>
-      Form Errors: {{ form.errors }}<br>
-      Request Method: {{ request.method }}<br>
-      POST Data: {{ request.POST }}
-    </small>
-  </div>
-</div>
-{% endif %}
-
       <!-- Submission Form -->
       <form method="post" id="solution-form">
         {% csrf_token %}
