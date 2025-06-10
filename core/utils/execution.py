@@ -2,6 +2,28 @@ import subprocess
 import tempfile
 import os
 import shutil
+import json
+
+def find_compiler(compiler_name):
+    """Find the full path of a compiler/interpreter"""
+    # Try using shutil.which first
+    path = shutil.which(compiler_name)
+    if path:
+        return path
+    
+    # Common locations to check
+    common_paths = [
+        f'/usr/bin/{compiler_name}',
+        f'/bin/{compiler_name}',
+        f'/usr/local/bin/{compiler_name}',
+        f'/opt/bin/{compiler_name}'
+    ]
+    
+    for path in common_paths:
+        if os.path.isfile(path) and os.access(path, os.X_OK):
+            return path
+    
+    return None
 
 def execute_code(language, code, input_data, expected_output):
     
@@ -35,13 +57,23 @@ def execute_code(language, code, input_data, expected_output):
 
             # Prepare run command based on language
             if language == 'python':
-                run_cmd = ['python', filepath]
+                python_path = find_compiler('python3') or find_compiler('python')
+                if not python_path:
+                    return {'verdict': 'CE', 'error': 'Python interpreter not found'}
+                run_cmd = [python_path, filepath]
 
             elif language == 'cpp':
-                exe_path = os.path.join(temp_dir, 'main.exe' if os.name == 'nt' else 'main.out')
-                compile_cmd = ['g++', filepath, '-o', exe_path]
+                # Find g++ compiler
+                gpp_path = find_compiler('g++')
+                if not gpp_path:
+                    return {'verdict': 'CE', 'error': 'g++ compiler not found. Please install: sudo apt install g++'}
                 
-                print(f"[DEBUG] Compiling C++: {' '.join(compile_cmd)}")
+                exe_path = os.path.join(temp_dir, 'main.exe' if os.name == 'nt' else 'main.out')
+                compile_cmd = [gpp_path, filepath, '-o', exe_path]
+                
+                print(f"[DEBUG] Compiling C++ with: {gpp_path}")
+                print(f"[DEBUG] Compile command: {' '.join(compile_cmd)}")
+                
                 compile_proc = subprocess.run(compile_cmd, capture_output=True, text=True, timeout=10)
                 
                 if compile_proc.returncode != 0:
@@ -52,9 +84,19 @@ def execute_code(language, code, input_data, expected_output):
                 run_cmd = [exe_path]
 
             elif language == 'java':
+                # Find javac and java
+                javac_path = find_compiler('javac')
+                java_path = find_compiler('java')
+                
+                if not javac_path:
+                    return {'verdict': 'CE', 'error': 'javac compiler not found. Please install: sudo apt install default-jdk'}
+                if not java_path:
+                    return {'verdict': 'CE', 'error': 'java runtime not found. Please install: sudo apt install default-jdk'}
+                
                 # Compile Java
-                compile_cmd = ['javac', filepath]
-                print(f"[DEBUG] Compiling Java: {' '.join(compile_cmd)}")
+                compile_cmd = [javac_path, filepath]
+                print(f"[DEBUG] Compiling Java with: {javac_path}")
+                print(f"[DEBUG] Compile command: {' '.join(compile_cmd)}")
                 
                 compile_proc = subprocess.run(compile_cmd, cwd=temp_dir, capture_output=True, text=True, timeout=10)
                 
@@ -63,10 +105,13 @@ def execute_code(language, code, input_data, expected_output):
                     print(f"[DEBUG] Java compilation failed: {error_msg}")
                     return {'verdict': 'CE', 'error': error_msg}
                 
-                run_cmd = ['java', '-cp', temp_dir, 'Main']
+                run_cmd = [java_path, '-cp', temp_dir, 'Main']
 
             elif language == 'javascript':
-                run_cmd = ['node', filepath]
+                node_path = find_compiler('node')
+                if not node_path:
+                    return {'verdict': 'CE', 'error': 'Node.js not found. Please install: sudo apt install nodejs'}
+                run_cmd = [node_path, filepath]
 
             else:
                 return {'verdict': 'CE', 'error': f'Execution not implemented for {language}'}
@@ -128,9 +173,7 @@ def execute_code(language, code, input_data, expected_output):
         error_msg = f"Execution error: {str(e)}"
         print(f"[DEBUG] Exception: {error_msg}")
         return {'verdict': 'RE', 'error': error_msg}
-    
 
-import json
 
 def evaluate_submission(language, code, problem):
     try:
