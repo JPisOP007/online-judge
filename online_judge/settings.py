@@ -7,6 +7,15 @@ from pathlib import Path
 
 import os
 from google.cloud import aiplatform
+import os
+import base64
+
+encoded_key = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS_B64")
+if encoded_key:
+    service_account_path = "/tmp/gemini-service-key.json"
+    with open(service_account_path, "wb") as f:
+        f.write(base64.b64decode(encoded_key))
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = service_account_path
 
 # Set once in your app startup
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/home/ubuntu/online_judge/credentials/gemini-service-key.json"
