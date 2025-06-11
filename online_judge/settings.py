@@ -28,22 +28,20 @@ else:
 # Initialize Vertex AI
 aiplatform.init(project="gen-lang-client-0899179119", location="us-central1")
 
-# === BASE SETTINGS ===
-
+# === BASE DIR ===
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-m0ugqpwnmv_4jjl^ljk)fjt^i4tzu6tb@o0%f9+1ecilme%e3#'  # Change in production!
-DEBUG = True
-
-ALLOWED_HOSTS = ['*']  # For development only
+# === SECURITY ===
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-unsafe-default-key')
+DEBUG = os.getenv('DEBUG', 'False') == 'True'
+ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', '*').split()
 
 CSRF_TRUSTED_ORIGINS = [
     'https://myoj.work.gd',
     'http://myoj.work.gd',
 ]
 
-# === INSTALLED APPS ===
-
+# === APPLICATIONS ===
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -57,7 +55,6 @@ INSTALLED_APPS = [
 ]
 
 # === MIDDLEWARE ===
-
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -68,10 +65,11 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+# === URLS & WSGI ===
 ROOT_URLCONF = 'online_judge.urls'
+WSGI_APPLICATION = 'online_judge.wsgi.application'
 
 # === TEMPLATES ===
-
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -88,10 +86,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'online_judge.wsgi.application'
-
 # === DATABASE ===
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -100,7 +95,6 @@ DATABASES = {
 }
 
 # === PASSWORD VALIDATION ===
-
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
@@ -109,45 +103,40 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 # === I18N / TIMEZONE ===
-
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'Asia/Kolkata'
 USE_I18N = True
 USE_TZ = True
 
-# === STATIC AND MEDIA ===
-
-STATIC_URL = 'static/'
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+# === STATIC & MEDIA ===
+STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-# === DJANGO DEFAULTS ===
-
+# === DEFAULT PRIMARY KEY FIELD ===
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# === CUSTOM SETTINGS ===
-
+# === CODE EXECUTION CONFIG ===
 CODE_EXECUTION = {
-    'TIME_LIMIT': 5,  # seconds
-    'MEMORY_LIMIT': 128,  # MB
+    'TIME_LIMIT': 5,
+    'MEMORY_LIMIT': 128,
     'TEMP_DIR': os.path.join(BASE_DIR, 'tmp'),
 }
 
+# === AUTH & EMAIL ===
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/login/'
 
+# === SECURITY (Adjust in production) ===
 SESSION_COOKIE_SECURE = False
 CSRF_COOKIE_SECURE = False
 SECURE_SSL_REDIRECT = False
 
-# === COMPILER PATHS ===
-
+# === COMPILER PATHS (for local dev) ===
 COMPILER_PATHS = {
     'CPP_COMPILER': r'C:\msys64\mingw64\bin\g++.exe',  # Update if needed
     'JAVA_COMPILER': 'javac',
