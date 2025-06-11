@@ -3,42 +3,47 @@ Django settings for online_judge project.
 """
 
 import os
-from pathlib import Path
-
-import os
-from google.cloud import aiplatform
-import os
 import base64
+from pathlib import Path
+from google.cloud import aiplatform
 
+# === GOOGLE CREDENTIALS (Cloud and Local) ===
 encoded_key = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS_B64")
 if encoded_key:
-    service_account_path = "/tmp/gemini-service-key.json"
-    with open(service_account_path, "wb") as f:
-        f.write(base64.b64decode(encoded_key))
-    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = service_account_path
+    try:
+        service_account_path = "/tmp/gemini-service-key.json"
+        with open(service_account_path, "wb") as f:
+            f.write(base64.b64decode(encoded_key))
+        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = service_account_path
+    except Exception as e:
+        raise Exception("Failed to decode or write GOOGLE_APPLICATION_CREDENTIALS_B64") from e
+else:
+    # Fallback for local development
+    local_creds = os.path.join(Path(__file__).resolve().parent.parent, "credentials", "gemini-service-key.json")
+    if os.path.exists(local_creds):
+        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = local_creds
+    else:
+        raise EnvironmentError("Google credentials not found for cloud or local setup.")
 
-# Set once in your app startup
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/home/ubuntu/online_judge/credentials/gemini-service-key.json"
-
-
+# Initialize Vertex AI
 aiplatform.init(project="gen-lang-client-0899179119", location="us-central1")
 
-# Build paths
+# === BASE SETTINGS ===
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Security
 SECRET_KEY = 'django-insecure-m0ugqpwnmv_4jjl^ljk)fjt^i4tzu6tb@o0%f9+1ecilme%e3#'  # Change in production!
 DEBUG = True
+
 ALLOWED_HOSTS = ['*']  # For development only
 
-# CSRF Settings - Add this to fix the 403 error
 CSRF_TRUSTED_ORIGINS = [
     'https://myoj.work.gd',
-    'http://myoj.work.gd',  # Include HTTP version if needed
-    # Add any other domains you use
+    'http://myoj.work.gd',
 ]
 
-# Application definition
+# === INSTALLED APPS ===
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -48,10 +53,10 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'core.apps.CoreConfig',
     'widget_tweaks',
+    'django_codemirror6',
 ]
 
-INSTALLED_APPS += ['django_codemirror6']
-
+# === MIDDLEWARE ===
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -65,7 +70,8 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'online_judge.urls'
 
-# Templates
+# === TEMPLATES ===
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -84,7 +90,8 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'online_judge.wsgi.application'
 
-# Database
+# === DATABASE ===
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -92,63 +99,57 @@ DATABASES = {
     }
 }
 
-# Password validation
+# === PASSWORD VALIDATION ===
+
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-# Internationalization
+# === I18N / TIMEZONE ===
+
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'Asia/Kolkata'
 USE_I18N = True
 USE_TZ = True
 
-# Static files (CSS, JavaScript, Images)
+# === STATIC AND MEDIA ===
+
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-# Media files (user uploads)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-# Default primary key field type
+# === DJANGO DEFAULTS ===
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Custom settings
+# === CUSTOM SETTINGS ===
+
 CODE_EXECUTION = {
     'TIME_LIMIT': 5,  # seconds
     'MEMORY_LIMIT': 128,  # MB
     'TEMP_DIR': os.path.join(BASE_DIR, 'tmp'),
 }
 
-# Email settings (for password reset, etc.)
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # For development
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
-# Authentication
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/login/'
 
-# Security (for production you should set these)
 SESSION_COOKIE_SECURE = False
 CSRF_COOKIE_SECURE = False
 SECURE_SSL_REDIRECT = False
 
-# Compiler paths (MSYS2 specific)
+# === COMPILER PATHS ===
+
 COMPILER_PATHS = {
-    'CPP_COMPILER': r'C:\msys64\mingw64\bin\g++.exe',  # Update if your MSYS2 is installed elsewhere
+    'CPP_COMPILER': r'C:\msys64\mingw64\bin\g++.exe',  # Update if needed
     'JAVA_COMPILER': 'javac',
     'PYTHON_INTERPRETER': 'python'
 }
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
