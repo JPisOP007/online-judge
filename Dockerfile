@@ -18,5 +18,8 @@ COPY . .
 # Expose port
 EXPOSE 8000
 
-# Default command
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+# Collect static files (optional if you're serving them)
+RUN python manage.py collectstatic --noinput || true
+
+# Run with Gunicorn
+CMD ["gunicorn", "core.wsgi:application", "--bind", "0.0.0.0:8000"]
