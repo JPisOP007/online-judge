@@ -7,6 +7,9 @@ import base64
 from pathlib import Path
 from google.cloud import aiplatform
 
+# === BASE DIR ===
+BASE_DIR = Path(__file__).resolve().parent.parent
+
 # === GOOGLE CREDENTIALS (Cloud and Local) ===
 encoded_key = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS_B64")
 if encoded_key:
@@ -19,7 +22,7 @@ if encoded_key:
         raise Exception("Failed to decode or write GOOGLE_APPLICATION_CREDENTIALS_B64") from e
 else:
     # Fallback for local development
-    local_creds = os.path.join(Path(__file__).resolve().parent.parent, "credentials", "gemini-service-key.json")
+    local_creds = os.path.join(BASE_DIR, "credentials", "gemini-service-key.json")
     if os.path.exists(local_creds):
         os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = local_creds
     else:
@@ -27,9 +30,6 @@ else:
 
 # Initialize Vertex AI
 aiplatform.init(project="gen-lang-client-0899179119", location="us-central1")
-
-# === BASE DIR ===
-BASE_DIR = Path(__file__).resolve().parent.parent
 
 # === SECURITY ===
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-unsafe-default-key')
@@ -131,14 +131,15 @@ LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/login/'
 
-# === SECURITY (Adjust in production) ===
-SESSION_COOKIE_SECURE = False
-CSRF_COOKIE_SECURE = False
-SECURE_SSL_REDIRECT = False
+# === SECURITY HEADERS (Adjust these in production) ===
+SESSION_COOKIE_SECURE = False  # True if using HTTPS
+CSRF_COOKIE_SECURE = False     # True if using HTTPS
+SECURE_SSL_REDIRECT = False    # True if forcing HTTPS
 
-# === COMPILER PATHS (for local dev) ===
+# === COMPILER PATHS ===
+# For containerized Linux, these paths should point to Linux executables
 COMPILER_PATHS = {
-    'CPP_COMPILER': r'C:\msys64\mingw64\bin\g++.exe',  # Update if needed
+    'CPP_COMPILER': 'g++',
     'JAVA_COMPILER': 'javac',
-    'PYTHON_INTERPRETER': 'python'
+    'PYTHON_INTERPRETER': 'python3',
 }
