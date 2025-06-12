@@ -33,7 +33,7 @@ aiplatform.init(project="gen-lang-client-0899179119", location="us-central1")
 
 # === SECURITY ===
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-unsafe-default-key')
-DEBUG = os.getenv('DEBUG', 'False') == 'True'
+DEBUG = True
 ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', '*').split()
 
 CSRF_TRUSTED_ORIGINS = [
