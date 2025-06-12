@@ -1,10 +1,11 @@
 FROM python:3.11-slim
 
 RUN apt-get update && apt-get install -y \
-    g++ \                # C++
-    openjdk-17-jdk \     # Java (use openjdk-17-jdk or version you need)
-    nodejs \             # JavaScript runtime
-    npm                  # Node.js package manager (needed for some JS execution)
+    g++ \
+    openjdk-17-jdk \
+    nodejs \
+    npm \
+    && rm -rf /var/lib/apt/lists/*
 
 
 ENV PYTHONDONTWRITEBYTECODE=1
