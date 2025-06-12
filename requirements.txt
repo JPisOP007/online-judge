@@ -21,3 +21,4 @@ tzdata==2025.1
 virtualenv==20.31.2
 google-cloud-aiplatform>=1.38.0
 gunicorn
+whitenoise
