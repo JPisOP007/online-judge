@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>{% block title %}My Online Judge{% endblock %}</title>
+  <title>{% block title %}MyOJ - Master Programming Through Practice{% endblock %}</title>
   <link rel="icon" type="image/png" href="{% static 'images/logo.png' %}">
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
@@ -13,7 +13,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
   
   <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
   <style>
     :root {
@@ -28,6 +28,7 @@
       --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
       --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
       --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+      --shadow-xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
       --border-radius: 12px;
     }
 
@@ -38,12 +39,13 @@
     html, body {
       height: 100%;
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      overflow-x: hidden;
     }
 
     body {
       display: flex;
       flex-direction: column;
-      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: var(--dark-color);
       line-height: 1.6;
     }
@@ -54,25 +56,30 @@
 
     /* Navbar Styles */
     .navbar-custom {
-      background: linear-gradient(135deg, var(--primary-color) 0%, #1d4ed8 100%);
-      backdrop-filter: blur(10px);
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
       box-shadow: var(--shadow-md);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+      position: fixed;
+      width: 100%;
+      top: 0;
+      z-index: 1030;
+      transition: all 0.3s ease;
     }
 
     .navbar-custom .navbar-brand {
-      color: #fff;
-      font-weight: 700;
-      font-size: 1.5rem;
+      color: var(--dark-color);
+      font-weight: 800;
+      font-size: 1.75rem;
       text-decoration: none;
-    }
-
-    .navbar-custom .navbar-brand:hover {
-      color: #f1f5f9;
+      background: linear-gradient(135deg, var(--primary-color), #8b5cf6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
 
     .navbar-custom .nav-link {
-      color: rgba(255, 255, 255, 0.9);
+      color: var(--dark-color);
       font-weight: 500;
       padding: 8px 16px;
       margin: 0 4px;
@@ -82,137 +89,266 @@
     }
 
     .navbar-custom .nav-link:hover {
-      background-color: rgba(255, 255, 255, 0.1);
-      color: #fff;
+      background-color: rgba(37, 99, 235, 0.1);
+      color: var(--primary-color);
       transform: translateY(-1px);
     }
 
-    .navbar-custom .nav-link.btn {
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      backdrop-filter: blur(10px);
-    }
-
-    .navbar-custom .nav-link.btn:hover {
-      background-color: rgba(255, 255, 255, 0.15);
-      border-color: rgba(255, 255, 255, 0.3);
-      box-shadow: var(--shadow-sm);
-    }
-
-    /* Card Styles */
-    .card {
-      background: rgba(255, 255, 255, 0.9);
-      backdrop-filter: blur(10px);
-      border: 1px solid var(--border-color);
-      border-radius: var(--border-radius);
-      box-shadow: var(--shadow-md);
-      transition: all 0.3s ease;
-    }
-
-    .card:hover {
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-lg);
-    }
-
-    .card-section {
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(10px);
-      border: 1px solid var(--border-color);
-      border-radius: var(--border-radius);
-      padding: 2rem;
-      margin-bottom: 2rem;
-      box-shadow: var(--shadow-md);
-      transition: all 0.3s ease;
-    }
-
-    .card-section:hover {
-      box-shadow: var(--shadow-lg);
-    }
-
-    /* Button Styles */
-    .btn {
-      border-radius: 8px;
-      font-weight: 500;
-      padding: 10px 20px;
-      transition: all 0.2s ease;
+    .navbar-custom .nav-link.btn-primary {
+      background: linear-gradient(135deg, var(--primary-color) 0%, #1d4ed8 100%);
+      color: white;
       border: none;
     }
 
-    .btn-primary {
-      background: linear-gradient(135deg, var(--primary-color) 0%, #1d4ed8 100%);
-      box-shadow: var(--shadow-sm);
-    }
-
-    .btn-primary:hover {
-      transform: translateY(-1px);
-      box-shadow: var(--shadow-md);
-    }
-
-    .btn-success {
-      background: linear-gradient(135deg, var(--success-color) 0%, #047857 100%);
-      box-shadow: var(--shadow-sm);
-    }
-
-    .btn-success:hover {
-      transform: translateY(-1px);
-      box-shadow: var(--shadow-md);
-    }
-
-    .btn-outline-primary {
+    .navbar-custom .nav-link.btn-outline-primary {
       border: 2px solid var(--primary-color);
       color: var(--primary-color);
       background: transparent;
     }
 
-    .btn-outline-primary:hover {
-      background: var(--primary-color);
-      transform: translateY(-1px);
-      box-shadow: var(--shadow-md);
+    /* Hero Section */
+    .hero-section {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+      padding-top: 80px;
     }
 
-    .btn-outline-secondary {
-      border: 2px solid var(--secondary-color);
+    .hero-section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>') repeat;
+      opacity: 0.3;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+    }
+
+    .hero-title {
+      font-size: 4rem;
+      font-weight: 800;
+      color: white;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      margin-bottom: 1.5rem;
+      line-height: 1.1;
+    }
+
+    .hero-subtitle {
+      font-size: 1.5rem;
+      color: rgba(255, 255, 255, 0.9);
+      margin-bottom: 2.5rem;
+      font-weight: 400;
+    }
+
+    .hero-stats {
+      display: flex;
+      gap: 3rem;
+      margin-top: 4rem;
+    }
+
+    .stat-item {
+      text-align: center;
+      color: white;
+    }
+
+    .stat-number {
+      font-size: 2.5rem;
+      font-weight: 800;
+      display: block;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .stat-label {
+      font-size: 0.9rem;
+      opacity: 0.9;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* Feature Section */
+    .features-section {
+      padding: 6rem 0;
+      background: linear-gradient(to bottom, #f8fafc, #e2e8f0);
+    }
+
+    .feature-card {
+      background: white;
+      border-radius: var(--border-radius);
+      padding: 3rem 2rem;
+      text-align: center;
+      box-shadow: var(--shadow-lg);
+      transition: all 0.3s ease;
+      border: none;
+      height: 100%;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-8px);
+      box-shadow: var(--shadow-xl);
+    }
+
+    .feature-icon {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 2rem;
+      font-size: 2rem;
+      color: white;
+    }
+
+    .feature-icon.primary { background: linear-gradient(135deg, var(--primary-color), #1d4ed8); }
+    .feature-icon.success { background: linear-gradient(135deg, var(--success-color), #047857); }
+    .feature-icon.warning { background: linear-gradient(135deg, var(--warning-color), #b45309); }
+    .feature-icon.purple { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+
+    .feature-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      color: var(--dark-color);
+    }
+
+    .feature-description {
       color: var(--secondary-color);
-      background: transparent;
+      line-height: 1.8;
     }
 
-    .btn-outline-secondary:hover {
-      background: var(--secondary-color);
-      transform: translateY(-1px);
+    /* Problems Preview Section */
+    .problems-section {
+      padding: 6rem 0;
+      background: white;
+    }
+
+    .problem-card {
+      background: white;
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+      transition: all 0.3s ease;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .problem-card:hover {
+      transform: translateY(-2px);
       box-shadow: var(--shadow-md);
+      border-color: var(--primary-color);
+    }
+
+    .problem-title {
+      font-weight: 600;
+      color: var(--dark-color);
+      margin-bottom: 0.5rem;
+    }
+
+    .problem-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.875rem;
+      color: var(--secondary-color);
     }
 
     /* Difficulty Badges */
     .difficulty-easy {
       background: linear-gradient(135deg, var(--success-color) 0%, #047857 100%);
       color: white;
-      padding: 6px 12px;
+      padding: 4px 12px;
       border-radius: 20px;
-      font-size: 0.85rem;
+      font-size: 0.75rem;
       font-weight: 600;
-      display: inline-block;
-      box-shadow: var(--shadow-sm);
     }
 
     .difficulty-medium {
       background: linear-gradient(135deg, var(--warning-color) 0%, #b45309 100%);
       color: white;
-      padding: 6px 12px;
+      padding: 4px 12px;
       border-radius: 20px;
-      font-size: 0.85rem;
+      font-size: 0.75rem;
       font-weight: 600;
-      display: inline-block;
-      box-shadow: var(--shadow-sm);
     }
 
     .difficulty-hard {
       background: linear-gradient(135deg, var(--danger-color) 0%, #b91c1c 100%);
       color: white;
-      padding: 6px 12px;
+      padding: 4px 12px;
       border-radius: 20px;
-      font-size: 0.85rem;
+      font-size: 0.75rem;
       font-weight: 600;
-      display: inline-block;
-      box-shadow: var(--shadow-sm);
+    }
+
+    /* CTA Section */
+    .cta-section {
+      background: linear-gradient(135deg, var(--dark-color) 0%, #0f172a 100%);
+      padding: 6rem 0;
+      text-align: center;
+      color: white;
+    }
+
+    .cta-title {
+      font-size: 3rem;
+      font-weight: 800;
+      margin-bottom: 1.5rem;
+    }
+
+    .cta-subtitle {
+      font-size: 1.25rem;
+      opacity: 0.9;
+      margin-bottom: 3rem;
+    }
+
+    /* Button Styles */
+    .btn {
+      border-radius: 8px;
+      font-weight: 600;
+      padding: 12px 24px;
+      transition: all 0.2s ease;
+      border: none;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-hero {
+      font-size: 1.1rem;
+      padding: 16px 32px;
+      border-radius: 12px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary-color) 0%, #1d4ed8 100%);
+      box-shadow: var(--shadow-md);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .btn-outline-light {
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      color: white;
+      background: transparent;
+      backdrop-filter: blur(10px);
+    }
+
+    .btn-outline-light:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.5);
+      transform: translateY(-2px);
     }
 
     /* Footer */
@@ -220,186 +356,83 @@
       background: linear-gradient(135deg, var(--dark-color) 0%, #0f172a 100%);
       color: white;
       text-align: center;
-      padding: 20px 0;
-      border-top: 1px solid var(--border-color);
+      padding: 3rem 0 1.5rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
     }
 
-    /* Floating Button */
-    .floating-add-btn {
-      position: fixed;
-      bottom: 30px;
-      right: 30px;
-      z-index: 1050;
-      background: linear-gradient(135deg, var(--primary-color) 0%, #1d4ed8 100%);
-      color: white;
-      font-size: 18px;
-      font-weight: 600;
-      padding: 16px 20px;
-      border-radius: 50px;
-      box-shadow: var(--shadow-lg);
-      text-decoration: none;
-      transition: all 0.3s ease;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+    /* Animations */
+    .fade-in {
+      animation: fadeIn 0.8s ease-out;
     }
 
-    .floating-add-btn:hover {
-      background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
-      color: white;
-      transform: translateY(-2px);
-      box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    .slide-up {
+      animation: slideUp 0.6s ease-out;
     }
 
-    /* Alert Styles */
-    .alert {
-      border: none;
-      border-radius: var(--border-radius);
-      box-shadow: var(--shadow-sm);
-      backdrop-filter: blur(10px);
+    .float {
+      animation: float 3s ease-in-out infinite;
     }
 
-    .alert-success {
-      background: rgba(16, 185, 129, 0.1);
-      border-left: 4px solid var(--success-color);
-      color: var(--success-color);
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
-    .alert-danger {
-      background: rgba(239, 68, 68, 0.1);
-      border-left: 4px solid var(--danger-color);
-      color: var(--danger-color);
+    @keyframes slideUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
     }
 
-    .alert-info {
-      background: rgba(59, 130, 246, 0.1);
-      border-left: 4px solid var(--primary-color);
-      color: var(--primary-color);
-    }
-
-    .alert-warning {
-      background: rgba(245, 158, 11, 0.1);
-      border-left: 4px solid var(--warning-color);
-      color: var(--warning-color);
-    }
-
-    /* Form Styles */
-    .form-control, .form-select {
-      border: 2px solid var(--border-color);
-      border-radius: 8px;
-      padding: 12px 16px;
-      transition: all 0.2s ease;
-      background: rgba(255, 255, 255, 0.9);
-    }
-
-    .form-control:focus, .form-select:focus {
-      border-color: var(--primary-color);
-      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-      background: white;
-    }
-
-    .form-label {
-      font-weight: 600;
-      color: var(--dark-color);
-      margin-bottom: 8px;
-    }
-
-    /* Contest status badges */
-    .contest-status {
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      text-transform: uppercase;
-    }
-
-    .contest-upcoming {
-      background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-      color: white;
-    }
-
-    .contest-running {
-      background: linear-gradient(135deg, var(--success-color) 0%, #047857 100%);
-      color: white;
-    }
-
-    .contest-ended {
-      background: linear-gradient(135deg, var(--secondary-color) 0%, #475569 100%);
-      color: white;
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
     }
 
     /* Responsive Design */
     @media (max-width: 768px) {
-      .container {
-        padding: 0 15px;
+      .hero-title {
+        font-size: 2.5rem;
       }
       
-      .card-section {
-        padding: 1.5rem;
-        margin-bottom: 1.5rem;
+      .hero-subtitle {
+        font-size: 1.25rem;
       }
       
-      .floating-add-btn {
-        bottom: 20px;
-        right: 20px;
-        padding: 12px 16px;
-        font-size: 16px;
+      .hero-stats {
+        flex-direction: column;
+        gap: 1.5rem;
+        margin-top: 2rem;
+      }
+      
+      .stat-number {
+        font-size: 2rem;
+      }
+      
+      .cta-title {
+        font-size: 2rem;
+      }
+      
+      .feature-card {
+        padding: 2rem 1.5rem;
       }
     }
 
-    /* Animation Classes */
-    .fade-in {
-      animation: fadeIn 0.5s ease-in;
+    /* Scrollbar Styling */
+    ::-webkit-scrollbar {
+      width: 8px;
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
     }
 
-    .slide-up {
-      animation: slideUp 0.3s ease-out;
+    ::-webkit-scrollbar-thumb {
+      background: var(--primary-color);
+      border-radius: 4px;
     }
 
-    @keyframes slideUp {
-      from { transform: translateY(10px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
-    }
-
-    :root {
-      --primary-color: #2563eb;
-      --secondary-color: #64748b;
-      --success-color: #059669;
-      --warning-color: #d97706;
-      --danger-color: #dc2626;
-      --info-color: #0891b2;
-      --light-color: #f8fafc;
-      --dark-color: #1e293b;
-      --bronze-color: #cd7f32;
-      --gold-color: #ffd700;
-      --silver-color: #c0c0c0;
-    }
-
-    /* Optional: Add fade-in animation */
-    .fade-in {
-      animation: fadeIn 0.5s ease-in;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .card-section {
-      background: white;
-      border-radius: 12px;
-      padding: 2rem;
-      margin-bottom: 2rem;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    }
-
-    .card-title {
-      font-weight: 600;
+    ::-webkit-scrollbar-thumb:hover {
+      background: #1d4ed8;
     }
   </style>
 
@@ -410,107 +443,305 @@
 <nav class="navbar navbar-expand-lg navbar-custom">
   <div class="container">
     <a class="navbar-brand d-flex align-items-center" href="{% url 'home' %}">
-      <img src="{% static 'images/logo.png' %}" alt="Logo" width="96" height="96" class="rounded-circle shadow-sm" />
+      <img src="{% static 'images/logo.png' %}" alt="Logo" width="40" height="40" class="rounded-circle me-2" />
+      MyOJ
     </a>
     <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-      <i class="bi bi-list text-white fs-4"></i>
+      <i class="bi bi-list fs-4"></i>
     </button>
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav ms-auto gap-1">
+        <li class="nav-item">
+          <a class="nav-link" href="#features">Features</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#problems">Problems</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#about">About</a>
+        </li>
         {% if user.is_authenticated %}
-  <li class="nav-item">
-    <a class="nav-link btn d-flex align-items-center" href="{% url 'problem_list' %}">
-      <i class="bi bi-list-task me-1"></i>Problems
-    </a>
-  </li>
-  {% if user.userprofile.role == 'problem_setter' or user.is_staff %}
-  <li class="nav-item">
-    <a class="nav-link btn d-flex align-items-center" href="{% url 'add_problem' %}">
-      <i class="bi bi-plus-circle me-1"></i>Add Problem
-    </a>
-  </li>
-  {% endif %}
-  <li class="nav-item">
-    <a class="nav-link btn d-flex align-items-center" href="{% url 'contest_list' %}">
-      <i class="bi bi-trophy me-1"></i>Contests
-    </a>
-  </li>
-  {% if user.is_staff %}
-  <li class="nav-item">
-    <a class="nav-link btn d-flex align-items-center" href="{% url 'create_contest' %}">
-      <i class="bi bi-calendar-plus me-1"></i>Create Contest
-    </a>
-  </li>
-  <li class="nav-item">
-    <a class="nav-link btn d-flex align-items-center" href="{% url 'manage_roles' %}"> 
-      <i class="bi bi-people me-1"></i>Manage Roles
-    </a>
-  </li>
-  {% endif %}
-  <li class="nav-item">
-    <a class="nav-link btn d-flex align-items-center" href="{% url 'profile' %}">
-      <i class="bi bi-person me-1"></i>Profile
-    </a>
-  </li>
-  <li class="nav-item">
-    <a class="nav-link btn d-flex align-items-center" href="{% url 'logout' %}">
-      <i class="bi bi-box-arrow-right me-1"></i>Logout
-    </a>
-  </li>
-{% else %}
-  <li class="nav-item">
-    <a class="nav-link btn d-flex align-items-center" href="{% url 'login' %}">
-      <i class="bi bi-box-arrow-in-right me-1"></i>Login
-    </a>
-  </li>
-  <li class="nav-item">
-    <a class="nav-link btn d-flex align-items-center" href="{% url 'register' %}">
-      <i class="bi bi-person-plus me-1"></i>Register
-    </a>
-  </li>
-{% endif %}
-
+          <li class="nav-item">
+            <a class="nav-link btn btn-primary" href="{% url 'problem_list' %}">
+              <i class="bi bi-list-task"></i>Dashboard
+            </a>
+          </li>
+        {% else %}
+          <li class="nav-item">
+            <a class="nav-link btn btn-outline-primary" href="{% url 'login' %}">
+              <i class="bi bi-box-arrow-in-right"></i>Login
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link btn btn-primary" href="{% url 'register' %}">
+              <i class="bi bi-person-plus"></i>Sign Up
+            </a>
+          </li>
+        {% endif %}
       </ul>
     </div>
   </div>
 </nav>
 
-<main class="container my-4 fade-in">
-  {% if messages %}
-    {% for message in messages %}
-      <div class="alert alert-{{ message.tags }} alert-dismissible fade show slide-up" role="alert">
-        <i class="bi bi-info-circle me-2"></i>
-        {{ message }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+<main>
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="container">
+      <div class="row align-items-center">
+        <div class="col-lg-6">
+          <div class="hero-content fade-in">
+            <h1 class="hero-title">Master Programming Through Practice</h1>
+            <p class="hero-subtitle">Join thousands of programmers improving their coding skills with challenging problems, competitive contests, and instant feedback.</p>
+            <div class="d-flex gap-3 flex-wrap">
+              {% if not user.is_authenticated %}
+                <a href="{% url 'register' %}" class="btn btn-primary btn-hero">
+                  <i class="bi bi-rocket-takeoff"></i>Start Coding Now
+                </a>
+                <a href="{% url 'problem_list' %}" class="btn btn-outline-light btn-hero">
+                  <i class="bi bi-eye"></i>Browse Problems
+                </a>
+              {% else %}
+                <a href="{% url 'problem_list' %}" class="btn btn-primary btn-hero">
+                  <i class="bi bi-list-task"></i>Solve Problems
+                </a>
+                <a href="{% url 'contest_list' %}" class="btn btn-outline-light btn-hero">
+                  <i class="bi bi-trophy"></i>Join Contests
+                </a>
+              {% endif %}
+            </div>
+            <div class="hero-stats">
+              <div class="stat-item slide-up">
+                <span class="stat-number">10,000+</span>
+                <span class="stat-label">Problems Solved</span>
+              </div>
+              <div class="stat-item slide-up">
+                <span class="stat-number">5,000+</span>
+                <span class="stat-label">Active Users</span>
+              </div>
+              <div class="stat-item slide-up">
+                <span class="stat-number">500+</span>
+                <span class="stat-label">Contests Held</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-6 text-center">
+          <div class="float">
+            <i class="bi bi-code-slash" style="font-size: 15rem; color: rgba(255,255,255,0.1);"></i>
+          </div>
+        </div>
       </div>
-    {% endfor %}
-  {% endif %}
+    </div>
+  </section>
 
-  {% block content %}{% endblock %}
+  <!-- Features Section -->
+  <section class="features-section" id="features">
+    <div class="container">
+      <div class="text-center mb-5">
+        <h2 class="display-4 fw-bold mb-3">Why Choose MyOJ?</h2>
+        <p class="lead text-muted">Everything you need to excel in competitive programming</p>
+      </div>
+      <div class="row g-4">
+        <div class="col-lg-3 col-md-6">
+          <div class="feature-card fade-in">
+            <div class="feature-icon primary">
+              <i class="bi bi-lightning-charge"></i>
+            </div>
+            <h3 class="feature-title">Instant Feedback</h3>
+            <p class="feature-description">Get immediate results with our fast judging system. Know exactly where you stand with detailed execution reports.</p>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+          <div class="feature-card fade-in">
+            <div class="feature-icon success">
+              <i class="bi bi-graph-up"></i>
+            </div>
+            <h3 class="feature-title">Progress Tracking</h3>
+            <p class="feature-description">Monitor your improvement with detailed statistics, solved problems history, and performance analytics.</p>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+          <div class="feature-card fade-in">
+            <div class="feature-icon warning">
+              <i class="bi bi-trophy"></i>
+            </div>
+            <h3 class="feature-title">Competitive Contests</h3>
+            <p class="feature-description">Participate in regular contests, climb the leaderboards, and compete with programmers worldwide.</p>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+          <div class="feature-card fade-in">
+            <div class="feature-icon purple">
+              <i class="bi bi-people"></i>
+            </div>
+            <h3 class="feature-title">Community</h3>
+            <p class="feature-description">Join a vibrant community of learners. Share solutions, discuss approaches, and learn from others.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Problems Preview Section -->
+  <section class="problems-section" id="problems">
+    <div class="container">
+      <div class="text-center mb-5">
+        <h2 class="display-4 fw-bold mb-3">Practice Problems</h2>
+        <p class="lead text-muted">From beginner-friendly to expert-level challenges</p>
+      </div>
+      <div class="row">
+        <div class="col-lg-8 mx-auto">
+          <div class="problem-card slide-up">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <h5 class="problem-title">Two Sum</h5>
+                <p class="text-muted mb-2">Find two numbers in an array that add up to a target sum.</p>
+              </div>
+              <span class="difficulty-easy">Easy</span>
+            </div>
+            <div class="problem-meta">
+              <span><i class="bi bi-check-circle text-success me-1"></i>1,245 solved</span>
+              <span><i class="bi bi-clock me-1"></i>2 min read</span>
+            </div>
+          </div>
+          
+          <div class="problem-card slide-up">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <h5 class="problem-title">Binary Tree Traversal</h5>
+                <p class="text-muted mb-2">Implement inorder, preorder, and postorder traversal of a binary tree.</p>
+              </div>
+              <span class="difficulty-medium">Medium</span>
+            </div>
+            <div class="problem-meta">
+              <span><i class="bi bi-check-circle text-success me-1"></i>856 solved</span>
+              <span><i class="bi bi-clock me-1"></i>5 min read</span>
+            </div>
+          </div>
+          
+          <div class="problem-card slide-up">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <h5 class="problem-title">Maximum Flow</h5>
+                <p class="text-muted mb-2">Find the maximum flow in a network using advanced graph algorithms.</p>
+              </div>
+              <span class="difficulty-hard">Hard</span>
+            </div>
+            <div class="problem-meta">
+              <span><i class="bi bi-check-circle text-success me-1"></i>234 solved</span>
+              <span><i class="bi bi-clock me-1"></i>15 min read</span>
+            </div>
+          </div>
+          
+          <div class="text-center mt-4">
+            <a href="{% url 'problem_list' %}" class="btn btn-primary btn-lg">
+              <i class="bi bi-arrow-right"></i>View All Problems
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="cta-section" id="about">
+    <div class="container">
+      <div class="text-center">
+        <h2 class="cta-title">Ready to Level Up Your Coding Skills?</h2>
+        <p class="cta-subtitle">Join our community of passionate programmers and start your journey to coding excellence.</p>
+        {% if not user.is_authenticated %}
+          <a href="{% url 'register' %}" class="btn btn-primary btn-hero me-3">
+            <i class="bi bi-person-plus"></i>Create Free Account
+          </a>
+          <a href="{% url 'login' %}" class="btn btn-outline-light btn-hero">
+            <i class="bi bi-box-arrow-in-right"></i>Sign In
+          </a>
+        {% else %}
+          <a href="{% url 'problem_list' %}" class="btn btn-primary btn-hero me-3">
+            <i class="bi bi-play-circle"></i>Start Solving
+          </a>
+          <a href="{% url 'contest_list' %}" class="btn btn-outline-light btn-hero">
+            <i class="bi bi-trophy"></i>Join Contest
+          </a>
+        {% endif %}
+      </div>
+    </div>
+  </section>
 </main>
 
-<footer class="mt-auto">
+<footer>
   <div class="container">
     <div class="row align-items-center">
       <div class="col-md-6 text-center text-md-start">
-        <span>&copy; {{ now.year }} MyOJ - Online Judge Platform</span>
+        <div class="d-flex align-items-center justify-content-center justify-content-md-start mb-3">
+          <img src="{% static 'images/logo.png' %}" alt="Logo" width="32" height="32" class="rounded-circle me-2" />
+          <span class="fw-bold">MyOJ - Online Judge Platform</span>
+        </div>
+        <p class="text-muted mb-0">&copy; {{ now.year }} MyOJ. All rights reserved.</p>
       </div>
       <div class="col-md-6 text-center text-md-end">
+        <div class="d-flex justify-content-center justify-content-md-end gap-3 mb-3">
+          <a href="#" class="text-light"><i class="bi bi-github fs-5"></i></a>
+          <a href="#" class="text-light"><i class="bi bi-twitter fs-5"></i></a>
+          <a href="#" class="text-light"><i class="bi bi-linkedin fs-5"></i></a>
+        </div>
         <span class="text-muted">Built with ❤️ by JPisOP</span>
       </div>
     </div>
   </div>
 </footer>
 
-{% if user.is_authenticated and user.userprofile.role == 'problem_setter' or user.is_staff %}
-<a href="{% url 'add_problem' %}" class="floating-add-btn">
-  <i class="bi bi-plus-lg"></i>
-  <span class="d-none d-sm-inline">Add Problem</span>
-</a>
-{% endif %}
-
 <!-- JS Dependencies -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+// Smooth scrolling for anchor links
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+            target.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+    });
+});
+
+// Navbar background on scroll
+window.addEventListener('scroll', function() {
+    const navbar = document.querySelector('.navbar-custom');
+    if (window.scrollY > 50) {
+        navbar.style.background = 'rgba(255, 255, 255, 0.98)';
+    } else {
+        navbar.style.background = 'rgba(255, 255, 255, 0.95)';
+    }
+});
+
+// Intersection Observer for animations
+const observerOptions = {
+    threshold: 0.1,
+    rootMargin: '0px 0px -50px 0px'
+};
+
+const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            entry.target.style.opacity = '1';
+            entry.target.style.transform = 'translateY(0)';
+        }
+    });
+}, observerOptions);
+
+// Observe elements for animation
+document.querySelectorAll('.fade-in, .slide-up').forEach(el => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(30px)';
+    el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+    observer.observe(el);
+});
+</script>
 
 {% block extra_js %}{% endblock %}
 </body>
