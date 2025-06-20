@@ -190,7 +190,6 @@ def problem_list(request):
     }
     return render(request, "core/problem_list.html", context)
 
-
 @role_required(['participant', 'setter', 'admin'])
 def problem_detail(request, problem_id):
     problem = get_object_or_404(Problem, uuid=problem_id)
@@ -206,6 +205,9 @@ def problem_detail(request, problem_id):
     ).exists()
 
     if request.method == "POST":
+        # Check if it's an AJAX request
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+        
         form = SubmitSolutionForm(request.POST)
         if form.is_valid():
             language = form.cleaned_data['language']
@@ -217,7 +219,7 @@ def problem_detail(request, problem_id):
                     from core.utils.ai_review import generate_code_review
                     ai_feedback = generate_code_review(code)
                     
-                    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    if is_ajax:
                         return JsonResponse({
                             'success': True,
                             'ai_feedback': ai_feedback
@@ -226,7 +228,7 @@ def problem_detail(request, problem_id):
                 except Exception as e:
                     ai_feedback = f"⚠️ AI review failed: {e}"
                     
-                    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    if is_ajax:
                         return JsonResponse({
                             'success': False,
                             'error': str(e),
@@ -244,7 +246,6 @@ def problem_detail(request, problem_id):
                             sample_input = test_cases[0].get("input", "")
                             sample_output = test_cases[0].get("output", "")
                     except json.JSONDecodeError:
-                        messages.error(request, "Invalid test cases format.")
                         sample_input, sample_output = "", ""
 
                 if sample_input and sample_output:
@@ -254,24 +255,72 @@ def problem_detail(request, problem_id):
                         verdict = result.get('verdict', '')
                         feedback_message = get_feedback_message(verdict)
                         debug = f"Input: '{sample_input}'\nExpected: '{sample_output}'\nActual: '{output}'\nVerdict: {verdict}"
+                        
+                        if is_ajax:
+                            return JsonResponse({
+                                'success': True,
+                                'output': output,
+                                'verdict': verdict,
+                                'feedback_message': feedback_message,
+                                'debug': debug
+                            })
+                            
                     except Exception as e:
                         output = f"Execution error: {str(e)}"
                         verdict = "IE"
                         feedback_message = get_feedback_message("IE")
+                        
+                        if is_ajax:
+                            return JsonResponse({
+                                'success': False,
+                                'output': output,
+                                'verdict': verdict,
+                                'feedback_message': feedback_message,
+                                'error': str(e)
+                            })
                 else:
                     output = "No sample test case available"
                     verdict = "IE"
                     feedback_message = "Cannot run without sample test cases"
+                    
+                    if is_ajax:
+                        return JsonResponse({
+                            'success': False,
+                            'output': output,
+                            'verdict': verdict,
+                            'feedback_message': feedback_message,
+                            'error': 'No test cases available'
+                        })
 
             elif action == "Submit":
                 try:
                     test_cases = json.loads(problem.test_cases_json or "[]")
                 except json.JSONDecodeError:
-                    messages.error(request, "Invalid test case format in the database.")
+                    error_msg = "Invalid test case format in the database."
+                    
+                    if is_ajax:
+                        return JsonResponse({
+                            'success': False,
+                            'error': error_msg,
+                            'verdict': 'IE',
+                            'feedback_message': 'Database error'
+                        })
+                    
+                    messages.error(request, error_msg)
                     return redirect('problem_detail', problem_id=problem.uuid)
 
                 if not test_cases:
-                    messages.error(request, "No test cases available for this problem.")
+                    error_msg = "No test cases available for this problem."
+                    
+                    if is_ajax:
+                        return JsonResponse({
+                            'success': False,
+                            'error': error_msg,
+                            'verdict': 'IE',
+                            'feedback_message': 'No test cases'
+                        })
+                    
+                    messages.error(request, error_msg)
                     return redirect('problem_detail', problem_id=problem.uuid)
 
                 all_passed = True
@@ -324,16 +373,28 @@ def problem_detail(request, problem_id):
                 except Exception as e:
                     ai_feedback = f"⚠️ AI review failed: {e}"
 
+                if is_ajax:
+                    return JsonResponse({
+                        'success': True,
+                        'verdict': verdict,
+                        'output': output,
+                        'feedback_message': feedback_message,
+                        'debug': debug,
+                        'ai_feedback': ai_feedback
+                    })
+                
                 messages.success(request, f"Solution submitted! {feedback_message}")
 
         else:
+            # Form validation failed
             debug = f"Form errors: {form.errors}"
             
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            if is_ajax:
                 return JsonResponse({
                     'success': False,
                     'error': 'Form validation failed',
-                    'form_errors': form.errors
+                    'form_errors': form.errors,
+                    'debug': debug
                 })
 
     # Get user's previous submissions for this problem
