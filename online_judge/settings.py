@@ -145,3 +145,26 @@ COMPILER_PATHS = {
     'JAVA_COMPILER': 'javac',
     'PYTHON_INTERPRETER': 'python3',
 }
+
+
+# Add these settings to your Django settings.py file
+
+# Replace with your actual domain
+
+
+# HTTPS Security Settings (Update these for production)
+SESSION_COOKIE_SECURE = True      # Use HTTPS for session cookies
+CSRF_COOKIE_SECURE = True         # Use HTTPS for CSRF cookies
+SECURE_SSL_REDIRECT = True        # Redirect HTTP to HTTPS
+SECURE_HSTS_SECONDS = 31536000    # HTTP Strict Transport Security
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# Optional: Force HTTPS in production
+USE_TLS = True
+
+# Debug should be False in production
+DEBUG = False
