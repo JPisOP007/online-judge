@@ -97,7 +97,6 @@
     color: white;
   }
 
-  /* NEW: AI Review Button Styles */
   .btn-ai-review {
     background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
     color: white;
@@ -166,7 +165,6 @@
     min-width: 120px;
   }
 
-  /* CodeMirror Editor Styles */
   .editor-wrapper {
     height: 500px;
     position: relative;
@@ -193,7 +191,6 @@
     color: #94a3b8 !important;
   }
 
-  /* Fallback textarea styling */
   #id_source_code {
     width: 100%;
     height: 500px;
@@ -209,23 +206,44 @@
     display: none;
   }
 
-  /* OUTPUT SECTION STYLES - CRITICAL FOR VISIBILITY */
-  .output-section {
+  /* SEPARATE SECTIONS FOR RUN AND SUBMIT */
+  .run-output-section {
     background: white !important;
-    border: 2px solid var(--border-color) !important;
+    border: 2px solid #3b82f6 !important;
     border-radius: var(--border-radius) !important;
     padding: 1.5rem !important;
     margin-top: 2rem !important;
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    position: static !important;
-    z-index: auto !important;
-    clear: both !important;
+    display: none;
   }
 
-  .output-section h5 {
-    color: var(--dark-color) !important;
+  .run-output-section.show {
+    display: block !important;
+  }
+
+  .run-output-section h5 {
+    color: #3b82f6 !important;
+    font-weight: 600 !important;
+    margin-bottom: 1rem !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+  }
+
+  .submission-result-section {
+    background: white !important;
+    border: 2px solid #059669 !important;
+    border-radius: var(--border-radius) !important;
+    padding: 1.5rem !important;
+    margin-top: 2rem !important;
+    display: none;
+  }
+
+  .submission-result-section.show {
+    display: block !important;
+  }
+
+  .submission-result-section h5 {
+    color: #059669 !important;
     font-weight: 600 !important;
     margin-bottom: 1rem !important;
     display: flex !important;
@@ -250,7 +268,6 @@
     display: block !important;
   }
 
-  /* NEW: AI Review Section Styles */
   .ai-review-section {
     background: white !important;
     border: 2px solid #8b5cf6 !important;
@@ -258,11 +275,6 @@
     padding: 1.5rem !important;
     margin-top: 2rem !important;
     display: none;
-    visibility: visible !important;
-    opacity: 1 !important;
-    position: static !important;
-    z-index: auto !important;
-    clear: both !important;
   }
 
   .ai-review-section.show {
@@ -304,7 +316,6 @@
     align-items: center !important;
     gap: 6px !important;
     margin-top: 1rem !important;
-    visibility: visible !important;
   }
 
   .verdict-AC {
@@ -320,6 +331,29 @@
   .verdict-TLE, .verdict-RE, .verdict-CE {
     background: #ffc107 !important;
     color: #212529 !important;
+  }
+
+  .run-status {
+    padding: 8px 16px !important;
+    border-radius: 20px !important;
+    font-weight: 600 !important;
+    font-size: 0.9rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    margin-top: 1rem !important;
+  }
+
+  .run-status.success {
+    background: #dcfce7 !important;
+    color: #166534 !important;
+    border: 1px solid #bbf7d0 !important;
+  }
+
+  .run-status.error {
+    background: #fef2f2 !important;
+    color: #dc2626 !important;
+    border: 1px solid #fecaca !important;
   }
 
   .form-help-text {
@@ -380,6 +414,33 @@
     margin-bottom: 2rem;
     box-shadow: var(--shadow-md);
     border: 1px solid var(--border-color);
+  }
+
+  .alert {
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-top: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .alert-success {
+    background: #d1fae5;
+    color: #065f46;
+    border: 1px solid #a7f3d0;
+  }
+
+  .alert-danger {
+    background: #fee2e2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+  }
+
+  .alert-info {
+    background: #dbeafe;
+    color: #1e40af;
+    border: 1px solid #93c5fd;
   }
 
   @media (max-width: 768px) {
@@ -483,123 +544,100 @@
   </section>
 
   <section class="card-section slide-up">
-    <form method="post" id="solution-form">
-      {% csrf_token %}
-      <input type="hidden" name="problem_id" value="{{ problem.id }}" />
+    <div class="section-title mb-4">
+      <i class="bi bi-code-slash"></i>
+      Submit Your Solution
+    </div>
 
-      <div class="section-title mb-4">
-        <i class="bi bi-code-slash"></i>
-        Submit Your Solution
-      </div>
-
-      <div class="editor-container">
-        <div class="editor-header">
-          <label class="form-label mb-0 fw-semibold" for="language-select">
-            <i class="bi bi-gear me-1"></i>
-            Language:
-          </label>
-          <select id="language-select" name="language" class="language-selector">
-            <option value="python">Python</option>
-            <option value="cpp">C++</option>
-            <option value="java">Java</option>
-            <option value="javascript">JavaScript</option>
-          </select>
-          <div class="ms-auto text-muted small">
-            <i class="bi bi-info-circle me-1"></i>
-            Code Editor
-          </div>
-        </div>
-        <div class="editor-wrapper">
-          <textarea id="id_source_code" name="source_code">{{ form.source_code.value|default:"# Write your solution here..." }}</textarea>
+    <div class="editor-container">
+      <div class="editor-header">
+        <label class="form-label mb-0 fw-semibold" for="language-select">
+          <i class="bi bi-gear me-1"></i>
+          Language:
+        </label>
+        <select id="language-select" name="language" class="language-selector">
+          <option value="python">Python</option>
+          <option value="cpp">C++</option>
+          <option value="java">Java</option>
+          <option value="javascript">JavaScript</option>
+        </select>
+        <div class="ms-auto text-muted small">
+          <i class="bi bi-info-circle me-1"></i>
+          Code Editor
         </div>
       </div>
-
-      <div class="btn-container">
-        <button type="button" class="btn btn-run" id="run-btn">
-          <i class="bi bi-play-fill"></i>
-          <span>Run Code</span>
-          <div class="loading-spinner" id="run-spinner"></div>
-        </button>
-        <button type="button" class="btn btn-submit" id="submit-btn">
-          <i class="bi bi-send-fill"></i>
-          <span>Submit Solution</span>
-          <div class="loading-spinner" id="submit-spinner"></div>
-        </button>
-        <!-- NEW: AI Review Button -->
-        <button type="button" class="btn btn-ai-review" id="ai-review-btn">
-          <i class="bi bi-robot"></i>
-          <span>Get AI Review</span>
-          <div class="loading-spinner" id="ai-review-spinner"></div>
-        </button>
+      <div class="editor-wrapper">
+        <textarea id="id_source_code" name="source_code"># Write your solution here...</textarea>
       </div>
+    </div>
 
-      <div class="form-help-text">
-        <div class="d-flex align-items-start gap-2">
-          <i class="bi bi-lightbulb flex-shrink-0 mt-1"></i>
-          <div>
-            <strong>Tips:</strong><br>
-            • Click <strong>Run Code</strong> to test your solution with sample input<br>
-            • Click <strong>Submit Solution</strong> to evaluate against all test cases<br>
-            • Click <strong>Get AI Review</strong> to analyze your code for improvements<br>
-            • Use Ctrl+Space for code completion, Ctrl+/ for comments
-          </div>
+    <div class="btn-container">
+      <button type="button" class="btn btn-run" id="run-btn">
+        <i class="bi bi-play-fill"></i>
+        <span>Run Code</span>
+        <div class="loading-spinner" id="run-spinner"></div>
+      </button>
+      <button type="button" class="btn btn-submit" id="submit-btn">
+        <i class="bi bi-send-fill"></i>
+        <span>Submit Solution</span>
+        <div class="loading-spinner" id="submit-spinner"></div>
+      </button>
+      <button type="button" class="btn btn-ai-review" id="ai-review-btn">
+        <i class="bi bi-robot"></i>
+        <span>Get AI Review</span>
+        <div class="loading-spinner" id="ai-review-spinner"></div>
+      </button>
+    </div>
+
+    <div class="form-help-text">
+      <div class="d-flex align-items-start gap-2">
+        <i class="bi bi-lightbulb flex-shrink-0 mt-1"></i>
+        <div>
+          <strong>Tips:</strong><br>
+          • Click <strong>Run Code</strong> to test your solution with sample input (debug mode)<br>
+          • Click <strong>Submit Solution</strong> to evaluate against all test cases (judge mode)<br>
+          • Click <strong>Get AI Review</strong> to analyze your code for improvements<br>
+          • Use Ctrl+Space for code completion, Ctrl+/ for comments
         </div>
       </div>
-    </form>
+    </div>
   </section>
 
-  {% if output %}
-  <section class="card-section output-section" id="output-section">
+  <!-- Run Output Section (for testing with sample input) -->
+  <section class="run-output-section" id="run-output-section">
     <h5>
       <i class="bi bi-terminal"></i>
-      Execution Result
+      Run Output (Sample Test)
     </h5>
-    <div class="output-content" id="output-content">{{ output }}</div>
-
-    {% if verdict %}
-      <div class="verdict-badge verdict-{{ verdict }}" id="verdict-badge">
-        {% if verdict == 'AC' %}
-          <i class="bi bi-check-circle-fill"></i>
-          Accepted
-        {% elif verdict == 'WA' %}
-          <i class="bi bi-x-circle-fill"></i>
-          Wrong Answer
-        {% elif verdict == 'TLE' %}
-          <i class="bi bi-clock-fill"></i>
-          Time Limit Exceeded
-        {% elif verdict == 'RE' %}
-          <i class="bi bi-exclamation-triangle-fill"></i>
-          Runtime Error
-        {% elif verdict == 'CE' %}
-          <i class="bi bi-bug-fill"></i>
-          Compilation Error
-        {% else %}
-          <i class="bi bi-question-circle-fill"></i>
-          {{ verdict }}
-        {% endif %}
-      </div>
-    {% endif %}
-
-    {% if feedback_message %}
-      <div class="alert alert-info mt-3">
-        <i class="bi bi-info-circle me-2"></i>
-        {{ feedback_message }}
-      </div>
-    {% endif %}
+    <div class="output-content" id="run-output-content"></div>
+    <div class="run-status" id="run-status"></div>
   </section>
-  {% endif %}
 
-  <!-- NEW: Separate AI Review Section -->
-  <section class="card-section ai-review-section" id="ai-review-section">
+  <!-- Submission Result Section (for final submission) -->
+  <section class="submission-result-section" id="submission-result-section">
+    <h5>
+      <i class="bi bi-check-circle"></i>
+      Submission Result
+    </h5>
+    <div class="output-content" id="submission-output-content"></div>
+    <div class="verdict-badge" id="verdict-badge"></div>
+  </section>
+
+  <!-- AI Review Section -->
+  <section class="ai-review-section" id="ai-review-section">
     <h5>
       <i class="bi bi-robot"></i>
       AI Code Review
     </h5>
-    <div class="ai-review-content" id="ai-review-content">
-      <!-- AI feedback will be loaded here -->
-    </div>
+    <div class="ai-review-content" id="ai-review-content"></div>
   </section>
 </div>
+
+<!-- Hidden form for CSRF token -->
+<form style="display: none;" id="csrf-form">
+  {% csrf_token %}
+  <input type="hidden" name="problem_id" value="{{ problem.id }}" />
+</form>
 {% endblock %}
 
 {% block extra_js %}
@@ -614,7 +652,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/comment/comment.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/selection/active-line.min.js"></script>
-
 <script>
 let editor;
 let currentLanguage = 'python';
@@ -677,7 +714,6 @@ function initializeCodeMirror() {
   const textarea = document.getElementById('id_source_code');
   
   try {
-    // Get initial code
     const initialCode = textarea.value && textarea.value.trim() !== "# Write your solution here..." 
       ? textarea.value 
       : languageConfigs[currentLanguage].defaultCode;
@@ -718,7 +754,6 @@ function initializeCodeMirror() {
       const config = languageConfigs[newLanguage];
       editor.setOption('mode', config.mode);
       
-      // Only change code if current code is empty or is a default template
       const currentCode = editor.getValue().trim();
       const isDefaultCode = Object.values(languageConfigs).some(cfg => 
         currentCode === cfg.defaultCode.trim()
@@ -729,18 +764,17 @@ function initializeCodeMirror() {
       }
     });
 
-    // Focus editor
     setTimeout(() => {
       editor.focus();
     }, 100);
 
   } catch (error) {
-    // Show textarea as fallback
+    console.error('CodeMirror initialization failed:', error);
     textarea.style.display = 'block';
   }
 }
 
-// Loading state helper function
+// Loading state helper
 function showLoadingState(button) {
   const spinner = button.querySelector('.loading-spinner');
   const allButtons = document.querySelectorAll('#run-btn, #submit-btn, #ai-review-btn');
@@ -752,38 +786,71 @@ function showLoadingState(button) {
   allButtons.forEach(btn => {
     btn.disabled = true;
   });
-  
-  // Re-enable buttons after timeout (fallback)
-  setTimeout(() => {
-    allButtons.forEach(btn => {
-      btn.disabled = false;
-    });
-    document.querySelectorAll('.loading-spinner').forEach(s => {
-      s.style.display = 'none';
-    });
-  }, 15000);
 }
 
-// NEW: AI Review function
-async function requestAIReview() {
-  const reviewSection = document.getElementById('ai-review-section');
-  const reviewContent = document.getElementById('ai-review-content');
+function hideLoadingState() {
+  const allButtons = document.querySelectorAll('#run-btn, #submit-btn, #ai-review-btn');
+  allButtons.forEach(btn => {
+    btn.disabled = false;
+  });
+  document.querySelectorAll('.loading-spinner').forEach(s => {
+    s.style.display = 'none';
+  });
+}
+
+// Get CSRF token
+function getCSRFToken() {
+  return document.querySelector('#csrf-form [name=csrfmiddlewaretoken]').value;
+}
+
+// Show error message
+function showError(message) {
+  const alertDiv = document.createElement('div');
+  alertDiv.className = 'alert alert-danger';
+  alertDiv.innerHTML = `<i class="bi bi-exclamation-triangle-fill"></i> ${message}`;
+  
+  const container = document.querySelector('.container');
+  container.insertBefore(alertDiv, container.firstChild);
+  
+  setTimeout(() => {
+    alertDiv.remove();
+  }, 5000);
+}
+
+// Show success message
+function showSuccess(message) {
+  const alertDiv = document.createElement('div');
+  alertDiv.className = 'alert alert-success';
+  alertDiv.innerHTML = `<i class="bi bi-check-circle-fill"></i> ${message}`;
+  
+  const container = document.querySelector('.container');
+  container.insertBefore(alertDiv, container.firstChild);
+  
+  setTimeout(() => {
+    alertDiv.remove();
+  }, 5000);
+}
+
+// Run Code Function (test with sample input only - NO VERDICT)
+async function runCode() {
+  const runBtn = document.getElementById('run-btn');
+  const runSection = document.getElementById('run-output-section');
+  const runContent = document.getElementById('run-output-content');
+  const runStatus = document.getElementById('run-status');
+  
+  showLoadingState(runBtn);
+  
+  // Hide other sections
+  document.getElementById('submission-result-section').classList.remove('show');
+  document.getElementById('ai-review-section').classList.remove('show');
   
   try {
-    // Update textarea with editor content
-    if (editor) {
-      editor.save();
-    }
-    
     const formData = new FormData();
-    formData.append('action', 'AI_Review');
+    formData.append('action', 'run');
     formData.append('source_code', editor ? editor.getValue() : document.getElementById('id_source_code').value);
     formData.append('language', document.getElementById('language-select').value);
-    formData.append('problem_id', document.querySelector('input[name="problem_id"]').value);
-    
-    // Add CSRF token
-    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-    formData.append('csrfmiddlewaretoken', csrfToken);
+    formData.append('problem_id', document.querySelector('#csrf-form input[name="problem_id"]').value);
+    formData.append('csrfmiddlewaretoken', getCSRFToken());
     
     const response = await fetch(window.location.href, {
       method: 'POST',
@@ -796,175 +863,245 @@ async function requestAIReview() {
     if (response.ok) {
       const data = await response.json();
       
-      if (data.ai_feedback) {
-        reviewContent.textContent = data.ai_feedback;
-        reviewSection.classList.add('show');
-        reviewSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      // Show output
+      runContent.textContent = data.output || data.stdout || 'No output';
+      
+      // Show status (EXECUTION STATUS ONLY - NOT VERDICT)
+      if (data.error || data.stderr) {
+        runStatus.className = 'run-status error';
+        runStatus.innerHTML = '<i class="bi bi-exclamation-triangle-fill"></i> Execution Error';
+        if (data.stderr) {
+          runContent.textContent = data.stderr;
+        }
       } else {
-        reviewContent.textContent = 'No AI feedback available. Please make sure your code is valid.';
-        reviewSection.classList.add('show');
+        runStatus.className = 'run-status success';
+        runStatus.innerHTML = '<i class="bi bi-check-circle-fill"></i> Code Executed Successfully';
       }
+      
+      // Show the run section
+      runSection.classList.add('show');
+      runSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      
     } else {
-      throw new Error('Failed to get AI review');
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
     
   } catch (error) {
-    console.error('AI Review Error:', error);
-    reviewContent.textContent = 'Error getting AI review. Please try again later.';
-    reviewSection.classList.add('show');
+    console.error('Run failed:', error);
+    showError(`Failed to run code: ${error.message}`);
+  } finally {
+    hideLoadingState();
   }
 }
 
-// Form submission handler
+// Submit Solution Function (evaluate against all test cases - WITH VERDICT)
+async function submitSolution() {
+  const submitBtn = document.getElementById('submit-btn');
+  const submissionSection = document.getElementById('submission-result-section');
+  const submissionContent = document.getElementById('submission-output-content');
+  const verdictBadge = document.getElementById('verdict-badge');
+  
+  showLoadingState(submitBtn);
+  
+  // Hide other sections
+  document.getElementById('run-output-section').classList.remove('show');
+  document.getElementById('ai-review-section').classList.remove('show');
+  
+  try {
+    const formData = new FormData();
+    formData.append('action', 'submit');
+    formData.append('source_code', editor ? editor.getValue() : document.getElementById('id_source_code').value);
+    formData.append('language', document.getElementById('language-select').value);
+    formData.append('problem_id', document.querySelector('#csrf-form input[name="problem_id"]').value);
+    formData.append('csrfmiddlewaretoken', getCSRFToken());
+    
+    const response = await fetch(window.location.href, {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      
+      // Show detailed output/feedback
+      let outputText = '';
+      if (data.output) {
+        outputText = data.output;
+      } else if (data.feedback) {
+        outputText = data.feedback;
+      } else if (data.error) {
+        outputText = data.error;
+      } else {
+        outputText = 'Submission processed';
+      }
+      
+      submissionContent.textContent = outputText;
+      
+      // Show verdict badge with proper styling
+      const verdict = data.verdict || 'Unknown';
+      verdictBadge.className = `verdict-badge verdict-${verdict}`;
+      
+      let verdictIcon = '';
+      let verdictText = verdict.toUpperCase();
+      
+      switch (verdict.toUpperCase()) {
+        case 'AC':
+        case 'ACCEPTED':
+          verdictIcon = '<i class="bi bi-check-circle-fill"></i>';
+          verdictText = 'ACCEPTED';
+          verdictBadge.className = 'verdict-badge verdict-AC';
+          break;
+        case 'WA':
+        case 'WRONG_ANSWER':
+          verdictIcon = '<i class="bi bi-x-circle-fill"></i>';
+          verdictText = 'WRONG ANSWER';
+          verdictBadge.className = 'verdict-badge verdict-WA';
+          break;
+        case 'TLE':
+        case 'TIME_LIMIT_EXCEEDED':
+          verdictIcon = '<i class="bi bi-clock-fill"></i>';
+          verdictText = 'TIME LIMIT EXCEEDED';
+          verdictBadge.className = 'verdict-badge verdict-TLE';
+          break;
+        case 'RE':
+        case 'RUNTIME_ERROR':
+          verdictIcon = '<i class="bi bi-exclamation-triangle-fill"></i>';
+          verdictText = 'RUNTIME ERROR';
+          verdictBadge.className = 'verdict-badge verdict-RE';
+          break;
+        case 'CE':
+        case 'COMPILATION_ERROR':
+          verdictIcon = '<i class="bi bi-bug-fill"></i>';
+          verdictText = 'COMPILATION ERROR';
+          verdictBadge.className = 'verdict-badge verdict-CE';
+          break;
+        default:
+          verdictIcon = '<i class="bi bi-question-circle-fill"></i>';
+          verdictText = verdict.toUpperCase();
+      }
+      
+      verdictBadge.innerHTML = `${verdictIcon} ${verdictText}`;
+      
+      // Show the submission section
+      submissionSection.classList.add('show');
+      submissionSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      
+      // Show success/error message
+      if (verdict.toUpperCase() === 'AC' || verdict.toUpperCase() === 'ACCEPTED') {
+        showSuccess('Solution accepted! Great job!');
+      } else {
+        showError(`Submission failed: ${verdictText}`);
+      }
+      
+    } else {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
+  } catch (error) {
+    console.error('Submission failed:', error);
+    showError(`Failed to submit solution: ${error.message}`);
+  } finally {
+    hideLoadingState();
+  }
+}
+
+// AI Review Function
+async function getAIReview() {
+  const aiBtn = document.getElementById('ai-review-btn');
+  const aiSection = document.getElementById('ai-review-section');
+  const aiContent = document.getElementById('ai-review-content');
+  
+  showLoadingState(aiBtn);
+  
+  // Hide other sections
+  document.getElementById('run-output-section').classList.remove('show');
+  document.getElementById('submission-result-section').classList.remove('show');
+  
+  try {
+    const formData = new FormData();
+    formData.append('action', 'ai_review');
+    formData.append('source_code', editor ? editor.getValue() : document.getElementById('id_source_code').value);
+    formData.append('language', document.getElementById('language-select').value);
+    formData.append('problem_id', document.querySelector('#csrf-form input[name="problem_id"]').value);
+    formData.append('csrfmiddlewaretoken', getCSRFToken());
+    
+    const response = await fetch(window.location.href, {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      
+      // Show AI review content
+      aiContent.textContent = data.review || data.feedback || 'AI review completed';
+      
+      // Show the AI section
+      aiSection.classList.add('show');
+      aiSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      
+    } else {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
+  } catch (error) {
+    console.error('AI Review failed:', error);
+    showError(`Failed to get AI review: ${error.message}`);
+  } finally {
+    hideLoadingState();
+  }
+}
+
+// Event Listeners
 document.addEventListener('DOMContentLoaded', function() {
   // Initialize CodeMirror
-  setTimeout(initializeCodeMirror, 100);
-
-  // Form submission handler with proper action detection
-  const form = document.getElementById('solution-form');
-  if (form) {
-    // Add click handlers to buttons to set action before form submission
-    const runBtn = document.getElementById('run-btn');
-    const submitBtn = document.getElementById('submit-btn');
-    const aiReviewBtn = document.getElementById('ai-review-btn');
-    
-    if (runBtn) {
-      runBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        
-        // Update textarea with editor content
-        if (editor) {
-          const code = editor.getValue();
-          editor.save();
-        }
-        
-        // Create hidden input for action
-        let actionInput = document.querySelector('input[name="action"]');
-        if (!actionInput) {
-          actionInput = document.createElement('input');
-          actionInput.type = 'hidden';
-          actionInput.name = 'action';
-          form.appendChild(actionInput);
-        }
-        actionInput.value = 'Run';
-        
-        // Show loading state
-        showLoadingState(runBtn);
-        
-        // Submit form
-        form.submit();
-      });
-    }
-    
-    if (submitBtn) {
-      submitBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        
-        // Update textarea with editor content
-        if (editor) {
-          const code = editor.getValue();
-          editor.save();
-        }
-        
-        // Create hidden input for action
-        let actionInput = document.querySelector('input[name="action"]');
-        if (!actionInput) {
-          actionInput = document.createElement('input');
-          actionInput.type = 'hidden';
-          actionInput.name = 'action';
-          form.appendChild(actionInput);
-        }
-        actionInput.value = 'Submit';
-        
-        // Show loading state
-        showLoadingState(submitBtn);
-        
-        // Submit form
-        form.submit();
-      });
-    }
-    
-    // NEW: AI Review button handler
-    if (aiReviewBtn) {
-      aiReviewBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        
-        // Check if code is not empty
-        const code = editor ? editor.getValue().trim() : document.getElementById('id_source_code').value.trim();
-        if (!code || code === '# Write your solution here...' || code === languageConfigs[currentLanguage].defaultCode.trim()) {
-          alert('Please write some code before requesting an AI review.');
-          return;
-        }
-        
-        // Show loading state
-        showLoadingState(aiReviewBtn);
-        
-        // Request AI review
-        requestAIReview().finally(() => {
-          // Hide loading state
-          const allButtons = document.querySelectorAll('#run-btn, #submit-btn, #ai-review-btn');
-          allButtons.forEach(btn => {
-            btn.disabled = false;
-          });
-          document.querySelectorAll('.loading-spinner').forEach(s => {
-            s.style.display = 'none';
-          });
-        });
-      });
-    }
-  }
-
-  // Handle window resize
-  window.addEventListener('resize', function() {
-    if (editor) {
-      setTimeout(() => {
-        editor.refresh();
-      }, 100);
-    }
-  });
-
-  // Handle page visibility changes
-  document.addEventListener('visibilitychange', function() {
-    if (!document.hidden && editor) {
-      setTimeout(() => {
-        editor.refresh();
-        editor.focus();
-      }, 100);
-    }
-  });
-
-  // FORCE output section visibility - this is critical
-  const outputSection = document.getElementById('output-section');
-  if (outputSection) {
-    // Remove any potentially conflicting styles
-    outputSection.style.cssText = `
-      display: block !important;
-      visibility: visible !important;
-      opacity: 1 !important;
-      position: static !important;
-      z-index: auto !important;
-      clear: both !important;
-      background: white !important;
-      border: 2px solid var(--border-color) !important;
-      border-radius: var(--border-radius) !important;
-      padding: 1.5rem !important;
-      margin-top: 2rem !important;
-    `;
-    
-    // Ensure all child elements are visible
-    const allElements = outputSection.querySelectorAll('*');
-    allElements.forEach(el => {
-      el.style.visibility = 'visible';
-      el.style.opacity = '1';
+  initializeCodeMirror();
+  
+  // Attach event listeners
+  document.getElementById('run-btn').addEventListener('click', runCode);
+  document.getElementById('submit-btn').addEventListener('click', submitSolution);
+  document.getElementById('ai-review-btn').addEventListener('click', getAIReview);
+  
+  // Handle form submission to prevent page reload
+  const form = document.querySelector('form');
+  if (form && !form.id) {  // Only prevent default for the main form, not csrf form
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      console.log('Form submission prevented - using AJAX instead');
     });
   }
 });
 
-// Auto-save functionality
-setInterval(function() {
-  if (editor) {
-    editor.save();
+// Handle browser back/forward buttons
+window.addEventListener('popstate', function(event) {
+  // Optionally handle state changes
+  console.log('Navigation detected');
+});
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+  if (e.ctrlKey || e.metaKey) {
+    switch(e.key) {
+      case 'Enter':
+        e.preventDefault();
+        if (e.shiftKey) {
+          document.getElementById('submit-btn').click();
+        } else {
+          document.getElementById('run-btn').click();
+        }
+        break;
+      case 's':
+        e.preventDefault();
+        document.getElementById('submit-btn').click();
+        break;
+    }
   }
-}, 2000);
+});
 </script>
 {% endblock %}
