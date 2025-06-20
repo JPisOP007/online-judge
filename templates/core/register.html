@@ -6,12 +6,6 @@
 <div style="max-width: 450px; margin: 2em auto; padding: 2em; border: 1px solid #ccc; border-radius: 8px; background-color: #f9f9f9; box-shadow: 2px 2px 10px rgba(0,0,0,0.1);">
     <h2 style="text-align: center;">Register</h2>
 
-    {% if messages %}
-        {% for message in messages %}
-            <p style="color: red; text-align: center;">{{ message }}</p>
-        {% endfor %}
-    {% endif %}
-
     <form method="post" style="display: flex; flex-direction: column;">
         {% csrf_token %}
 
