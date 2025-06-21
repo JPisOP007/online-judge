@@ -1,601 +1,675 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MyOJ - Competitive Programming Platform</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+{% extends 'core/base.html' %}
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            color: #333;
-        }
+{% block title %}Home | MyOJ - Code. Compete. Conquer.{% endblock %}
 
-        .navbar {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            padding: 1rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-        }
+{% block extra_css %}
+<style>
+  /* Hero Section */
+  .hero-section {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 100px 0;
+    position: relative;
+    overflow: hidden;
+  }
 
-        .logo {
-            font-size: 1.8rem;
-            font-weight: bold;
-            color: white;
-        }
+  .hero-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" fill="rgba(255,255,255,0.1)"><polygon points="0,0 1000,100 1000,0"/></svg>');
+    background-size: cover;
+  }
 
-        .nav-buttons {
-            display: flex;
-            gap: 1rem;
-        }
+  .hero-content {
+    position: relative;
+    z-index: 2;
+  }
 
-        .btn {
-            padding: 0.7rem 1.5rem;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-block;
-        }
+  .hero-title {
+    font-size: 4rem;
+    font-weight: 800;
+    margin-bottom: 1rem;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+  }
 
-        .btn-primary {
-            background: linear-gradient(45deg, #ff6b6b, #ee5a52);
-            color: white;
-        }
+  .hero-subtitle {
+    font-size: 1.5rem;
+    margin-bottom: 2rem;
+    opacity: 0.9;
+  }
 
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-        }
+  .cta-buttons {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
 
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-        }
+  .btn-hero {
+    padding: 15px 30px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-radius: 50px;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+  }
 
-        .hero {
-            text-align: center;
-            padding: 4rem 2rem;
-            color: white;
-        }
+  .btn-hero-primary {
+    background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+    color: white;
+    box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+  }
 
-        .hero h1 {
-            font-size: 3.5rem;
-            margin-bottom: 1rem;
-            font-weight: 700;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-        }
+  .btn-hero-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(255, 107, 107, 0.6);
+    color: white;
+  }
 
-        .hero p {
-            font-size: 1.3rem;
-            margin-bottom: 2rem;
-            opacity: 0.9;
-        }
+  .btn-hero-secondary {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(10px);
+  }
 
-        .hero-buttons {
-            display: flex;
-            gap: 1rem;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
+  .btn-hero-secondary:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+    color: white;
+  }
 
-        .user-welcome {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            padding: 1.5rem;
-            border-radius: 15px;
-            margin: 2rem auto;
-            max-width: 1200px;
-            color: white;
-        }
+  /* Stats Section */
+  .stats-section {
+    background: white;
+    padding: 80px 0;
+    margin-top: -50px;
+    position: relative;
+    z-index: 3;
+  }
 
-        .welcome-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-        }
+  .stats-card {
+    text-align: center;
+    padding: 2rem;
+    border-radius: 20px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border: 1px solid #dee2e6;
+    transition: all 0.3s ease;
+    height: 100%;
+  }
 
-        .user-info h2 {
-            font-size: 2rem;
-            margin-bottom: 0.5rem;
-        }
+  .stats-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+  }
 
-        .user-badge {
-            background: linear-gradient(45deg, #ffd700, #ffed4e);
-            color: #333;
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            font-weight: bold;
-        }
+  .stats-number {
+    font-size: 3rem;
+    font-weight: 800;
+    color: #2563eb;
+    margin-bottom: 0.5rem;
+  }
 
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
+  .stats-label {
+    font-size: 1.1rem;
+    color: #64748b;
+    font-weight: 500;
+  }
 
-        .stat-card {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 1.5rem;
-            border-radius: 10px;
-            text-align: center;
-            backdrop-filter: blur(5px);
-        }
+  /* Features Section */
+  .features-section {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    padding: 100px 0;
+  }
 
-        .stat-number {
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: #ffd700;
-            margin-bottom: 0.5rem;
-        }
+  .feature-card {
+    background: white;
+    border-radius: 20px;
+    padding: 2.5rem;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    border: 1px solid #e2e8f0;
+    height: 100%;
+  }
 
-        .features {
-            padding: 4rem 2rem;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
+  .feature-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+  }
 
-        .features h2 {
-            text-align: center;
-            font-size: 2.5rem;
-            margin-bottom: 3rem;
-            color: white;
-        }
+  .feature-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 1.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: white;
+  }
 
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 2rem;
-        }
+  .feature-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: #1e293b;
+  }
 
-        .feature-card {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            padding: 2rem;
-            border-radius: 15px;
-            text-align: center;
-            color: white;
-            transition: transform 0.3s ease;
-        }
+  .feature-description {
+    color: #64748b;
+    line-height: 1.6;
+  }
 
-        .feature-card:hover {
-            transform: translateY(-5px);
-        }
+  /* Recent Activity Section */
+  .activity-section {
+    background: white;
+    padding: 100px 0;
+  }
 
-        .feature-icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-        }
+  .activity-card {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    border-left: 4px solid #60a5fa;
+    transition: all 0.3s ease;
+    color: white;
+  }
 
-        .feature-card h3 {
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
-        }
+  .activity-card:hover {
+    transform: translateX(5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    background: rgba(255, 255, 255, 0.2);
+  }
 
-        .competitive-section {
-            padding: 4rem 2rem;
-            max-width: 1200px;
-            margin: 0 auto;
-            display: none; /* Hidden when authenticated */
-        }
+  .activity-user {
+    font-weight: 600;
+    color: #60a5fa;
+  }
 
-        .competitive-section.show {
-            display: block;
-        }
+  .activity-time {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9rem;
+  }
 
-        .section-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 3rem;
-            margin-top: 2rem;
-        }
+  /* Leaderboard Section */
+  .leaderboard-section {
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+    color: white;
+    padding: 100px 0;
+  }
 
-        .section-card {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            padding: 2rem;
-            border-radius: 15px;
-            color: white;
-            height: 400px; /* Fixed height for consistency */
-            display: flex;
-            flex-direction: column;
-        }
+  /* Fixed: Equal height containers for leaderboard and activity */
+  .leaderboard-container, .activity-container {
+    min-height: 600px; /* Set consistent minimum height */
+    display: flex;
+    flex-direction: column;
+  }
 
-        .section-card h3 {
-            font-size: 1.8rem;
-            margin-bottom: 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
+  .leaderboard-content, .activity-content {
+    flex-grow: 1; /* Allow content to expand */
+    display: flex;
+    flex-direction: column;
+  }
 
-        .leaderboard-item {
-            display: flex;
-            align-items: center;
-            padding: 1rem;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            margin-bottom: 0.8rem;
-            transition: all 0.3s ease;
-        }
+  .leaderboard-items, .activity-items {
+    flex-grow: 1; /* Make the items area take remaining space */
+  }
 
-        .leaderboard-item:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: translateX(5px);
-        }
+  .leaderboard-item {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    transition: all 0.3s ease;
+  }
 
-        .rank {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #ffd700;
-            margin-right: 1rem;
-            min-width: 30px;
-        }
+  .leaderboard-item:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-2px);
+  }
 
-        .user-details {
-            flex: 1;
-        }
+  .rank-badge {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    margin-right: 1rem;
+  }
 
-        .username {
-            font-weight: bold;
-            font-size: 1.1rem;
-            margin-bottom: 0.3rem;
-        }
+  .rank-1 { background: linear-gradient(45deg, #ffd700, #ffed4e); color: #1a1a1a; }
+  .rank-2 { background: linear-gradient(45deg, #c0c0c0, #e5e5e5); color: #1a1a1a; }
+  .rank-3 { background: linear-gradient(45deg, #cd7f32, #d2691e); color: white; }
+  .rank-other { background: linear-gradient(45deg, #4a5568, #2d3748); color: white; }
 
-        .user-stats {
-            font-size: 0.9rem;
-            opacity: 0.8;
-        }
+  /* Animated Code Background */
+  .code-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    opacity: 0.1;
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    line-height: 1.4;
+    overflow: hidden;
+    pointer-events: none;
+  }
 
-        .points {
-            color: #4ade80;
-            font-weight: bold;
-        }
+  .floating-code {
+    position: absolute;
+    animation: float 20s linear infinite;
+  }
 
-        .activity-item {
-            display: flex;
-            align-items: center;
-            padding: 1rem;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            margin-bottom: 0.8rem;
-            transition: all 0.3s ease;
-        }
+  @keyframes float {
+    0% { transform: translateY(100vh) translateX(0); }
+    100% { transform: translateY(-100vh) translateX(100px); }
+  }
 
-        .activity-item:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .hero-title {
+      font-size: 2.5rem;
+    }
+    
+    .hero-subtitle {
+      font-size: 1.2rem;
+    }
+    
+    .cta-buttons {
+      justify-content: center;
+    }
+    
+    .stats-number {
+      font-size: 2rem;
+    }
 
-        .activity-content {
-            flex: 1;
-        }
+    /* Mobile responsiveness for equal height containers */
+    .leaderboard-container, .activity-container {
+      min-height: auto;
+    }
+  }
 
-        .activity-user {
-            font-weight: bold;
-            color: #ffd700;
-        }
+  /* Pulse Animation */
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
 
-        .activity-action {
-            margin: 0.3rem 0;
-        }
+  .pulse-animation {
+    animation: pulse 2s infinite;
+  }
+</style>
+{% endblock %}
 
-        .activity-time {
-            font-size: 0.8rem;
-            opacity: 0.7;
-        }
-
-        .view-more-btn {
-            background: linear-gradient(45deg, #4ade80, #22c55e);
-            color: white;
-            padding: 0.8rem 1.5rem;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
-            font-weight: 600;
-            margin-top: auto;
-            transition: all 0.3s ease;
-        }
-
-        .view-more-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-        }
-
-        .auth-buttons {
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-        }
-
-        .user-menu {
-            display: none;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .user-menu.show {
-            display: flex;
-        }
-
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: linear-gradient(45deg, #ffd700, #ffed4e);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            color: #333;
-        }
-
-        @media (max-width: 768px) {
-            .section-grid {
-                grid-template-columns: 1fr;
-                gap: 2rem;
-            }
-            
-            .hero h1 {
-                font-size: 2.5rem;
-            }
-            
-            .hero-buttons {
-                flex-direction: column;
-                align-items: center;
-            }
-            
-            .features-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
-</head>
-<body>
-    <nav class="navbar">
-        <div class="logo">MyOJ</div>
-        <div class="auth-buttons" id="authButtons">
-            <a href="#" class="btn btn-secondary">Login</a>
-            <a href="#" class="btn btn-primary">Sign Up</a>
-        </div>
-        <div class="user-menu" id="userMenu">
-            <div class="user-avatar">JP</div>
-            <span style="color: white; font-weight: 600;">JPisOP</span>
-            <button class="btn btn-secondary" onclick="logout()">Logout</button>
-        </div>
-    </nav>
-
-    <div class="hero">
-        <h1>Code. Compete. Conquer.</h1>
-        <p>Master algorithmic challenges and compete with programmers worldwide</p>
-        <div class="hero-buttons" id="heroButtons">
-            <a href="#" class="btn btn-primary">Start Coding</a>
-            <a href="#" class="btn btn-secondary">Join Contest</a>
-        </div>
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+  <div class="code-bg">
+    <div class="floating-code" style="left: 10%; animation-delay: 0s;">
+      def solve():<br>
+      &nbsp;&nbsp;return "Hello World"
     </div>
-
-    <div class="user-welcome" id="userWelcome" style="display: none;">
-        <div class="welcome-header">
-            <div class="user-info">
-                <h2>Welcome back, <span style="color: #ffd700;">JPisOP</span>!</h2>
-                <div class="user-badge">Admin</div>
-            </div>
-        </div>
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-number">100+</div>
-                <div>Problems Solved</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number">500+</div>
-                <div>Active Users</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number">50+</div>
-                <div>Contests Held</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number">24 hours</div>
-                <div>Platform Uptime</div>
-            </div>
-        </div>
+    <div class="floating-code" style="left: 60%; animation-delay: 5s;">
+      for i in range(n):<br>
+      &nbsp;&nbsp;if arr[i] > max_val:<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;max_val = arr[i]
     </div>
-
-    <div class="features">
-        <h2>Why Choose MyOJ?</h2>
-        <p style="text-align: center; color: white; opacity: 0.9; margin-bottom: 3rem; font-size: 1.1rem;">
-            Everything you need to master competitive programming
-        </p>
-        <div class="features-grid">
-            <div class="feature-card">
-                <div class="feature-icon">⚡</div>
-                <h3>Lightning Fast</h3>
-                <p>Ultra-fast code execution with real-time feedback. Get results in milliseconds, not minutes.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">🎯</div>
-                <h3>Diverse Problems</h3>
-                <p>From beginner-friendly to expert-level challenges across all algorithmic domains.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">🏆</div>
-                <h3>Competitive Contests</h3>
-                <p>Regular contests with real-time rankings and exciting prizes for top performers.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">💻</div>
-                <h3>Multi-Language Support</h3>
-                <p>Code in Python, C++, Java, JavaScript and more. Choose your weapon of choice.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">📊</div>
-                <h3>Track Progress</h3>
-                <p>Detailed analytics and progress tracking to help you improve your coding skills.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">👥</div>
-                <h3>Community Driven</h3>
-                <p>Join a vibrant community of programmers, share solutions, and learn together.</p>
-            </div>
+  </div>
+  
+  <div class="hero-content">
+    <div class="container text-center">
+      <h1 class="hero-title">Code. Compete. Conquer.</h1>
+      <p class="hero-subtitle">Master algorithmic challenges and compete with programmers worldwide</p>
+      
+      {% if user.is_authenticated %}
+        <div class="cta-buttons">
+          <a href="{% url 'problem_list' %}" class="btn btn-hero btn-hero-primary">
+            <i class="bi bi-code-slash me-2"></i>Start Coding
+          </a>
+          <a href="{% url 'contest_list' %}" class="btn btn-hero btn-hero-secondary">
+            <i class="bi bi-trophy me-2"></i>Join Contest
+          </a>
         </div>
+        
+        <div class="mt-4">
+          <p class="mb-2">Welcome back, <strong>{{ user.username }}</strong>!</p>
+          <span class="badge bg-light text-dark px-3 py-2">
+            <i class="bi bi-person-badge me-1"></i>{{ user.userprofile.role|title }}
+          </span>
+        </div>
+      {% else %}
+        <div class="cta-buttons">
+          <a href="{% url 'register' %}" class="btn btn-hero btn-hero-primary pulse-animation">
+            <i class="bi bi-person-plus me-2"></i>Join Now
+          </a>
+          <a href="{% url 'login' %}" class="btn btn-hero btn-hero-secondary">
+            <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+          </a>
+        </div>
+      {% endif %}
     </div>
+  </div>
+</section>
 
-    <div class="competitive-section" id="competitiveSection">
-        <div class="section-grid">
-            <div class="section-card">
-                <h3>🏆 Top Performers</h3>
-                <p style="opacity: 0.8; margin-bottom: 1.5rem;">See who's dominating the competitive programming arena</p>
-                
-                <div class="leaderboard-item">
-                    <div class="rank">1</div>
-                    <div class="user-details">
-                        <div class="username">CodeMaster2024</div>
-                        <div class="user-stats">2,847 problems solved</div>
-                    </div>
-                    <div class="points">3,250 pts</div>
+<!-- Stats Section -->
+<section class="stats-section">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-md-3 col-sm-6">
+        <div class="stats-card">
+          <div class="stats-number">100+</div>
+          <div class="stats-label">Problems Solved</div>
+        </div>
+      </div>
+      <div class="col-md-3 col-sm-6">
+        <div class="stats-card">
+          <div class="stats-number">500+</div>
+          <div class="stats-label">Active Users</div>
+        </div>
+      </div>
+      <div class="col-md-3 col-sm-6">
+        <div class="stats-card">
+          <div class="stats-number">50+</div>
+          <div class="stats-label">Contests Held</div>
+        </div>
+      </div>
+      <div class="col-md-3 col-sm-6">
+        <div class="stats-card">
+          <div class="stats-number">24 hours</div>
+          <div class="stats-label">Platform Uptime</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Features Section -->
+<section class="features-section">
+  <div class="container">
+    <div class="row text-center mb-5">
+      <div class="col-12">
+        <h2 class="display-4 fw-bold mb-3">Why Choose MyOJ?</h2>
+        <p class="lead text-muted">Everything you need to master competitive programming</p>
+      </div>
+    </div>
+    
+    <div class="row g-4">
+      <div class="col-lg-4 col-md-6">
+        <div class="feature-card">
+          <div class="feature-icon">
+            <i class="bi bi-lightning-charge"></i>
+          </div>
+          <h3 class="feature-title">Lightning Fast</h3>
+          <p class="feature-description">
+            Ultra-fast code execution with real-time feedback. Get results in milliseconds, not minutes.
+          </p>
+        </div>
+      </div>
+      
+      <div class="col-lg-4 col-md-6">
+        <div class="feature-card">
+          <div class="feature-icon">
+            <i class="bi bi-puzzle"></i>
+          </div>
+          <h3 class="feature-title">Diverse Problems</h3>
+          <p class="feature-description">
+            From beginner-friendly to expert-level challenges across all algorithmic domains.
+          </p>
+        </div>
+      </div>
+      
+      <div class="col-lg-4 col-md-6">
+        <div class="feature-card">
+          <div class="feature-icon">
+            <i class="bi bi-trophy"></i>
+          </div>
+          <h3 class="feature-title">Competitive Contests</h3>
+          <p class="feature-description">
+            Regular contests with real-time rankings and exciting prizes for top performers.
+          </p>
+        </div>
+      </div>
+      
+      <div class="col-lg-4 col-md-6">
+        <div class="feature-card">
+          <div class="feature-icon">
+            <i class="bi bi-code-square"></i>
+          </div>
+          <h3 class="feature-title">Multi-Language Support</h3>
+          <p class="feature-description">
+            Code in Python, C++, Java, JavaScript and more. Choose your weapon of choice.
+          </p>
+        </div>
+      </div>
+      
+      <div class="col-lg-4 col-md-6">
+        <div class="feature-card">
+          <div class="feature-icon">
+            <i class="bi bi-graph-up"></i>
+          </div>
+          <h3 class="feature-title">Track Progress</h3>
+          <p class="feature-description">
+            Detailed analytics and progress tracking to help you improve your coding skills.
+          </p>
+        </div>
+      </div>
+      
+      <div class="col-lg-4 col-md-6">
+        <div class="feature-card">
+          <div class="feature-icon">
+            <i class="bi bi-people"></i>
+          </div>
+          <h3 class="feature-title">Community Driven</h3>
+          <p class="feature-description">
+            Join a vibrant community of programmers, share solutions, and learn together.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Leaderboard Section - Only show for non-authenticated users -->
+{% if not user.is_authenticated %}
+<section class="leaderboard-section">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-6">
+        <div class="leaderboard-container">
+          <div class="leaderboard-content">
+            <h2 class="display-5 fw-bold mb-4">🏆 Top Performers</h2>
+            <p class="lead mb-4">See who's dominating the competitive programming arena</p>
+            
+            <div class="leaderboard-items">
+              <div class="leaderboard-item">
+                <div class="rank-badge rank-1">1</div>
+                <div class="flex-grow-1">
+                  <div class="fw-bold">CodeMaster2024</div>
+                  <div class="text-light opacity-75">2,847 problems solved</div>
                 </div>
-                
-                <div class="leaderboard-item">
-                    <div class="rank">2</div>
-                    <div class="user-details">
-                        <div class="username">AlgoNinja</div>
-                        <div class="user-stats">2,634 problems solved</div>
-                    </div>
-                    <div class="points">3,100 pts</div>
+                <div class="text-warning">
+                  <i class="bi bi-star-fill"></i> 3,250 pts
                 </div>
-                
-                <div class="leaderboard-item">
-                    <div class="rank">3</div>
-                    <div class="user-details">
-                        <div class="username">ByteWarrior</div>
-                        <div class="user-stats">2,421 problems solved</div>
-                    </div>
-                    <div class="points">2,950 pts</div>
+              </div>
+              
+              <div class="leaderboard-item">
+                <div class="rank-badge rank-2">2</div>
+                <div class="flex-grow-1">
+                  <div class="fw-bold">AlgoNinja</div>
+                  <div class="text-light opacity-75">2,634 problems solved</div>
                 </div>
-                
-                <div class="leaderboard-item">
-                    <div class="rank">4</div>
-                    <div class="user-details">
-                        <div class="username">DevProdigy</div>
-                        <div class="user-stats">2,187 problems solved</div>
-                    </div>
-                    <div class="points">2,800 pts</div>
+                <div class="text-warning">
+                  <i class="bi bi-star-fill"></i> 3,100 pts
                 </div>
-                
-                <button class="view-more-btn">View Full Leaderboard</button>
+              </div>
+              
+              <div class="leaderboard-item">
+                <div class="rank-badge rank-3">3</div>
+                <div class="flex-grow-1">
+                  <div class="fw-bold">ByteWarrior</div>
+                  <div class="text-light opacity-75">2,421 problems solved</div>
+                </div>
+                <div class="text-warning">
+                  <i class="bi bi-star-fill"></i> 2,950 pts
+                </div>
+              </div>
+              
+              <div class="leaderboard-item">
+                <div class="rank-badge rank-other">4</div>
+                <div class="flex-grow-1">
+                  <div class="fw-bold">DevProdigy</div>
+                  <div class="text-light opacity-75">2,187 problems solved</div>
+                </div>
+                <div class="text-warning">
+                  <i class="bi bi-star-fill"></i> 2,800 pts
+                </div>
+              </div>
             </div>
             
-            <div class="section-card">
-                <h3>📊 Recent Activity</h3>
-                <p style="opacity: 0.8; margin-bottom: 1.5rem;">Latest submissions and achievements</p>
-                
-                <div class="activity-item">
-                    <div class="activity-content">
-                        <div><span class="activity-user">CodeMaster2024</span> solved <strong>"Two Sum Problem"</strong></div>
-                        <div class="activity-time">2 min ago</div>
-                    </div>
-                </div>
-                
-                <div class="activity-item">
-                    <div class="activity-content">
-                        <div><span class="activity-user">AlgoNinja</span> achieved <strong>100 day streak!</strong> 🔥</div>
-                        <div class="activity-time">5 min ago</div>
-                    </div>
-                </div>
-                
-                <div class="activity-item">
-                    <div class="activity-content">
-                        <div><span class="activity-user">ByteWarrior</span> won <strong>"Weekly Challenge #47"</strong> 🏆</div>
-                        <div class="activity-time">1 hour ago</div>
-                    </div>
-                </div>
-                
-                <div class="activity-item">
-                    <div class="activity-content">
-                        <div><span class="activity-user">DevProdigy</span> completed <strong>"Dynamic Programming Marathon"</strong></div>
-                        <div class="activity-time">3 hours ago</div>
-                    </div>
-                </div>
-                
-                <button class="view-more-btn">View Your Progress</button>
+            <div class="text-center mt-4">
+              <a href="{% url 'problem_list' %}" class="btn btn-outline-light btn-lg">
+                <i class="bi bi-arrow-right me-2"></i>View Full Leaderboard
+              </a>
             </div>
+          </div>
         </div>
+      </div>
+      
+      <div class="col-lg-6">
+        <div class="activity-container">
+          <div class="activity-content">
+            <h2 class="display-5 fw-bold mb-4">📊 Recent Activity</h2>
+            <p class="lead mb-4">Latest submissions and achievements</p>
+            
+            <div class="activity-items">
+              <div class="activity-card">
+                <div class="d-flex justify-content-between align-items-start">
+                  <div>
+                    <span class="activity-user">CodeMaster2024</span> solved 
+                    <strong>"Two Sum Problem"</strong>
+                  </div>
+                  <span class="activity-time">2 min ago</span>
+                </div>
+              </div>
+              
+              <div class="activity-card">
+                <div class="d-flex justify-content-between align-items-start">
+                  <div>
+                    <span class="activity-user">AlgoNinja</span> achieved 
+                    <strong>100 day streak!</strong> 🔥
+                  </div>
+                  <span class="activity-time">5 min ago</span>
+                </div>
+              </div>
+              
+              <div class="activity-card">
+                <div class="d-flex justify-content-between align-items-start">
+                  <div>
+                    <span class="activity-user">ByteWarrior</span> won 
+                    <strong>"Weekly Challenge #47"</strong> 🏆
+                  </div>
+                  <span class="activity-time">1 hour ago</span>
+                </div>
+              </div>
+              
+              <div class="activity-card">
+                <div class="d-flex justify-content-between align-items-start">
+                  <div>
+                    <span class="activity-user">DevProdigy</span> completed 
+                    <strong>"Dynamic Programming Marathon"</strong>
+                  </div>
+                  <span class="activity-time">3 hours ago</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="text-center mt-4">
+              <a href="{% url 'register' %}" class="btn btn-outline-light btn-lg">
+                <i class="bi bi-rocket me-2"></i>Start Your Journey
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
+  </div>
+</section>
+{% endif %}
 
-    <script>
-        let isAuthenticated = false;
+<!-- Call to Action -->
+{% if not user.is_authenticated %}
+<section class="hero-section" style="padding: 80px 0;">
+  <div class="container text-center">
+    <h2 class="display-4 fw-bold mb-4">Ready to Start Your Coding Journey?</h2>
+    <p class="lead mb-4">Join thousands of programmers improving their skills daily</p>
+    <div class="cta-buttons">
+      <a href="{% url 'register' %}" class="btn btn-hero btn-hero-primary pulse-animation">
+        <i class="bi bi-person-plus me-2"></i>Get Started Free
+      </a>
+      <a href="{% url 'problem_list' %}" class="btn btn-hero btn-hero-secondary btn-lg">
+        <i class="bi bi-eye me-2"></i>Browse Problems
+      </a>
+    </div>
+  </div>
+</section>
+{% endif %}
+{% endblock %}
 
-        function toggleAuth() {
-            isAuthenticated = !isAuthenticated;
-            
-            const authButtons = document.getElementById('authButtons');
-            const userMenu = document.getElementById('userMenu');
-            const userWelcome = document.getElementById('userWelcome');
-            const competitiveSection = document.getElementById('competitiveSection');
-            const heroButtons = document.getElementById('heroButtons');
-            
-            if (isAuthenticated) {
-                authButtons.style.display = 'none';
-                userMenu.classList.add('show');
-                userWelcome.style.display = 'block';
-                competitiveSection.style.display = 'none';
-                
-                // Update hero buttons for authenticated users
-                heroButtons.innerHTML = `
-                    <a href="#" class="btn btn-primary">Continue Coding</a>
-                    <a href="#" class="btn btn-secondary">View Contests</a>
-                `;
-            } else {
-                authButtons.style.display = 'flex';
-                userMenu.classList.remove('show');
-                userWelcome.style.display = 'none';
-                competitiveSection.style.display = 'block';
-                
-                // Reset hero buttons for non-authenticated users
-                heroButtons.innerHTML = `
-                    <a href="#" class="btn btn-primary">Start Coding</a>
-                    <a href="#" class="btn btn-secondary">Join Contest</a>
-                `;
-            }
+{% block extra_js %}
+<script>
+// Add some interactive elements
+document.addEventListener('DOMContentLoaded', function() {
+  // Animate stats numbers
+  const animateNumbers = () => {
+    const numbers = document.querySelectorAll('.stats-number');
+    numbers.forEach(number => {
+      const target = parseInt(number.textContent.replace(/\D/g, ''));
+      const suffix = number.textContent.replace(/\d/g, '');
+      let current = 0;
+      const increment = target / 100;
+      const timer = setInterval(() => {
+        current += increment;
+        if (current >= target) {
+          number.textContent = target + suffix;
+          clearInterval(timer);
+        } else {
+          number.textContent = Math.floor(current) + suffix;
         }
+      }, 20);
+    });
+  };
 
-        function logout() {
-            isAuthenticated = false;
-            toggleAuth();
-        }
-
-        // Simulate login on page load (for demo purposes)
-        document.addEventListener('DOMContentLoaded', function() {
-            // Auto-login for demo (remove this in production)
-            setTimeout(() => {
-                isAuthenticated = true;
-                toggleAuth();
-            }, 1000);
-        });
-
-        // Add click handlers for login/signup buttons
-        document.addEventListener('click', function(e) {
-            if (e.target.textContent === 'Login' || e.target.textContent === 'Sign Up') {
-                e.preventDefault();
-                if (!isAuthenticated) {
-                    toggleAuth();
-                }
-            }
-        });
-    </script>
-</body>
-</html>
+  // Trigger animation when stats section is visible
+  const statsSection = document.querySelector('.stats-section');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        animateNumbers();
+        observer.unobserve(entry.target);
+      }
+    });
+  });
+  
+  if (statsSection) {
+    observer.observe(statsSection);
+  }
+});
+</script>
+{% endblock %}
