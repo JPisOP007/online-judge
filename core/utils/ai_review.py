@@ -1,14 +1,11 @@
 from vertexai.generative_models import GenerativeModel
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_http_methods
 import json
 import logging
 
 logger = logging.getLogger(__name__)
 
 def generate_code_review(code):
-    """Generate AI code review with proper error handling"""
+    """Generate AI code review with structured response"""
     try:
         model = GenerativeModel("gemini-2.0-flash")
         
@@ -24,10 +21,10 @@ Review the following code based only on the following four criteria:
 
 Respond strictly in this JSON format:
 {{
-    "logic": "<your comment here>",
-    "efficiency": "<your comment here>",
-    "clarity": "<your comment here>",
-    "best_practices": "<your comment here>"
+    "logic": "your detailed comment here",
+    "efficiency": "your detailed comment here", 
+    "clarity": "your detailed comment here",
+    "best_practices": "your detailed comment here"
 }}
 
 Code to review:
@@ -38,28 +35,35 @@ Code to review:
         
         if not response or not response.text:
             raise ValueError("Empty response from AI model")
-            
+        
         # Try to parse as JSON first
         try:
-            # If the AI returns JSON format
-            review_data = json.loads(response.text)
+            structured_review = json.loads(response.text.strip())
             return {
-                "success": True,
-                "review": review_data
+                'success': True,
+                'review': structured_review,
+                'raw': response.text
             }
         except json.JSONDecodeError:
-            # Fallback: parse the text format
-            review_data = parse_text_review(response.text)
+            # Fallback: parse text format
+            structured_review = parse_text_review(response.text)
             return {
-                "success": True,
-                "review": review_data
+                'success': True,
+                'review': structured_review,
+                'raw': response.text
             }
             
     except Exception as e:
         logger.error(f"Error generating code review: {str(e)}")
         return {
-            "success": False,
-            "error": f"Failed to generate review: {str(e)}"
+            'success': False,
+            'error': str(e),
+            'review': {
+                "logic": "AI review failed - please try again",
+                "efficiency": "AI review failed - please try again",
+                "clarity": "AI review failed - please try again", 
+                "best_practices": "AI review failed - please try again"
+            }
         }
 
 def parse_text_review(text):
@@ -110,53 +114,8 @@ def parse_text_review(text):
     except Exception as e:
         logger.error(f"Error parsing review text: {str(e)}")
         return {
-            "logic": "Error parsing review",
-            "efficiency": "Error parsing review", 
-            "clarity": "Error parsing review",
-            "best_practices": "Error parsing review"
+            "logic": "Error parsing AI response",
+            "efficiency": "Error parsing AI response",
+            "clarity": "Error parsing AI response",
+            "best_practices": "Error parsing AI response"
         }
-
-@csrf_exempt
-@require_http_methods(["POST"])
-def ai_review_view(request):
-    """Django view for AI code review"""
-    try:
-        # Parse request data
-        if request.content_type == 'application/json':
-            data = json.loads(request.body)
-        else:
-            data = request.POST
-            
-        code = data.get('code', '').strip()
-        
-        if not code:
-            return JsonResponse({
-                "success": False,
-                "error": "No code provided"
-            }, status=400)
-        
-        # Generate review
-        result = generate_code_review(code)
-        
-        if result["success"]:
-            return JsonResponse({
-                "success": True,
-                "review": result["review"]
-            })
-        else:
-            return JsonResponse({
-                "success": False,
-                "error": result["error"]
-            }, status=500)
-            
-    except json.JSONDecodeError:
-        return JsonResponse({
-            "success": False,
-            "error": "Invalid JSON in request"
-        }, status=400)
-    except Exception as e:
-        logger.error(f"Unexpected error in ai_review_view: {str(e)}")
-        return JsonResponse({
-            "success": False,
-            "error": "Internal server error"
-        }, status=500)

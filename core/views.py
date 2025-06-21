@@ -218,23 +218,33 @@ def problem_detail(request, problem_id):
             if action == "AI_Review":
                 try:
                     from core.utils.ai_review import generate_code_review
-                    ai_feedback = generate_code_review(code)
-                    
+                    ai_result = generate_code_review(code)
+        
                     if is_ajax:
-                        return JsonResponse({
-                            'success': True,
-                            'ai_feedback': ai_feedback
-                        })
-                        
+                        if ai_result['success']:
+                            return JsonResponse({
+                                'success': True,
+                                'ai_feedback': ai_result['review']
+                            })
+                        else:
+                            return JsonResponse({
+                                'success': False,
+                                'error': ai_result['error'],
+                                'ai_feedback': ai_result['review']
+                            }, status=500)
+                
                 except Exception as e:
-                    ai_feedback = f"⚠️ AI review failed: {e}"
-                    
                     if is_ajax:
                         return JsonResponse({
                             'success': False,
                             'error': str(e),
-                            'ai_feedback': ai_feedback
-                        })
+                            'ai_feedback': {
+                                "logic": "AI review unavailable",
+                                "efficiency": "AI review unavailable",
+                                "clarity": "AI review unavailable", 
+                                "best_practices": "AI review unavailable"
+                            }
+                        }, status=500)
 
             elif action == "Run":
                 sample_input = problem.sample_input.strip() if problem.sample_input else ""
