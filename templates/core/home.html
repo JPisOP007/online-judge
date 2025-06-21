@@ -473,25 +473,6 @@
         <i class="bi bi-person-badge me-2"></i>{{ user.userprofile.role|title }}
       </div>
       
-      <div class="quick-stats">
-        <div class="quick-stat">
-          <span class="number">{{ user.submissions.count|default:"0" }}</span>
-          <span class="label">Submissions</span>
-        </div>
-        <div class="quick-stat">
-          <span class="number">{{ user.solved_problems.count|default:"0" }}</span>
-          <span class="label">Solved</span>
-        </div>
-        <div class="quick-stat">
-          <span class="number">{{ user.userprofile.rating|default:"1200" }}</span>
-          <span class="label">Rating</span>
-        </div>
-        <div class="quick-stat">
-          <span class="number">{{ user.contest_participations.count|default:"0" }}</span>
-          <span class="label">Contests</span>
-        </div>
-      </div>
-      
       <div class="cta-buttons mt-4">
         <a href="{% url 'problem_list' %}" class="btn btn-hero btn-hero-primary">
           <i class="bi bi-code-slash me-2"></i>Solve Problems
@@ -543,11 +524,11 @@
       
       <div class="col-lg-3 col-md-6">
         <div class="dashboard-card">
-          <h3><span class="icon icon-progress"><i class="bi bi-graph-up"></i></span> Progress</h3>
+          <h3><span class="icon icon-progress"><i class="bi bi-graph-up"></i></span> Profile and Progress</h3>
           <p class="text-muted mb-3">View your submission history and statistics</p>
           <div class="d-flex justify-content-between align-items-center">
             <span class="text-success fw-bold">{{ solve_rate|default:"75%" }} Success</span>
-            <a href="#" class="btn btn-outline-success btn-sm">
+            <a href="{% url 'profile' %}" class="btn btn-outline-success btn-sm">
               <i class="bi bi-arrow-right"></i>
             </a>
           </div>
@@ -722,6 +703,7 @@
 {% endif %}
 
 <!-- Leaderboard Section - Show for both authenticated and non-authenticated users -->
+ {% if not user.is_authenticated %}
 <section class="leaderboard-section">
   <div class="container">
     <div class="row leaderboard-row">
@@ -855,7 +837,8 @@
     </div>
   </div>
 </section>
-
+{% endif %}
+{% if not user.is_authenticated %}
 <!-- Call to Action Section -->
 <section class="cta-section" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 100px 0;">
   <div class="container text-center">
@@ -887,7 +870,7 @@
     </div>
   </div>
 </section>
-
+{% endif %}
 <!-- Footer -->
 <footer style="background: #1e293b; color: white; padding: 60px 0 20px;">
   <div class="container">
