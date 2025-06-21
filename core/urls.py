@@ -25,13 +25,15 @@ urlpatterns = [
     path('contest/<uuid:contest_uuid>/problems/', views.contest_problems, name='contest_problems'),  
     path('contest/<uuid:contest_uuid>/problem/<uuid:problem_uuid>/', views.contest_problem_detail, name='contest_problem_detail'),  
     path('contest/<uuid:contest_uuid>/standings/', views.contest_standings, name='contest_standings'),  
-  # Contest announcements
+    
+    # Contest announcements
     path('contest/<uuid:contest_uuid>/announcements/', views.contest_announcements, name='contest_announcements'),
     path('contest/<uuid:contest_uuid>/announcements/create/', views.create_announcement, name='create_announcement'),
     path('contest/<uuid:contest_uuid>/announcements/<int:announcement_id>/edit/', views.edit_announcement, name='edit_announcement'),
     path('contest/<uuid:contest_uuid>/announcements/<int:announcement_id>/delete/', views.delete_announcement, name='delete_announcement'),
+    
     # Contest Administration (Staff Only)
-    path('create-contest/', views.create_contest, name='create_contest'),  
+    path('contests/create/', views.create_contest, name='create_contest'),  
     path('contest/<uuid:contest_uuid>/edit/', views.edit_contest, name='edit_contest'),  
     
     # API Endpoints
