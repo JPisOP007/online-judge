@@ -832,6 +832,7 @@ function showSuccess(message) {
 }
 
 // Run Code Function (test with sample input only - NO VERDICT)
+// Run Code Function (test with sample input only - NO VERDICT)
 async function runCode() {
   const runBtn = document.getElementById('run-btn');
   const runSection = document.getElementById('run-output-section');
@@ -860,6 +861,14 @@ async function runCode() {
       }
     });
     
+    // Check if response is actually JSON
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const textResponse = await response.text();
+      console.error('Server returned non-JSON response:', textResponse);
+      throw new Error('Server returned invalid response format. Check Django view.');
+    }
+    
     if (response.ok) {
       const data = await response.json();
       
@@ -883,12 +892,17 @@ async function runCode() {
       runSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
       
     } else {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      const errorData = await response.json();
+      throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
     }
     
   } catch (error) {
     console.error('Run failed:', error);
-    showError(`Failed to run code: ${error.message}`);
+    if (error.message.includes('Unexpected token')) {
+      showError('Server error: Please check your Django view returns JSON response');
+    } else {
+      showError(`Failed to run code: ${error.message}`);
+    }
   } finally {
     hideLoadingState();
   }
@@ -922,6 +936,14 @@ async function submitSolution() {
         'X-Requested-With': 'XMLHttpRequest'
       }
     });
+    
+    // Check if response is actually JSON
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const textResponse = await response.text();
+      console.error('Server returned non-JSON response:', textResponse);
+      throw new Error('Server returned invalid response format. Check Django view.');
+    }
     
     if (response.ok) {
       const data = await response.json();
@@ -997,12 +1019,17 @@ async function submitSolution() {
       }
       
     } else {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      const errorData = await response.json();
+      throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
     }
     
   } catch (error) {
     console.error('Submission failed:', error);
-    showError(`Failed to submit solution: ${error.message}`);
+    if (error.message.includes('Unexpected token')) {
+      showError('Server error: Please check your Django view returns JSON response');
+    } else {
+      showError(`Failed to submit solution: ${error.message}`);
+    }
   } finally {
     hideLoadingState();
   }
@@ -1036,6 +1063,14 @@ async function getAIReview() {
       }
     });
     
+    // Check if response is actually JSON
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const textResponse = await response.text();
+      console.error('Server returned non-JSON response:', textResponse);
+      throw new Error('Server returned invalid response format. Check Django view.');
+    }
+    
     if (response.ok) {
       const data = await response.json();
       
@@ -1047,12 +1082,17 @@ async function getAIReview() {
       aiSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
       
     } else {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      const errorData = await response.json();
+      throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
     }
     
   } catch (error) {
     console.error('AI Review failed:', error);
-    showError(`Failed to get AI review: ${error.message}`);
+    if (error.message.includes('Unexpected token')) {
+      showError('Server error: Please check your Django view returns JSON response');
+    } else {
+      showError(`Failed to get AI review: ${error.message}`);
+    }
   } finally {
     hideLoadingState();
   }
