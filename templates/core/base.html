@@ -1,1485 +1,754 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>MyOJ - Competitive Programming Platform</title>
-  <!-- Bootstrap CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-  
-  <!-- Icons -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-  
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+{% extends 'core/base.html' %}
+{% load static %}
 
-  <style>
-    :root {
-      --primary-color: #6366f1;
-      --primary-dark: #4f46e5;
-      --primary-light: #8b5cf6;
-      --secondary-color: #64748b;
-      --accent-color: #06b6d4;
-      --success-color: #10b981;
-      --warning-color: #f59e0b;
-      --danger-color: #ef4444;
-      --info-color: #3b82f6;
-      --dark-color: #0f172a;
-      --light-bg: #f8fafc;
-      --border-color: #e2e8f0;
-      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-      --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-      --border-radius: 16px;
-    }
+{% block title %}MyOJ - Competitive Programming Platform{% endblock %}
 
-    * {
-      box-sizing: border-box;
-    }
+{% block extra_css %}
+<style>
+  /* Hero Section Styles */
+  .hero-section {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    position: relative;
+    overflow: hidden;
+    padding: 100px 0;
+    margin-top: -2rem;
+  }
 
-    html, body {
-      height: 100%;
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    }
+  .hero-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat;
+    opacity: 0.1;
+  }
 
-    body {
-      display: flex;
-      flex-direction: column;
-      background: #0f172a;
-      color: var(--dark-color);
-      line-height: 1.6;
-      overflow-x: hidden;
-    }
+  .hero-content {
+    position: relative;
+    z-index: 2;
+    color: white;
+    text-align: center;
+  }
 
-    main {
-      flex: 1;
-    }
+  .hero-title {
+    font-size: 3.5rem;
+    font-weight: 800;
+    margin-bottom: 1.5rem;
+    background: linear-gradient(45deg, #ffffff, #e0e7ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  }
 
-    /* Hero Section with Animated Background */
-    .hero-bg {
-      background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
-      position: relative;
-      min-height: 100vh;
-      overflow: hidden;
-    }
+  .hero-subtitle {
+    font-size: 1.4rem;
+    margin-bottom: 2rem;
+    opacity: 0.95;
+    font-weight: 400;
+  }
 
-    .hero-bg::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: 
-        radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
-        radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.15) 0%, transparent 50%),
-        radial-gradient(circle at 40% 60%, rgba(6, 182, 212, 0.1) 0%, transparent 50%);
-      pointer-events: none;
-      animation: gradientShift 20s ease-in-out infinite;
-    }
+  .hero-cta {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 2rem;
+  }
 
-    @keyframes gradientShift {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.8; }
-    }
+  .cta-button {
+    padding: 15px 35px;
+    border-radius: 50px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    backdrop-filter: blur(10px);
+  }
 
-    .hero-bg::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-image: 
-        linear-gradient(rgba(99, 102, 241, 0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(99, 102, 241, 0.03) 1px, transparent 1px);
-      background-size: 60px 60px;
-      pointer-events: none;
-      animation: gridMove 30s linear infinite;
-    }
+  .cta-primary {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border-color: rgba(255, 255, 255, 0.3);
+  }
 
-    @keyframes gridMove {
-      0% { transform: translate(0, 0); }
-      100% { transform: translate(60px, 60px); }
-    }
+  .cta-primary:hover {
+    background: rgba(255, 255, 255, 0.3);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  }
 
-    /* Floating Code Elements */
-    .code-elements {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      overflow: hidden;
-    }
+  .cta-secondary {
+    background: transparent;
+    color: white;
+    border-color: rgba(255, 255, 255, 0.5);
+  }
 
-    .code-element {
-      position: absolute;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 14px;
-      color: rgba(99, 102, 241, 0.3);
-      font-weight: 500;
-      animation: floatCode 25s infinite linear;
-    }
+  .cta-secondary:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    transform: translateY(-2px);
+  }
 
-    @keyframes floatCode {
-      0% {
-        transform: translateY(100vh) rotate(0deg);
-        opacity: 0;
-      }
-      10% {
-        opacity: 0.6;
-      }
-      90% {
-        opacity: 0.6;
-      }
-      100% {
-        transform: translateY(-100px) rotate(5deg);
-        opacity: 0;
-      }
-    }
+  /* Stats Section */
+  .stats-section {
+    background: linear-gradient(135deg, #1e3a8a 0%, #312e81 100%);
+    padding: 60px 0;
+    margin-top: -1px;
+  }
 
-    /* Modern Navbar */
-    .navbar-custom {
-      background: rgba(15, 23, 42, 0.8);
-      backdrop-filter: blur(20px);
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-      position: fixed;
-      top: 0;
-      width: 100%;
-      z-index: 1030;
-      transition: all 0.3s ease;
-      padding: 1rem 0;
-    }
+  .stat-card {
+    text-align: center;
+    color: white;
+    padding: 2rem;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+  }
 
-    .navbar-custom.scrolled {
-      background: rgba(15, 23, 42, 0.95);
-      backdrop-filter: blur(25px);
-    }
+  .stat-card:hover {
+    transform: translateY(-5px);
+    background: rgba(255, 255, 255, 0.15);
+  }
 
-    .navbar-custom .navbar-brand {
-      color: white;
-      font-weight: 800;
-      font-size: 1.8rem;
-      text-decoration: none;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-family: 'Poppins', sans-serif;
-    }
+  .stat-number {
+    font-size: 3rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(45deg, #fbbf24, #f59e0b);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
 
-    .navbar-custom .navbar-brand:hover {
-      color: var(--primary-color);
-    }
+  .stat-label {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    font-weight: 500;
+  }
 
-    .navbar-custom .nav-link {
-      color: rgba(255, 255, 255, 0.8);
-      font-weight: 500;
-      padding: 10px 18px;
-      margin: 0 4px;
-      border-radius: 12px;
-      transition: all 0.3s ease;
-      text-decoration: none;
-      position: relative;
-    }
+  /* Features Section */
+  .features-section {
+    padding: 100px 0;
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  }
 
-    .navbar-custom .nav-link::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
-      border-radius: 12px;
-      opacity: 0;
-      transition: opacity 0.3s ease;
-      z-index: -1;
-    }
+  .section-title {
+    text-align: center;
+    font-size: 2.8rem;
+    font-weight: 700;
+    color: var(--dark-color);
+    margin-bottom: 1rem;
+  }
 
-    .navbar-custom .nav-link:hover {
-      color: white;
-      transform: translateY(-2px);
-    }
+  .section-subtitle {
+    text-align: center;
+    font-size: 1.2rem;
+    color: var(--secondary-color);
+    margin-bottom: 4rem;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+  }
 
-    .navbar-custom .nav-link:hover::before {
-      opacity: 1;
-    }
+  .feature-card {
+    background: white;
+    border-radius: 20px;
+    padding: 3rem 2rem;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    border: 1px solid rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+    height: 100%;
+  }
 
-    /* Hero Section */
-    .hero-section {
-      padding: 140px 0 100px;
-      text-align: center;
-      color: white;
-      position: relative;
-      z-index: 2;
-    }
+  .feature-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+  }
 
-    .hero-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: rgba(99, 102, 241, 0.1);
-      border: 1px solid rgba(99, 102, 241, 0.2);
-      color: var(--primary-color);
-      padding: 8px 20px;
-      border-radius: 50px;
-      font-size: 0.9rem;
-      font-weight: 600;
-      margin-bottom: 2rem;
-      backdrop-filter: blur(10px);
-      animation: pulse 3s infinite;
-    }
+  .feature-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 2rem;
+    background: linear-gradient(135deg, var(--primary-color), #1d4ed8);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: white;
+    box-shadow: 0 10px 25px rgba(37, 99, 235, 0.3);
+  }
 
+  .feature-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--dark-color);
+    margin-bottom: 1rem;
+  }
+
+  .feature-description {
+    color: var(--secondary-color);
+    line-height: 1.7;
+    font-size: 1.1rem;
+  }
+
+  /* Popular Problems Section */
+  .popular-problems {
+    padding: 100px 0;
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  }
+
+  .popular-problems .section-title,
+  .popular-problems .section-subtitle {
+    color: white;
+  }
+
+  .problem-card {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 2rem;
+    transition: all 0.3s ease;
+    color: white;
+  }
+
+  .problem-card:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-5px);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  .problem-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: #e2e8f0;
+  }
+
+  .problem-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+
+  .problem-difficulty {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  .problem-stats {
+    color: #94a3b8;
+    font-size: 0.9rem;
+  }
+
+  .problem-description {
+    color: #cbd5e1;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+  }
+
+  .solve-button {
+    background: linear-gradient(135deg, var(--primary-color), #1d4ed8);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: inline-block;
+  }
+
+  .solve-button:hover {
+    background: linear-gradient(135deg, #1d4ed8, #1e40af);
+    color: white;
+    transform: translateY(-2px);
+  }
+
+  /* Recent Contests */
+  .recent-contests {
+    padding: 100px 0;
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  }
+
+  .contest-card {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    border: 1px solid rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+  }
+
+  .contest-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+  }
+
+  .contest-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+  }
+
+  .contest-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--dark-color);
+    margin-bottom: 0.5rem;
+  }
+
+  .contest-time {
+    color: var(--secondary-color);
+    font-size: 0.95rem;
+  }
+
+  .contest-participants {
+    background: linear-gradient(135deg, #059669, #047857);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  .join-contest {
+    background: linear-gradient(135deg, var(--primary-color), #1d4ed8);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: inline-block;
+    margin-top: 1rem;
+  }
+
+  .join-contest:hover {
+    background: linear-gradient(135deg, #1d4ed8, #1e40af);
+    color: white;
+    transform: translateY(-2px);
+  }
+
+  /* CTA Section */
+  .cta-section {
+    background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%);
+    padding: 100px 0;
+    text-align: center;
+    color: white;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cta-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M0 40L40 0H20L0 20M40 40V20L20 40'/%3E%3C/g%3E%3C/svg%3E") repeat;
+  }
+
+  .cta-content {
+    position: relative;
+    z-index: 2;
+  }
+
+  .cta-title {
+    font-size: 3rem;
+    font-weight: 800;
+    margin-bottom: 1.5rem;
+  }
+
+  .cta-description {
+    font-size: 1.3rem;
+    margin-bottom: 2.5rem;
+    opacity: 0.95;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* Responsive Design */
+  @media (max-width: 768px) {
     .hero-title {
-      font-size: 4.5rem;
-      font-weight: 900;
-      font-family: 'Poppins', sans-serif;
-      background: linear-gradient(135deg, #ffffff 0%, #e2e8f0 50%, #94a3b8 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      margin-bottom: 1.5rem;
-      line-height: 1.1;
-      animation: slideUp 1s ease-out;
-    }
-
-    .hero-subtitle {
-      font-size: 1.3rem;
-      font-weight: 400;
-      margin-bottom: 3rem;
-      opacity: 0.8;
-      max-width: 700px;
-      margin-left: auto;
-      margin-right: auto;
-      line-height: 1.6;
-      animation: slideUp 1s ease-out 0.2s both;
-    }
-
-    .hero-cta {
-      display: flex;
-      justify-content: center;
-      gap: 1rem;
-      margin-bottom: 4rem;
-      flex-wrap: wrap;
-      animation: slideUp 1s ease-out 0.4s both;
-    }
-
-    .hero-stats {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 2rem;
-      margin: 4rem auto 0;
-      max-width: 800px;
-      animation: slideUp 1s ease-out 0.6s both;
-    }
-
-    .hero-stat {
-      text-align: center;
-      background: rgba(255, 255, 255, 0.05);
-      backdrop-filter: blur(20px);
-      padding: 2rem 1.5rem;
-      border-radius: 20px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      transition: all 0.4s ease;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .hero-stat::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 2px;
-      background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
-      transition: all 0.6s ease;
-    }
-
-    .hero-stat:hover::before {
-      left: 0;
-    }
-
-    .hero-stat:hover {
-      transform: translateY(-8px);
-      background: rgba(255, 255, 255, 0.08);
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-    }
-
-    .hero-stat-number {
-      font-size: 2.8rem;
-      font-weight: 800;
-      display: block;
-      margin-bottom: 0.5rem;
-      background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .hero-stat-label {
-      font-size: 1rem;
-      opacity: 0.8;
-      font-weight: 500;
-    }
-
-    /* Features Section */
-    .features-section {
-      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-      padding: 120px 0;
-      position: relative;
-    }
-
-    .section-header {
-      text-align: center;
-      margin-bottom: 4rem;
-    }
-
-    .section-badge {
-      display: inline-block;
-      background: rgba(99, 102, 241, 0.1);
-      color: var(--primary-color);
-      padding: 8px 20px;
-      border-radius: 50px;
-      font-size: 0.9rem;
-      font-weight: 600;
-      margin-bottom: 1rem;
-    }
-
-    .section-title {
-      font-size: 3rem;
-      font-weight: 800;
-      color: var(--dark-color);
-      margin-bottom: 1rem;
-      font-family: 'Poppins', sans-serif;
-    }
-
-    .section-subtitle {
-      font-size: 1.2rem;
-      color: var(--secondary-color);
-      max-width: 600px;
-      margin: 0 auto;
-    }
-
-    .feature-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-      gap: 2rem;
-      margin-top: 3rem;
-    }
-
-    .feature-card {
-      background: white;
-      border-radius: 24px;
-      padding: 3rem;
-      text-align: left;
-      box-shadow: var(--shadow-lg);
-      border: 1px solid var(--border-color);
-      transition: all 0.4s ease;
-      height: 100%;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .feature-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 4px;
-      background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
-      transform: scaleX(0);
-      transition: transform 0.6s ease;
-    }
-
-    .feature-card:hover::before {
-      transform: scaleX(1);
-    }
-
-    .feature-card:hover {
-      transform: translateY(-12px);
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
-    }
-
-    .feature-icon {
-      width: 60px;
-      height: 60px;
-      background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
-      border-radius: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 1.5rem;
-      color: white;
-      font-size: 1.5rem;
-    }
-
-    .feature-title {
-      font-size: 1.4rem;
-      font-weight: 700;
-      margin-bottom: 1rem;
-      color: var(--dark-color);
-    }
-
-    .feature-description {
-      color: var(--secondary-color);
-      font-size: 1rem;
-      line-height: 1.7;
-    }
-
-    /* Live Contest Section */
-    .live-contests {
-      background: var(--dark-color);
-      padding: 120px 0;
-      color: white;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .live-contests::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: 
-        radial-gradient(circle at 30% 70%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
-        radial-gradient(circle at 70% 30%, rgba(6, 182, 212, 0.1) 0%, transparent 50%);
-      pointer-events: none;
-    }
-
-    .contest-card {
-      background: rgba(255, 255, 255, 0.05);
-      backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 20px;
-      padding: 2rem;
-      transition: all 0.3s ease;
-      height: 100%;
-    }
-
-    .contest-card:hover {
-      transform: translateY(-8px);
-      background: rgba(255, 255, 255, 0.08);
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-    }
-
-    .contest-status {
-      padding: 6px 16px;
-      border-radius: 20px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      margin-bottom: 1rem;
-      display: inline-block;
-    }
-
-    .status-live {
-      background: linear-gradient(135deg, var(--success-color), #059669);
-      color: white;
-      animation: pulse 2s infinite;
-    }
-
-    .status-upcoming {
-      background: linear-gradient(135deg, var(--info-color), #1d4ed8);
-      color: white;
-    }
-
-    /* CTA Section */
-    .cta-section {
-      background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
-      color: white;
-      padding: 100px 0;
-      text-align: center;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .cta-section::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="80" cy="40" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="40" cy="80" r="1.5" fill="rgba(255,255,255,0.1)"/></svg>');
-      opacity: 0.3;
-    }
-
-    /* Button Styles */
-    .btn {
-      border-radius: 12px;
-      font-weight: 600;
-      padding: 14px 32px;
-      transition: all 0.3s ease;
-      border: none;
-      font-size: 1rem;
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .btn-lg {
-      padding: 18px 40px;
-      font-size: 1.1rem;
-      border-radius: 16px;
-    }
-
-    .btn-primary {
-      background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
-      box-shadow: var(--shadow-md);
-      color: white;
-    }
-
-    .btn-primary:hover {
-      background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-color) 100%);
-      transform: translateY(-3px);
-      box-shadow: var(--shadow-xl);
-      color: white;
-    }
-
-    .btn-outline-light {
-      border: 2px solid rgba(255, 255, 255, 0.3);
-      color: white;
-      background: transparent;
-      backdrop-filter: blur(10px);
-    }
-
-    .btn-outline-light:hover {
-      background: rgba(255, 255, 255, 0.1);
-      border-color: rgba(255, 255, 255, 0.5);
-      transform: translateY(-3px);
-      color: white;
-    }
-
-    /* Footer */
-    footer {
-      background: linear-gradient(135deg, var(--dark-color) 0%, #0f172a 100%);
-      color: white;
-      padding: 60px 0 30px;
-      border-top: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .footer-brand {
-      font-size: 2rem;
-      font-weight: 800;
-      margin-bottom: 1rem;
-      font-family: 'Poppins', sans-serif;
-    }
-
-    .footer-description {
-      color: rgba(255, 255, 255, 0.7);
-      font-size: 1.1rem;
-      line-height: 1.6;
-      margin-bottom: 2rem;
-    }
-
-    .footer-social {
-      display: flex;
-      gap: 1rem;
-    }
-
-    .footer-social a {
-      width: 45px;
-      height: 45px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      text-decoration: none;
-      transition: all 0.3s ease;
-      backdrop-filter: blur(10px);
-    }
-
-    .footer-social a:hover {
-      background: var(--primary-color);
-      transform: translateY(-3px);
-    }
-
-    .footer-links h6 {
-      color: white;
-      font-weight: 700;
-      margin-bottom: 1.5rem;
-      font-size: 1.1rem;
-    }
-
-    .footer-links a {
-      color: rgba(255, 255, 255, 0.7);
-      text-decoration: none;
-      transition: color 0.3s ease;
-      display: block;
-      margin-bottom: 0.8rem;
-    }
-
-    .footer-links a:hover {
-      color: var(--primary-color);
-    }
-
-    /* Animations */
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.7; }
-    }
-
-    @keyframes slideUp {
-      from {
-        opacity: 0;
-        transform: translateY(30px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    /* Responsive Design */
-    @media (max-width: 768px) {
-      .hero-title {
-        font-size: 3rem;
-      }
-
-      .hero-subtitle {
-        font-size: 1.1rem;
-      }
-
-      .hero-stats {
-        grid-template-columns: 1fr;
-        gap: 1.5rem;
-      }
-
-      .hero-stat {
-        padding: 1.5rem 1rem;
-      }
-
-      .hero-stat-number {
-        font-size: 2.2rem;
-      }
-
-      .feature-grid {
-        grid-template-columns: 1fr;
-        gap: 1.5rem;
-      }
-
-      .feature-card {
-        padding: 2rem 1.5rem;
-      }
-
-      .section-title {
-        font-size: 2.2rem;
-      }
-
-      .hero-cta {
-        flex-direction: column;
-        align-items: center;
-      }
-
-      .navbar-custom .navbar-nav {
-        text-align: center;
-        margin-top: 1rem;
-      }
-    }
-  </style>
-</head>
-
-<body>
-  <!-- Navigation -->
-  <nav class="navbar navbar-expand-lg navbar-custom">
-    <div class="container">
-      <a class="navbar-brand" href="#">
-        <i class="bi bi-code-square"></i>
-        MyOJ
-      </a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" style="border: none; color: white;">
-        <i class="bi bi-list"></i>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav me-auto">
-          <li class="nav-item">
-            <a class="nav-link" href="#problems">Problems</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="#contests">Contests</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="#leaderboard">Leaderboard</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="#community">Community</a>
-          </li>
-        </ul>
-        <ul class="navbar-nav">
-          <li class="nav-item">
-            <a class="nav-link btn-outline-primary" href="#login">Login</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link btn-primary" href="#register">Get Started</a>
-          </li>
-        </ul>
-      </div>
-    </div>
-  </nav>
-
-  <main>
-    <!-- Hero Section -->
-    <section class="hero-bg">
-      <!-- Floating Code Elements -->
-      <div class="code-elements">
-        <div class="code-element" style="left: 10%; animation-delay: 0s;">for (int i = 0; i < n; i++)</div>
-        <div class="code-element" style="left: 70%; animation-delay: 5s;">vector&lt;int&gt; dp(n+1);</div>
-        <div class="code-element" style="left: 30%; animation-delay: 10s;">if (left &lt;= right)</div>
-        <div class="code-element" style="left: 80%; animation-delay: 15s;">return solve(n-1);</div>
-        <div class="code-element" style="left: 20%; animation-delay: 20s;">cout &lt;&lt; "AC" &lt;&lt; endl;</div>
-      </div>
-
-      <div class="hero-section">
-        <div class="container">
-          <div class="hero-badge">
-            <i class="bi bi-lightning-charge"></i>
-            Join 50,000+ competitive programmers
-          </div>
-          
-          <h1 class="hero-title">
-            Master Algorithms.<br>
-            <span style="background: linear-gradient(135deg, var(--accent-color), var(--primary-light)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Conquer Contests.</span>
-          </h1>
-          
-          <p class="hero-subtitle">
-            Elevate your programming skills with challenging problems, live contests, and a vibrant community of coders. From beginner-friendly tutorials to advanced algorithmic challenges.
-          </p>
-          
-          <div class="hero-cta">
-            <a href="#register" class="btn btn-primary btn-lg">
-              <i class="bi bi-rocket-takeoff"></i>
-              Start Coding Now
-            </a>
-            <a href="#explore" class="btn btn-outline-light btn-lg">
-              <i class="bi bi-play-circle"></i>
-              Explore Problems
-            </a>
-          </div>
-          
-          <div class="hero-stats">
-            <div class="hero-stat">
-              <span class="hero-stat-number">2,500+</span>
-              <span class="hero-stat-label">Problems</span>
-            </div>
-            <div class="hero-stat">
-              <span class="hero-stat-number">150+</span>
-              <span class="hero-stat-label">Contests</span>
-            </div>
-            <div class="hero-stat">
-              <span class="hero-stat-number">50K+</span>
-              <span class="hero-stat-label">Users</span>
-            </div>
-            <div class="hero-stat">
-              <span class="hero-stat-number">1M+</span>
-              <span class="hero-stat-label">Submissions</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Features Section -->
-    <section class="features-section">
-      <div class="container">
-        <div class="section-header">
-          <div class="section-badge">Why Choose MyOJ</div>
-          <h2 class="section-title">Everything You Need to Excel</h2>
-          <p class="section-subtitle">
-            From basic algorithms to advanced data structures, our platform provides comprehensive tools for every stage of your competitive programming journey.
-          </p>
-        </div>
-        
-        <div class="feature-grid">
-          <div class="feature-card">
-            <div class="feature-icon">
-              <i class="bi bi-cpu"></i>
-            </div>
-            <h3 class="feature-title">Advanced Problem Set</h3>
-            <p class="feature-description">
-              Curated collection of 2,500+ problems ranging from easy to expert level, covering all major algorithmic concepts and data structures with detailed explanations.
-            </p>
-          </div>
-          
-          <div class="feature-card">
-            <div class="feature-icon">
-              <i class="bi bi-trophy"></i>
-            </div>
-            <h3 class="feature-title">Live Contests</h3>
-            <p class="feature-description">
-              Participate in weekly contests, special events, and global competitions. Compete with programmers worldwide and climb the leaderboards.
-            </p>
-          </div>
-          
-          <div class="feature-card">
-            <div class="feature-icon">
-              <i class="bi bi-graph-up"></i>
-            </div>
-            <h3 class="feature-title">Performance Analytics</h3>
-            <p class="feature-description">
-              Track your progress with detailed analytics, performance metrics, and personalized recommendations to identify areas for improvement.
-            </p>
-          </div>
-          
-          <div class="feature-card">
-            <div class="feature-icon">
-              <i class="bi bi-people"></i>
-            </div>
-            <h3 class="feature-title">Vibrant Community</h3>
-            <p class="feature-description">
-              Connect with fellow programmers, share solutions, participate in discussions, and learn from the experiences of others in our active community.
-            </p>
-          </div>
-          
-          <div class="feature-card">
-            <div class="feature-icon">
-              <i class="bi bi-code-slash"></i>
-            </div>
-            <h3 class="feature-title">Multi-Language Support</h3>
-            <p class="feature-description">Submit solutions in C++, Java, Python, JavaScript, and 10+ other languages. Our robust judging system ensures fast and accurate evaluation of your code.
-            </p>
-          </div>
-          
-          <div class="feature-card">
-            <div class="feature-icon">
-              <i class="bi bi-shield-check"></i>
-            </div>
-            <h3 class="feature-title">Secure Judging System</h3>
-            <p class="feature-description">
-              State-of-the-art sandboxed execution environment with real-time feedback, detailed test case analysis, and comprehensive error reporting for optimal learning.
-            </p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Problem Categories Section -->
-    <section class="categories-section" style="background: white; padding: 120px 0;">
-      <div class="container">
-        <div class="section-header">
-          <div class="section-badge">Problem Categories</div>
-          <h2 class="section-title">Master Every Algorithm</h2>
-          <p class="section-subtitle">
-            Structured learning path covering all essential topics in competitive programming and software engineering interviews.
-          </p>
-        </div>
-        
-        <div class="categories-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-top: 3rem;">
-          <!-- Dynamic Programming -->
-          <div class="category-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2rem; border-radius: 20px; text-align: center; transition: all 0.3s ease; cursor: pointer;">
-            <div class="category-icon" style="font-size: 2.5rem; margin-bottom: 1rem;">
-              <i class="bi bi-diagram-3"></i>
-            </div>
-            <h4 style="font-weight: 700; margin-bottom: 0.5rem;">Dynamic Programming</h4>
-            <p style="opacity: 0.9; font-size: 0.9rem; margin-bottom: 1rem;">485 Problems</p>
-            <div class="difficulty-bar" style="background: rgba(255,255,255,0.2); height: 4px; border-radius: 2px; overflow: hidden;">
-              <div style="background: #10b981; width: 75%; height: 100%;"></div>
-            </div>
-          </div>
-
-          <!-- Graph Algorithms -->
-          <div class="category-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 2rem; border-radius: 20px; text-align: center; transition: all 0.3s ease; cursor: pointer;">
-            <div class="category-icon" style="font-size: 2.5rem; margin-bottom: 1rem;">
-              <i class="bi bi-diagram-2"></i>
-            </div>
-            <h4 style="font-weight: 700; margin-bottom: 0.5rem;">Graph Theory</h4>
-            <p style="opacity: 0.9; font-size: 0.9rem; margin-bottom: 1rem;">324 Problems</p>
-            <div class="difficulty-bar" style="background: rgba(255,255,255,0.2); height: 4px; border-radius: 2px; overflow: hidden;">
-              <div style="background: #f59e0b; width: 60%; height: 100%;"></div>
-            </div>
-          </div>
-
-          <!-- Data Structures -->
-          <div class="category-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 2rem; border-radius: 20px; text-align: center; transition: all 0.3s ease; cursor: pointer;">
-            <div class="category-icon" style="font-size: 2.5rem; margin-bottom: 1rem;">
-              <i class="bi bi-stack"></i>
-            </div>
-            <h4 style="font-weight: 700; margin-bottom: 0.5rem;">Data Structures</h4>
-            <p style="opacity: 0.9; font-size: 0.9rem; margin-bottom: 1rem;">398 Problems</p>
-            <div class="difficulty-bar" style="background: rgba(255,255,255,0.2); height: 4px; border-radius: 2px; overflow: hidden;">
-              <div style="background: #06b6d4; width: 85%; height: 100%;"></div>
-            </div>
-          </div>
-
-          <!-- Mathematics -->
-          <div class="category-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white; padding: 2rem; border-radius: 20px; text-align: center; transition: all 0.3s ease; cursor: pointer;">
-            <div class="category-icon" style="font-size: 2.5rem; margin-bottom: 1rem;">
-              <i class="bi bi-calculator"></i>
-            </div>
-            <h4 style="font-weight: 700; margin-bottom: 0.5rem;">Mathematics</h4>
-            <p style="opacity: 0.9; font-size: 0.9rem; margin-bottom: 1rem;">267 Problems</p>
-            <div class="difficulty-bar" style="background: rgba(255,255,255,0.2); height: 4px; border-radius: 2px; overflow: hidden;">
-              <div style="background: #ef4444; width: 45%; height: 100%;"></div>
-            </div>
-          </div>
-
-          <!-- String Algorithms -->
-          <div class="category-card" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); color: #1f2937; padding: 2rem; border-radius: 20px; text-align: center; transition: all 0.3s ease; cursor: pointer;">
-            <div class="category-icon" style="font-size: 2.5rem; margin-bottom: 1rem;">
-              <i class="bi bi-fonts"></i>
-            </div>
-            <h4 style="font-weight: 700; margin-bottom: 0.5rem;">String Processing</h4>
-            <p style="opacity: 0.8; font-size: 0.9rem; margin-bottom: 1rem;">156 Problems</p>
-            <div class="difficulty-bar" style="background: rgba(0,0,0,0.1); height: 4px; border-radius: 2px; overflow: hidden;">
-              <div style="background: #8b5cf6; width: 55%; height: 100%;"></div>
-            </div>
-          </div>
-
-          <!-- Greedy Algorithms -->
-          <div class="category-card" style="background: linear-gradient(135degree, #ffecd2 0%, #fcb69f 100%); color: #1f2937; padding: 2rem; border-radius: 20px; text-align: center; transition: all 0.3s ease; cursor: pointer;">
-            <div class="category-icon" style="font-size: 2.5rem; margin-bottom: 1rem;">
-              <i class="bi bi-lightning"></i>
-            </div>
-            <h4 style="font-weight: 700; margin-bottom: 0.5rem;">Greedy Algorithms</h4>
-            <p style="opacity: 0.8; font-size: 0.9rem; margin-bottom: 1rem;">189 Problems</p>
-            <div class="difficulty-bar" style="background: rgba(0,0,0,0.1); height: 4px; border-radius: 2px; overflow: hidden;">
-              <div style="background: #f59e0b; width: 70%; height: 100%;"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Live Contests Section -->
-    <section class="live-contests">
-      <div class="container">
-        <div class="section-header">
-          <div class="section-badge" style="background: rgba(255, 255, 255, 0.1); color: white;">Live & Upcoming</div>
-          <h2 class="section-title" style="color: white;">Active Competitions</h2>
-          <p class="section-subtitle" style="color: rgba(255, 255, 255, 0.8);">
-            Join live contests and compete with programmers from around the world. Test your skills in real-time challenges.
-          </p>
-        </div>
-        
-        <div class="row">
-          <div class="col-lg-4 col-md-6 mb-4">
-            <div class="contest-card">
-              <div class="contest-status status-live">
-                <i class="bi bi-broadcast"></i> Live Now
-              </div>
-              <h4 style="color: white; font-weight: 700; margin-bottom: 1rem;">Weekly Challenge #47</h4>
-              <p style="color: rgba(255, 255, 255, 0.8); margin-bottom: 1.5rem;">
-                5 algorithmic problems focusing on dynamic programming and graph theory.
-              </p>
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                <div>
-                  <div style="color: rgba(255, 255, 255, 0.6); font-size: 0.9rem;">Participants</div>
-                  <div style="color: white; font-weight: 600;">1,247</div>
-                </div>
-                <div>
-                  <div style="color: rgba(255, 255, 255, 0.6); font-size: 0.9rem;">Time Left</div>
-                  <div style="color: #10b981; font-weight: 600;">2h 34m</div>
-                </div>
-              </div>
-              <a href="#" class="btn" style="background: rgba(255, 255, 255, 0.1); color: white; border: 1px solid rgba(255, 255, 255, 0.2); width: 100%;">
-                <i class="bi bi-play-circle"></i> Join Contest
-              </a>
-            </div>
-          </div>
-          
-          <div class="col-lg-4 col-md-6 mb-4">
-            <div class="contest-card">
-              <div class="contest-status status-upcoming">
-                <i class="bi bi-clock"></i> Upcoming
-              </div>
-              <h4 style="color: white; font-weight: 700; margin-bottom: 1rem;">Codeforces Round #892</h4>
-              <p style="color: rgba(255, 255, 255, 0.8); margin-bottom: 1.5rem;">
-                Div. 2 round featuring 6 challenging problems across various difficulty levels.
-              </p>
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                <div>
-                  <div style="color: rgba(255, 255, 255, 0.6); font-size: 0.9rem;">Registered</div>
-                  <div style="color: white; font-weight: 600;">3,456</div>
-                </div>
-                <div>
-                  <div style="color: rgba(255, 255, 255, 0.6); font-size: 0.9rem;">Starts In</div>
-                  <div style="color: #3b82f6; font-weight: 600;">6h 15m</div>
-                </div>
-              </div>
-              <a href="#" class="btn" style="background: linear-gradient(135deg, var(--primary-color), var(--primary-light)); color: white; width: 100%;">
-                <i class="bi bi-calendar-plus"></i> Register Now
-              </a>
-            </div>
-          </div>
-          
-          <div class="col-lg-4 col-md-6 mb-4">
-            <div class="contest-card">
-              <div class="contest-status status-upcoming">
-                <i class="bi bi-trophy"></i> Special Event
-              </div>
-              <h4 style="color: white; font-weight: 700; margin-bottom: 1rem;">Monthly Mega Contest</h4>
-              <p style="color: rgba(255, 255, 255, 0.8); margin-bottom: 1.5rem;">
-                Premium contest with exclusive prizes and enhanced difficulty curve.
-              </p>
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                <div>
-                  <div style="color: rgba(255, 255, 255, 0.6); font-size: 0.9rem;">Prize Pool</div>
-                  <div style="color: #fbbf24; font-weight: 600;">$5,000</div>
-                </div>
-                <div>
-                  <div style="color: rgba(255, 255, 255, 0.6); font-size: 0.9rem;">Starts In</div>
-                  <div style="color: #3b82f6; font-weight: 600;">3 days</div>
-                </div>
-              </div>
-              <a href="#" class="btn" style="background: linear-gradient(135deg, #fbbf24, #f59e0b); color: white; width: 100%;">
-                <i class="bi bi-star"></i> View Details
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Learning Path Section -->
-    <section style="background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); padding: 120px 0;">
-      <div class="container">
-        <div class="section-header">
-          <div class="section-badge">Learning Journey</div>
-          <h2 class="section-title">Structured Learning Path</h2>
-          <p class="section-subtitle">
-            Follow our carefully designed curriculum that takes you from basics to advanced competitive programming concepts.
-          </p>
-        </div>
-        
-        <div class="learning-path" style="margin-top: 4rem;">
-          <div class="row align-items-center">
-            <div class="col-lg-6">
-              <div class="path-steps">
-                <div class="path-step" style="display: flex; align-items: flex-start; margin-bottom: 2rem; padding: 1.5rem; background: white; border-radius: 16px; box-shadow: var(--shadow-md); position: relative;">
-                  <div class="step-number" style="width: 50px; height: 50px; background: linear-gradient(135deg, var(--primary-color), var(--primary-light)); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; margin-right: 1.5rem; flex-shrink: 0;">1</div>
-                  <div>
-                    <h4 style="color: var(--dark-color); font-weight: 700; margin-bottom: 0.5rem;">Foundation Building</h4>
-                    <p style="color: var(--secondary-color); margin: 0;">Master basic data structures, time complexity analysis, and fundamental algorithmic thinking.</p>
-                  </div>
-                </div>
-                
-                <div class="path-step" style="display: flex; align-items: flex-start; margin-bottom: 2rem; padding: 1.5rem; background: white; border-radius: 16px; box-shadow: var(--shadow-md); position: relative;">
-                  <div class="step-number" style="width: 50px; height: 50px; background: linear-gradient(135deg, var(--accent-color), #0891b2); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; margin-right: 1.5rem; flex-shrink: 0;">2</div>
-                  <div>
-                    <h4 style="color: var(--dark-color); font-weight: 700; margin-bottom: 0.5rem;">Algorithm Mastery</h4>
-                    <p style="color: var(--secondary-color); margin: 0;">Deep dive into sorting, searching, graph algorithms, and dynamic programming techniques.</p>
-                  </div>
-                </div>
-                
-                <div class="path-step" style="display: flex; align-items: flex-start; margin-bottom: 2rem; padding: 1.5rem; background: white; border-radius: 16px; box-shadow: var(--shadow-md); position: relative;">
-                  <div class="step-number" style="width: 50px; height: 50px; background: linear-gradient(135deg, var(--success-color), #059669); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; margin-right: 1.5rem; flex-shrink: 0;">3</div>
-                  <div>
-                    <h4 style="color: var(--dark-color); font-weight: 700; margin-bottom: 0.5rem;">Contest Preparation</h4>
-                    <p style="color: var(--secondary-color); margin: 0;">Practice contest-style problems, learn optimization techniques, and develop speed coding skills.</p>
-                  </div>
-                </div>
-                
-                <div class="path-step" style="display: flex; align-items: flex-start; padding: 1.5rem; background: white; border-radius: 16px; box-shadow: var(--shadow-md); position: relative;">
-                  <div class="step-number" style="width: 50px; height: 50px; background: linear-gradient(135deg, var(--warning-color), #d97706); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; margin-right: 1.5rem; flex-shrink: 0;">4</div>
-                  <div>
-                    <h4 style="color: var(--dark-color); font-weight: 700; margin-bottom: 0.5rem;">Expert Level</h4>
-                    <p style="color: var(--secondary-color); margin: 0;">Tackle advanced topics like segment trees, network flows, and competitive programming strategies.</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div class="col-lg-6">
-              <div class="learning-visual" style="text-align: center; padding: 2rem;">
-                <div style="background: linear-gradient(135deg, var(--primary-color), var(--primary-light)); width: 300px; height: 300px; border-radius: 50%; margin: 0 auto; display: flex; align-items: center; justify-content: center; color: white; box-shadow: var(--shadow-xl); position: relative;">
-                  <div style="text-align: center;">
-                    <div style="font-size: 3rem; margin-bottom: 1rem;">
-                      <i class="bi bi-graph-up-arrow"></i>
-                    </div>
-                    <div style="font-size: 1.2rem; font-weight: 600;">Your Progress</div>
-                    <div style="font-size: 2.5rem; font-weight: 800; margin-top: 0.5rem;">87%</div>
-                  </div>
-                  
-                  <!-- Floating achievement badges -->
-                  <div style="position: absolute; top: -20px; left: -20px; background: var(--success-color); color: white; padding: 8px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600;">
-                    <i class="bi bi-trophy"></i> Expert
-                  </div>
-                  <div style="position: absolute; bottom: -20px; right: -20px; background: var(--accent-color); color: white; padding: 8px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600;">
-                    <i class="bi bi-lightning"></i> 150 Solved
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- CTA Section -->
-    <section class="cta-section">
-      <div class="container">
-        <div class="row align-items-center">
-          <div class="col-lg-8">
-            <h2 style="font-size: 3rem; font-weight: 800; margin-bottom: 1rem; font-family: 'Poppins', sans-serif;">
-              Ready to Level Up Your Coding Skills?
-            </h2>
-            <p style="font-size: 1.2rem; opacity: 0.9; margin-bottom: 2rem;">
-              Join thousands of programmers who have already transformed their problem-solving abilities with our comprehensive platform.
-            </p>
-            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-              <a href="#register" class="btn btn-lg" style="background: white; color: var(--primary-color); font-weight: 700;">
-                <i class="bi bi-rocket-takeoff"></i>
-                Start Your Journey
-              </a>
-              <a href="#explore" class="btn btn-outline-light btn-lg">
-                <i class="bi bi-collection"></i>
-                Browse Problems
-              </a>
-            </div>
-          </div>
-          <div class="col-lg-4">
-            <div style="text-align: center; position: relative;">
-              <div style="background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(20px); border-radius: 20px; padding: 2rem; border: 1px solid rgba(255, 255, 255, 0.2);">
-                <div style="font-size: 4rem; margin-bottom: 1rem;">
-                  <i class="bi bi-code-square"></i>
-                </div>
-                <div style="font-size: 1.1rem; font-weight: 600; margin-bottom: 0.5rem;">Free Forever</div>
-                <div style="font-size: 0.9rem; opacity: 0.8;">No hidden fees, unlimited access to all features</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <!-- Footer -->
-  <footer>
-    <div class="container">
-      <div class="row">
-        <div class="col-lg-4 mb-4">
-          <div class="footer-brand">MyOJ</div>
-          <p class="footer-description">
-            Empowering the next generation of competitive programmers with cutting-edge tools, comprehensive problem sets, and a vibrant learning community.
-          </p>
-          <div class="footer-social">
-            <a href="#"><i class="bi bi-github"></i></a>
-            <a href="#"><i class="bi bi-twitter"></i></a>
-            <a href="#"><i class="bi bi-discord"></i></a>
-            <a href="#"><i class="bi bi-linkedin"></i></a>
-          </div>
-        </div>
-        
-        <div class="col-lg-2 col-md-6 mb-4">
-          <div class="footer-links">
-            <h6>Platform</h6>
-            <a href="#">Problems</a>
-            <a href="#">Contests</a>
-            <a href="#">Leaderboard</a>
-            <a href="#">Community</a>
-          </div>
-        </div>
-        
-        <div class="col-lg-2 col-md-6 mb-4">
-          <div class="footer-links">
-            <h6>Learn</h6>
-            <a href="#">Tutorials</a>
-            <a href="#">Algorithms</a>
-            <a href="#">Data Structures</a>
-            <a href="#">Practice</a>
-          </div>
-        </div>
-        
-        <div class="col-lg-2 col-md-6 mb-4">
-          <div class="footer-links">
-            <h6>Support</h6>
-            <a href="#">Help Center</a>
-            <a href="#">Documentation</a>
-            <a href="#">Contact Us</a>
-            <a href="#">Bug Reports</a>
-          </div>
-        </div>
-        
-        <div class="col-lg-2 col-md-6 mb-4">
-          <div class="footer-links">
-            <h6>Company</h6>
-            <a href="#">About Us</a>
-            <a href="#">Privacy Policy</a>
-            <a href="#">Terms of Service</a>
-            <a href="#">Careers</a>
-          </div>
-        </div>
-      </div>
-      
-      <hr style="border-color: rgba(255, 255, 255, 0.1); margin: 2rem 0;">
-      
-      <div class="row align-items-center">
-        <div class="col-md-6">
-          <p style="color: rgba(255, 255, 255, 0.6); margin: 0; font-size: 0.9rem;">
-            © 2024 MyOJ. All rights reserved. Built with passion for competitive programming.
-          </p>
-        </div>
-        <div class="col-md-6 text-md-end">
-          <p style="color: rgba(255, 255, 255, 0.6); margin: 0; font-size: 0.9rem;">
-            Made with <i class="bi bi-heart-fill" style="color: #ef4444;"></i> by developers, for developers
-          </p>
-        </div>
-      </div>
-    </div>
-  </footer>
-
-  <!-- Bootstrap JS -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  
-  <script>
-    // Navbar scroll effect
-    window.addEventListener('scroll', function() {
-      const navbar = document.querySelector('.navbar-custom');
-      if (window.scrollY > 50) {
-        navbar.classList.add('scrolled');
-      } else {
-        navbar.classList.remove('scrolled');
-      }
-    });
-
-    // Category cards hover effect
-    document.querySelectorAll('.category-card').forEach(card => {
-      card.addEventListener('mouseenter', function() {
-        this.style.transform = 'translateY(-10px) scale(1.02)';
-        this.style.boxShadow = '0 25px 50px -12px rgba(0, 0, 0, 0.25)';
-      });
-      
-      card.addEventListener('mouseleave', function() {
-        this.style.transform = 'translateY(0) scale(1)';
-        this.style.boxShadow = 'none';
-      });
-    });
-
-    // Animate counters in hero stats
-    function animateCounters() {
-      const counters = document.querySelectorAll('.hero-stat-number');
-      counters.forEach(counter => {
-        const target = parseInt(counter.textContent.replace(/[^0-9]/g, ''));
-        const duration = 2000;
-        const step = target / (duration / 16);
-        let current = 0;
-        
-        const updateCounter = () => {
-          current += step;
-          if (current < target) {
-            counter.textContent = Math.floor(current).toLocaleString() + counter.textContent.replace(/[0-9,]/g, '');
-            requestAnimationFrame(updateCounter);
-          } else {
-            counter.textContent = target.toLocaleString() + counter.textContent.replace(/[0-9,]/g, '');
-          }
-        };
-        
-        // Start animation when element is visible
-        const observer = new IntersectionObserver((entries) => {
-          entries.forEach(entry => {
-            if (entry.isIntersecting) {
-              updateCounter();
-              observer.unobserve(entry.target);
-            }
-          });
-        });
-        observer.observe(counter);
-      });
-    }
-
-    // Initialize animations
-    document.addEventListener('DOMContentLoaded', function() {
-      animateCounters();
-      
-      // Generate floating code elements
-      const codeElements = document.querySelector('.code-elements');
-      const codeSnippets = [
-        'sort(arr.begin(), arr.end());',
-        'while(q--) { solve(); }',
-        'map<int, int> mp;',
-        'vector<vector<int>> dp;',
-        'return gcd(a, b);',
-        'if(vis[node]) continue;',
-        'ans = max(ans, curr);',
-        'for(int i : adj[u])',
-        'cout << fixed << setprecision(9);'
-      ];
-      
-      setInterval(() => {
-        if (codeElements.children.length < 8) {
-          const element = document.createElement('div');
-          element.className = 'code-element';
-          element.textContent = codeSnippets[Math.floor(Math.random() * codeSnippets.length)];
-          element.style.left = Math.random() * 80 + 10 + '%';
-          element.style.animationDelay = '0s';
-          codeElements.appendChild(element);
-          
-          // Remove element after animation
-          setTimeout(() => {
-            if (element.parentNode) {
-              element.parentNode.removeChild(element);
-            }
-          }, 25000);
-        }
-      }, 3000);
-    });
-
-    // Smooth scrolling for anchor links
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-      anchor.addEventListener('click', function (e) {
-        e.preventDefault();
-        const target = document.querySelector(this.getAttribute('href'));
-        if (target) {
-          target.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start'
-          });
-        }
-      });
-    });
-  </script>
-
-  <style>
-    /* Additional hover effects for category cards */
-    .category-card {
-      transition: all 0.3s ease;
+      font-size: 2.5rem;
     }
     
-    .category-card:hover {
-      transform: translateY(-10px) scale(1.02);
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    .hero-subtitle {
+      font-size: 1.2rem;
     }
-
-    /* Pulse animation for live contest status */
-    @keyframes pulse {
-      0%, 100% {
-        opacity: 1;
-        transform: scale(1);
-      }
-      50% {
-        opacity: 0.8;
-        transform: scale(1.05);
-      }
+    
+    .hero-cta {
+      flex-direction: column;
+      align-items: center;
     }
-
-    .live-status {
-      animation: pulse 2s infinite;
+    
+    .section-title {
+      font-size: 2.2rem;
     }
-
-    /* Floating code elements animation */
-    @keyframes float-up {
-      0% {
-        opacity: 0;
-        transform: translateY(100vh) rotate(0deg);
-      }
-      10% {
-        opacity: 1;
-      }
-      90% {
-        opacity: 1;
-      }
-      100% {
-        opacity: 0;
-        transform: translateY(-100vh) rotate(360deg);
-      }
+    
+    .feature-card,
+    .problem-card,
+    .contest-card {
+      margin-bottom: 2rem;
     }
-
-    .code-elements {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: -1;
-      overflow: hidden;
+    
+    .stat-number {
+      font-size: 2.5rem;
     }
-
-    .code-element {
-      position: absolute;
-      font-family: 'Courier New', monospace;
-      font-size: 12px;
-      color: rgba(99, 102, 241, 0.1);
-      animation: float-up 25s linear infinite;
-      white-space: nowrap;
+    
+    .cta-title {
+      font-size: 2.2rem;
     }
+  }
 
-    /* Responsive adjustments */
-    @media (max-width: 768px) {
-      .categories-grid {
-        grid-template-columns: 1fr;
-      }
-      
-      .hero-cta {
-        flex-direction: column;
-        gap: 1rem;
-      }
-      
-      .hero-cta .btn {
-        width: 100%;
-        max-width: 300px;
-      }
-      
-      .path-step {
-        margin-bottom: 1.5rem;
-      }
+  /* Animation */
+  .animate-on-scroll {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.6s ease;
+  }
 
-      .hero-stat-number {
-        font-size: 1.5rem;
-      }
+  .animate-on-scroll.animated {
+    opacity: 1;
+    transform: translateY(0);
+  }
+</style>
+{% endblock %}
 
-      .code-element {
-        font-size: 10px;
-      }
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+  <div class="container">
+    <div class="hero-content animate-on-scroll">
+      <h1 class="hero-title">Master Competitive Programming</h1>
+      <p class="hero-subtitle">Solve challenging problems, compete with peers, and elevate your coding skills on MyOJ</p>
+      <div class="hero-cta">
+        {% if not user.is_authenticated %}
+          <a href="{% url 'register' %}" class="cta-button cta-primary">
+            <i class="bi bi-rocket-takeoff me-2"></i>Get Started Free
+          </a>
+          <a href="{% url 'problem_list' %}" class="cta-button cta-secondary">
+            <i class="bi bi-code-slash me-2"></i>Browse Problems
+          </a>
+        {% else %}
+          <a href="{% url 'problem_list' %}" class="cta-button cta-primary">
+            <i class="bi bi-code-slash me-2"></i>Solve Problems
+          </a>
+          <a href="{% url 'contest_list' %}" class="cta-button cta-secondary">
+            <i class="bi bi-trophy me-2"></i>Join Contests
+          </a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Stats Section -->
+<section class="stats-section">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-md-3 col-sm-6">
+        <div class="stat-card animate-on-scroll">
+          <div class="stat-number">500+</div>
+          <div class="stat-label">Problems</div>
+        </div>
+      </div>
+      <div class="col-md-3 col-sm-6">
+        <div class="stat-card animate-on-scroll">
+          <div class="stat-number">1.2k+</div>
+          <div class="stat-label">Active Users</div>
+        </div>
+      </div>
+      <div class="col-md-3 col-sm-6">
+        <div class="stat-card animate-on-scroll">
+          <div class="stat-number">50+</div>
+          <div class="stat-label">Contests</div>
+        </div>
+      </div>
+      <div class="col-md-3 col-sm-6">
+        <div class="stat-card animate-on-scroll">
+          <div class="stat-number">10k+</div>
+          <div class="stat-label">Submissions</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Features Section -->
+<section class="features-section">
+  <div class="container">
+    <div class="animate-on-scroll">
+      <h2 class="section-title">Why Choose MyOJ?</h2>
+      <p class="section-subtitle">Experience the best competitive programming platform with cutting-edge features</p>
+    </div>
+    <div class="row g-4">
+      <div class="col-lg-4 col-md-6">
+        <div class="feature-card animate-on-scroll">
+          <div class="feature-icon">
+            <i class="bi bi-lightning-charge-fill"></i>
+          </div>
+          <h3 class="feature-title">Lightning Fast Judge</h3>
+          <p class="feature-description">Get instant feedback with our optimized judging system that processes submissions in seconds.</p>
+        </div>
+      </div>
+      <div class="col-lg-4 col-md-6">
+        <div class="feature-card animate-on-scroll">
+          <div class="feature-icon">
+            <i class="bi bi-trophy-fill"></i>
+          </div>
+          <h3 class="feature-title">Competitive Contests</h3>
+          <p class="feature-description">Participate in regular contests, climb the leaderboard, and compete with programmers worldwide.</p>
+        </div>
+      </div>
+      <div class="col-lg-4 col-md-6">
+        <div class="feature-card animate-on-scroll">
+          <div class="feature-icon">
+            <i class="bi bi-graph-up-arrow"></i>
+          </div>
+          <h3 class="feature-title">Progress Tracking</h3>
+          <p class="feature-description">Monitor your improvement with detailed analytics, problem solving statistics, and skill assessments.</p>
+        </div>
+      </div>
+      <div class="col-lg-4 col-md-6">
+        <div class="feature-card animate-on-scroll">
+          <div class="feature-icon">
+            <i class="bi bi-code-square"></i>
+          </div>
+          <h3 class="feature-title">Multi-Language Support</h3>
+          <p class="feature-description">Code in your preferred language with support for C++, Python, Java, and many more.</p>
+        </div>
+      </div>
+      <div class="col-lg-4 col-md-6">
+        <div class="feature-card animate-on-scroll">
+          <div class="feature-icon">
+            <i class="bi bi-people-fill"></i>
+          </div>
+          <h3 class="feature-title">Community Driven</h3>
+          <p class="feature-description">Join a vibrant community of learners, share solutions, and learn from experienced programmers.</p>
+        </div>
+      </div>
+      <div class="col-lg-4 col-md-6">
+        <div class="feature-card animate-on-scroll">
+          <div class="feature-icon">
+            <i class="bi bi-shield-check-fill"></i>
+          </div>
+          <h3 class="feature-title">Secure & Reliable</h3>
+          <p class="feature-description">Built with security in mind, ensuring fair play and protecting your code and data.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Popular Problems Section -->
+<section class="popular-problems">
+  <div class="container">
+    <div class="animate-on-scroll">
+      <h2 class="section-title">Popular Problems</h2>
+      <p class="section-subtitle">Start your journey with these handpicked problems loved by our community</p>
+    </div>
+    <div class="row g-4">
+      <div class="col-lg-4 col-md-6">
+        <div class="problem-card animate-on-scroll">
+          <h3 class="problem-title">Two Sum</h3>
+          <div class="problem-meta">
+            <span class="difficulty-easy">Easy</span>
+            <span class="problem-stats">1.2k solved</span>
+          </div>
+          <p class="problem-description">Given an array of integers, return indices of the two numbers such that they add up to a specific target.</p>
+          <a href="#" class="solve-button">Solve Now</a>
+        </div>
+      </div>
+      <div class="col-lg-4 col-md-6">
+        <div class="problem-card animate-on-scroll">
+          <h3 class="problem-title">Binary Tree Traversal</h3>
+          <div class="problem-meta">
+            <span class="difficulty-medium">Medium</span>
+            <span class="problem-stats">856 solved</span>
+          </div>
+          <p class="problem-description">Implement preorder, inorder, and postorder traversal of a binary tree using both recursive and iterative methods.</p>
+          <a href="#" class="solve-button">Solve Now</a>
+        </div>
+      </div>
+      <div class="col-lg-4 col-md-6">
+        <div class="problem-card animate-on-scroll">
+          <h3 class="problem-title">Graph Algorithms</h3>
+          <div class="problem-meta">
+            <span class="difficulty-hard">Hard</span>
+            <span class="problem-stats">342 solved</span>
+          </div>
+          <p class="problem-description">Find the shortest path in a weighted graph using advanced algorithms like Dijkstra's and Floyd-Warshall.</p>
+          <a href="#" class="solve-button">Solve Now</a>
+        </div>
+      </div>
+    </div>
+    <div class="text-center mt-5">
+      <a href="{% url 'problem_list' %}" class="cta-button cta-primary">
+        <i class="bi bi-arrow-right me-2"></i>View All Problems
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- Recent Contests Section -->
+<section class="recent-contests">
+  <div class="container">
+    <div class="animate-on-scroll">
+      <h2 class="section-title">Upcoming Contests</h2>
+      <p class="section-subtitle">Join exciting programming contests and test your skills against other coders</p>
+    </div>
+    <div class="row g-4">
+      <div class="col-lg-4 col-md-6">
+        <div class="contest-card animate-on-scroll">
+          <div class="contest-header">
+            <div>
+              <h3 class="contest-title">Weekly Challenge #15</h3>
+              <p class="contest-time">Starts in 2 days • 2 hours duration</p>
+            </div>
+            <span class="contest-participants">124 registered</span>
+          </div>
+          <p class="contest-description">Test your algorithms and data structures knowledge in this exciting weekly contest.</p>
+          <a href="#" class="join-contest">Register Now</a>
+        </div>
+      </div>
+      <div class="col-lg-4 col-md-6">
+        <div class="contest-card animate-on-scroll">
+          <div class="contest-header">
+            <div>
+              <h3 class="contest-title">Beginner's Cup</h3>
+              <p class="contest-time">Starts in 5 days • 1.5 hours duration</p>
+            </div>
+            <span class="contest-participants">89 registered</span>
+          </div>
+          <p class="contest-description">Perfect for newcomers to competitive programming. Easy to medium difficulty problems.</p>
+          <a href="#" class="join-contest">Register Now</a>
+        </div>
+      </div>
+      <div class="col-lg-4 col-md-6">
+        <div class="contest-card animate-on-scroll">
+          <div class="contest-header">
+            <div>
+              <h3 class="contest-title">Advanced Algorithms</h3>
+              <p class="contest-time">Starts in 1 week • 3 hours duration</p>
+            </div>
+            <span class="contest-participants">67 registered</span>
+          </div>
+          <p class="contest-description">Challenge yourself with complex algorithmic problems and advanced data structures.</p>
+          <a href="#" class="join-contest">Register Now</a>
+        </div>
+      </div>
+    </div>
+    <div class="text-center mt-5">
+      <a href="{% url 'contest_list' %}" class="cta-button cta-primary">
+        <i class="bi bi-trophy me-2"></i>View All Contests
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section">
+  <div class="container">
+    <div class="cta-content animate-on-scroll">
+      <h2 class="cta-title">Ready to Start Coding?</h2>
+      <p class="cta-description">Join thousands of programmers who are improving their skills daily on MyOJ</p>
+      <div class="hero-cta">
+        {% if not user.is_authenticated %}
+          <a href="{% url 'register' %}" class="cta-button cta-primary">
+            <i class="bi bi-person-plus me-2"></i>Create Account
+          </a>
+          <a href="{% url 'login' %}" class="cta-button cta-secondary">
+            <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+          </a>
+        {% else %}
+          <a href="{% url 'problem_list' %}" class="cta-button cta-primary">
+            <i class="bi bi-play-fill me-2"></i>Start Solving
+          </a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Smooth scroll animation for elements
+const observerOptions = {
+  threshold: 0.1,
+  rootMargin: '0px 0px -50px 0px'
+};
+
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('animated');
     }
+  });
+}, observerOptions);
 
-    @media (max-width: 480px) {
-      .hero-title {
-        font-size: 2rem;
+// Observe all elements with animate-on-scroll class
+document.addEventListener('DOMContentLoaded', function() {
+  const animateElements = document.querySelectorAll('.animate-on-scroll');
+  animateElements.forEach(el => observer.observe(el));
+});
+
+// Add some interactive counter animation for stats
+document.addEventListener('DOMContentLoaded', function() {
+  const statNumbers = document.querySelectorAll('.stat-number');
+  
+  const animateCount = (element, target) => {
+    const increment = target / 100;
+    let current = 0;
+    
+    const timer = setInterval(() => {
+      current += increment;
+      if (current >= target) {
+        element.textContent = target + '+';
+        clearInterval(timer);
+      } else {
+        element.textContent = Math.floor(current) + '+';
       }
-
-      .hero-subtitle {
-        font-size: 1rem;
+    }, 20);
+  };
+  
+  // Trigger animation when stats section comes into view
+  const statsObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const statCards = entry.target.querySelectorAll('.stat-card');
+        statCards.forEach((card, index) => {
+          setTimeout(() => {
+            const number = card.querySelector('.stat-number');
+            const targetText = number.textContent;
+            const targetNum = parseInt(targetText.replace(/[^\d]/g, ''));
+            animateCount(number, targetNum);
+          }, index * 200);
+        });
+        statsObserver.unobserve(entry.target);
       }
-
-      .category-card {
-        padding: 1rem;
-      }
-
-      .path-step {
-        padding: 1rem;
-      }
-    }
-
-    /* Additional animations */
-    @keyframes fadeInUp {
-      from {
-        opacity: 0;
-        transform: translateY(30px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    .fade-in-up {
-      animation: fadeInUp 0.6s ease forwards;
-    }
-
-    /* Navbar scroll effect styles */
-    .navbar-custom {
-      transition: all 0.3s ease;
-    }
-
-    .navbar-custom.scrolled {
-      background-color: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(10px);
-      box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
-    }
-  </style>
-  </body>
-</html>
+    });
+  }, { threshold: 0.5 });
+  
+  const statsSection = document.querySelector('.stats-section');
+  if (statsSection) {
+    statsObserver.observe(statsSection);
+  }
+});
+</script>
+{% endblock %}
