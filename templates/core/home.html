@@ -352,12 +352,12 @@
       &nbsp;&nbsp;&nbsp;&nbsp;max_val = arr[i]
     </div>
   </div>
-  
+  {% if not user.is_authenticated %}
   <div class="hero-content">
     <div class="container text-center">
       <h1 class="hero-title">Code. Compete. Conquer.</h1>
       <p class="hero-subtitle">Master algorithmic challenges and compete with programmers worldwide</p>
-      
+  {% endif %}
       {% if not user.is_authenticated %}
         <div class="cta-buttons">
           <a href="{% url 'problem_list' %}" class="btn btn-hero btn-hero-primary">
