@@ -208,21 +208,25 @@
     padding: 100px 0;
   }
 
-  /* Fixed: Equal height containers for leaderboard and activity */
+  /* Fixed: Proper alignment for leaderboard and activity sections */
   .leaderboard-container, .activity-container {
-    min-height: 600px; /* Set consistent minimum height */
+    height: 100%;
     display: flex;
     flex-direction: column;
   }
 
   .leaderboard-content, .activity-content {
-    flex-grow: 1; /* Allow content to expand */
     display: flex;
     flex-direction: column;
+    height: 100%;
   }
 
   .leaderboard-items, .activity-items {
-    flex-grow: 1; /* Make the items area take remaining space */
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    min-height: 400px;
   }
 
   .leaderboard-item {
@@ -250,12 +254,24 @@
     justify-content: center;
     font-weight: 800;
     margin-right: 1rem;
+    flex-shrink: 0;
   }
 
   .rank-1 { background: linear-gradient(45deg, #ffd700, #ffed4e); color: #1a1a1a; }
   .rank-2 { background: linear-gradient(45deg, #c0c0c0, #e5e5e5); color: #1a1a1a; }
   .rank-3 { background: linear-gradient(45deg, #cd7f32, #d2691e); color: white; }
   .rank-other { background: linear-gradient(45deg, #4a5568, #2d3748); color: white; }
+
+  /* Make sure both columns have equal height */
+  .leaderboard-row {
+    display: flex;
+    align-items: stretch;
+  }
+
+  .leaderboard-col {
+    display: flex;
+    flex-direction: column;
+  }
 
   /* Animated Code Background */
   .code-bg {
@@ -302,6 +318,10 @@
 
     /* Mobile responsiveness for equal height containers */
     .leaderboard-container, .activity-container {
+      min-height: auto;
+    }
+
+    .leaderboard-items, .activity-items {
       min-height: auto;
     }
   }
@@ -368,7 +388,8 @@
   </div>
 </section>
 
-<!-- Stats Section -->
+<!-- Stats Section - Only show for authenticated users -->
+{% if user.is_authenticated %}
 <section class="stats-section">
   <div class="container">
     <div class="row g-4">
@@ -399,8 +420,10 @@
     </div>
   </div>
 </section>
+{% endif %}
 
-<!-- Features Section -->
+<!-- Features Section - Only show for authenticated users -->
+{% if user.is_authenticated %}
 <section class="features-section">
   <div class="container">
     <div class="row text-center mb-5">
@@ -485,13 +508,14 @@
     </div>
   </div>
 </section>
+{% endif %}
 
 <!-- Leaderboard Section - Only show for non-authenticated users -->
 {% if not user.is_authenticated %}
 <section class="leaderboard-section">
   <div class="container">
-    <div class="row">
-      <div class="col-lg-6">
+    <div class="row leaderboard-row">
+      <div class="col-lg-6 leaderboard-col">
         <div class="leaderboard-container">
           <div class="leaderboard-content">
             <h2 class="display-5 fw-bold mb-4">🏆 Top Performers</h2>
@@ -552,7 +576,7 @@
         </div>
       </div>
       
-      <div class="col-lg-6">
+      <div class="col-lg-6 leaderboard-col">
         <div class="activity-container">
           <div class="activity-content">
             <h2 class="display-5 fw-bold mb-4">📊 Recent Activity</h2>
