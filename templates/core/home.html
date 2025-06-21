@@ -358,7 +358,7 @@
       <h1 class="hero-title">Code. Compete. Conquer.</h1>
       <p class="hero-subtitle">Master algorithmic challenges and compete with programmers worldwide</p>
       
-      {% if user.is_authenticated %}
+      {% if not user.is_authenticated %}
         <div class="cta-buttons">
           <a href="{% url 'problem_list' %}" class="btn btn-hero btn-hero-primary">
             <i class="bi bi-code-slash me-2"></i>Start Coding
@@ -389,7 +389,7 @@
 </section>
 
 <!-- Stats Section - Only show for authenticated users -->
-{% if user.is_authenticated %}
+{% if not user.is_authenticated %}
 <section class="stats-section">
   <div class="container">
     <div class="row g-4">
@@ -423,7 +423,7 @@
 {% endif %}
 
 <!-- Features Section - Only show for authenticated users -->
-{% if user.is_authenticated %}
+{% if not user.is_authenticated %}
 <section class="features-section">
   <div class="container">
     <div class="row text-center mb-5">
