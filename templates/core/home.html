@@ -514,7 +514,6 @@
           <h3><span class="icon icon-contests"><i class="bi bi-trophy"></i></span> Contests</h3>
           <p class="text-muted mb-3">Participate in competitive programming contests</p>
           <div class="d-flex justify-content-between align-items-center">
-            <span class="text-warning fw-bold">{{ active_contests|default:"5" }} Active</span>
             <a href="{% url 'contest_list' %}" class="btn btn-outline-warning btn-sm">
               <i class="bi bi-arrow-right"></i>
             </a>
@@ -527,7 +526,6 @@
           <h3><span class="icon icon-progress"><i class="bi bi-graph-up"></i></span> Profile and Progress</h3>
           <p class="text-muted mb-3">View your submission history and statistics</p>
           <div class="d-flex justify-content-between align-items-center">
-            <span class="text-success fw-bold">{{ solve_rate|default:"75%" }} Success</span>
             <a href="{% url 'profile' %}" class="btn btn-outline-success btn-sm">
               <i class="bi bi-arrow-right"></i>
             </a>
