@@ -871,6 +871,8 @@
   </div>
 </section>
 {% endif %}
+
+{% if not user.is_authenticated %}
 <!-- Footer -->
 <footer style="background: #1e293b; color: white; padding: 60px 0 20px;">
   <div class="container">
@@ -960,7 +962,7 @@
     </div>
   </div>
 </footer>
-
+{% endif %}
 <!-- Back to Top Button -->
 <button id="backToTop" class="btn btn-primary position-fixed bottom-0 end-0 m-4 rounded-circle d-none" style="z-index: 1000; width: 50px; height: 50px;">
   <i class="bi bi-arrow-up"></i>
