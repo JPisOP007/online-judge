@@ -42,6 +42,68 @@
     opacity: 0.9;
   }
 
+  /* Welcome Section for Authenticated Users */
+  .welcome-section {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 60px 0;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .welcome-card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(15px);
+    border-radius: 20px;
+    padding: 2.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  .welcome-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+  }
+
+  .role-badge {
+    display: inline-block;
+    background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+    color: white;
+    padding: 8px 20px;
+    border-radius: 25px;
+    font-weight: 600;
+    font-size: 1rem;
+    margin: 0.5rem;
+    box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+  }
+
+  .quick-stats {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-top: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .quick-stat {
+    text-align: center;
+  }
+
+  .quick-stat .number {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #60a5fa;
+    display: block;
+  }
+
+  .quick-stat .label {
+    font-size: 0.9rem;
+    opacity: 0.8;
+  }
+
   .cta-buttons {
     display: flex;
     gap: 1rem;
@@ -83,6 +145,52 @@
     transform: translateY(-2px);
     color: white;
   }
+
+  /* Dashboard Cards */
+  .dashboard-section {
+    background: #f8fafc;
+    padding: 80px 0;
+  }
+
+  .dashboard-card {
+    background: white;
+    border-radius: 15px;
+    padding: 2rem;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    border: 1px solid #e2e8f0;
+    transition: all 0.3s ease;
+    height: 100%;
+  }
+
+  .dashboard-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+  }
+
+  .dashboard-card h3 {
+    color: #1e293b;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .dashboard-card .icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    color: white;
+  }
+
+  .icon-problems { background: linear-gradient(45deg, #3b82f6, #1d4ed8); }
+  .icon-contests { background: linear-gradient(45deg, #f59e0b, #d97706); }
+  .icon-progress { background: linear-gradient(45deg, #10b981, #059669); }
+  .icon-community { background: linear-gradient(45deg, #8b5cf6, #7c3aed); }
 
   /* Stats Section */
   .stats-section {
@@ -300,7 +408,7 @@
 
   /* Responsive Design */
   @media (max-width: 768px) {
-    .hero-title {
+    .hero-title, .welcome-title {
       font-size: 2.5rem;
     }
     
@@ -308,12 +416,16 @@
       font-size: 1.2rem;
     }
     
-    .cta-buttons {
+    .cta-buttons, .quick-stats {
       justify-content: center;
     }
     
     .stats-number {
       font-size: 2rem;
+    }
+
+    .quick-stats {
+      gap: 1rem;
     }
 
     /* Mobile responsiveness for equal height containers */
@@ -339,7 +451,127 @@
 {% endblock %}
 
 {% block content %}
-<!-- Hero Section -->
+{% if user.is_authenticated %}
+<!-- Welcome Section for Authenticated Users -->
+<section class="welcome-section">
+  <div class="code-bg">
+    <div class="floating-code" style="left: 10%; animation-delay: 0s;">
+      def solve():<br>
+      &nbsp;&nbsp;return "Hello World"
+    </div>
+    <div class="floating-code" style="left: 60%; animation-delay: 5s;">
+      for i in range(n):<br>
+      &nbsp;&nbsp;if arr[i] > max_val:<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;max_val = arr[i]
+    </div>
+  </div>
+  
+  <div class="container">
+    <div class="welcome-card">
+      <h1 class="welcome-title">Welcome back, {{ user.username }}! 👋</h1>
+      <div class="role-badge">
+        <i class="bi bi-person-badge me-2"></i>{{ user.userprofile.role|title }}
+      </div>
+      
+      <div class="quick-stats">
+        <div class="quick-stat">
+          <span class="number">{{ user.submissions.count|default:"0" }}</span>
+          <span class="label">Submissions</span>
+        </div>
+        <div class="quick-stat">
+          <span class="number">{{ user.solved_problems.count|default:"0" }}</span>
+          <span class="label">Solved</span>
+        </div>
+        <div class="quick-stat">
+          <span class="number">{{ user.userprofile.rating|default:"1200" }}</span>
+          <span class="label">Rating</span>
+        </div>
+        <div class="quick-stat">
+          <span class="number">{{ user.contest_participations.count|default:"0" }}</span>
+          <span class="label">Contests</span>
+        </div>
+      </div>
+      
+      <div class="cta-buttons mt-4">
+        <a href="{% url 'problem_list' %}" class="btn btn-hero btn-hero-primary">
+          <i class="bi bi-code-slash me-2"></i>Solve Problems
+        </a>
+        <a href="{% url 'contest_list' %}" class="btn btn-hero btn-hero-secondary">
+          <i class="bi bi-trophy me-2"></i>Join Contest
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Dashboard Section -->
+<section class="dashboard-section">
+  <div class="container">
+    <div class="row text-center mb-5">
+      <div class="col-12">
+        <h2 class="display-5 fw-bold mb-3">Your Dashboard</h2>
+        <p class="lead text-muted">Track your progress and explore new challenges</p>
+      </div>
+    </div>
+    
+    <div class="row g-4">
+      <div class="col-lg-3 col-md-6">
+        <div class="dashboard-card">
+          <h3><span class="icon icon-problems"><i class="bi bi-puzzle"></i></span> Practice</h3>
+          <p class="text-muted mb-3">Solve algorithmic problems and improve your coding skills</p>
+          <div class="d-flex justify-content-between align-items-center">
+            <span class="text-primary fw-bold">{{ total_problems|default:"150+" }} Problems</span>
+            <a href="{% url 'problem_list' %}" class="btn btn-outline-primary btn-sm">
+              <i class="bi bi-arrow-right"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-lg-3 col-md-6">
+        <div class="dashboard-card">
+          <h3><span class="icon icon-contests"><i class="bi bi-trophy"></i></span> Contests</h3>
+          <p class="text-muted mb-3">Participate in competitive programming contests</p>
+          <div class="d-flex justify-content-between align-items-center">
+            <span class="text-warning fw-bold">{{ active_contests|default:"5" }} Active</span>
+            <a href="{% url 'contest_list' %}" class="btn btn-outline-warning btn-sm">
+              <i class="bi bi-arrow-right"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-lg-3 col-md-6">
+        <div class="dashboard-card">
+          <h3><span class="icon icon-progress"><i class="bi bi-graph-up"></i></span> Progress</h3>
+          <p class="text-muted mb-3">View your submission history and statistics</p>
+          <div class="d-flex justify-content-between align-items-center">
+            <span class="text-success fw-bold">{{ solve_rate|default:"75%" }} Success</span>
+            <a href="#" class="btn btn-outline-success btn-sm">
+              <i class="bi bi-arrow-right"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-lg-3 col-md-6">
+        <div class="dashboard-card">
+          <h3><span class="icon icon-community"><i class="bi bi-people"></i></span> Community</h3>
+          <p class="text-muted mb-3">Connect with other programmers and discuss solutions</p>
+          <div class="d-flex justify-content-between align-items-center">
+            <span class="text-purple fw-bold">{{ community_rank|default:"Top 20%" }}</span>
+            <a href="#" class="btn btn-outline-primary btn-sm">
+              <i class="bi bi-arrow-right"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% else %}
+<!-- Hero Section for Non-Authenticated Users -->
 <section class="hero-section">
   <div class="code-bg">
     <div class="floating-code" style="left: 10%; animation-delay: 0s;">
@@ -352,42 +584,32 @@
       &nbsp;&nbsp;&nbsp;&nbsp;max_val = arr[i]
     </div>
   </div>
-  {% if not user.is_authenticated %}
+  
   <div class="hero-content">
     <div class="container text-center">
       <h1 class="hero-title">Code. Compete. Conquer.</h1>
       <p class="hero-subtitle">Master algorithmic challenges and compete with programmers worldwide</p>
-  {% endif %}
-      {% if not user.is_authenticated %}
-        <div class="cta-buttons">
-          <a href="{% url 'problem_list' %}" class="btn btn-hero btn-hero-primary">
-            <i class="bi bi-code-slash me-2"></i>Start Coding
-          </a>
-          <a href="{% url 'contest_list' %}" class="btn btn-hero btn-hero-secondary">
-            <i class="bi bi-trophy me-2"></i>Join Contest
-          </a>
-        </div>
-        
-        <div class="mt-4">
-          <p class="mb-2">Welcome back, <strong>{{ user.username }}</strong>!</p>
-          <span class="badge bg-light text-dark px-3 py-2">
-            <i class="bi bi-person-badge me-1"></i>{{ user.userprofile.role|title }}
-          </span>
-        </div>
-      {% endif %}
+      
+      <div class="cta-buttons">
+        <a href="{% url 'register' %}" class="btn btn-hero btn-hero-primary">
+          <i class="bi bi-person-plus me-2"></i>Get Started Free
+        </a>
+        <a href="{% url 'problem_list' %}" class="btn btn-hero btn-hero-secondary">
+          <i class="bi bi-code-slash me-2"></i>Browse Problems
+        </a>
+      </div>
     </div>
   </div>
 </section>
 
-<!-- Stats Section - Only show for authenticated users -->
-{% if not user.is_authenticated %}
+<!-- Stats Section -->
 <section class="stats-section">
   <div class="container">
     <div class="row g-4">
       <div class="col-md-3 col-sm-6">
         <div class="stats-card">
-          <div class="stats-number">100+</div>
-          <div class="stats-label">Problems Solved</div>
+          <div class="stats-number">150+</div>
+          <div class="stats-label">Problems Available</div>
         </div>
       </div>
       <div class="col-md-3 col-sm-6">
@@ -404,17 +626,15 @@
       </div>
       <div class="col-md-3 col-sm-6">
         <div class="stats-card">
-          <div class="stats-number">24 hours</div>
+          <div class="stats-number">99.9%</div>
           <div class="stats-label">Platform Uptime</div>
         </div>
       </div>
     </div>
   </div>
 </section>
-{% endif %}
 
-<!-- Features Section - Only show for authenticated users -->
-{% if not user.is_authenticated %}
+<!-- Features Section -->
 <section class="features-section">
   <div class="container">
     <div class="row text-center mb-5">
@@ -501,8 +721,7 @@
 </section>
 {% endif %}
 
-<!-- Leaderboard Section - Only show for non-authenticated users -->
-{% if not user.is_authenticated %}
+<!-- Leaderboard Section - Show for both authenticated and non-authenticated users -->
 <section class="leaderboard-section">
   <div class="container">
     <div class="row leaderboard-row">
@@ -598,26 +817,36 @@
                 <div class="d-flex justify-content-between align-items-start">
                   <div>
                     <span class="activity-user">ByteWarrior</span> won 
-                    <strong>"Weekly Challenge #47"</strong> 🏆
+                    <strong>"Weekly Contest #47"</strong> 🏆
                   </div>
-                  <span class="activity-time">1 hour ago</span>
+                  <span class="activity-time">15 min ago</span>
                 </div>
               </div>
               
               <div class="activity-card">
                 <div class="d-flex justify-content-between align-items-start">
                   <div>
-                    <span class="activity-user">DevProdigy</span> completed 
-                    <strong>"Dynamic Programming Marathon"</strong>
+                    <span class="activity-user">DevProdigy</span> solved 
+                    <strong>"Dynamic Programming Challenge"</strong>
                   </div>
-                  <span class="activity-time">3 hours ago</span>
+                  <span class="activity-time">23 min ago</span>
+                </div>
+              </div>
+              
+              <div class="activity-card">
+                <div class="d-flex justify-content-between align-items-start">
+                  <div>
+                    <span class="activity-user">PythonPro</span> reached 
+                    <strong>Expert level!</strong> ⭐
+                  </div>
+                  <span class="activity-time">1 hr ago</span>
                 </div>
               </div>
             </div>
             
             <div class="text-center mt-4">
-              <a href="{% url 'register' %}" class="btn btn-outline-light btn-lg">
-                <i class="bi bi-rocket me-2"></i>Start Your Journey
+              <a href="#" class="btn btn-outline-light btn-lg">
+                <i class="bi bi-activity me-2"></i>View All Activity
               </a>
             </div>
           </div>
@@ -626,65 +855,255 @@
     </div>
   </div>
 </section>
-{% endif %}
 
-<!-- Call to Action -->
-{% if not user.is_authenticated %}
-<section class="hero-section" style="padding: 80px 0;">
+<!-- Call to Action Section -->
+<section class="cta-section" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 100px 0;">
   <div class="container text-center">
-    <h2 class="display-4 fw-bold mb-4">Ready to Start Your Coding Journey?</h2>
-    <p class="lead mb-4">Join thousands of programmers improving their skills daily</p>
-    <div class="cta-buttons">
-      <a href="{% url 'register' %}" class="btn btn-hero btn-hero-primary pulse-animation">
-        <i class="bi bi-person-plus me-2"></i>Get Started Free
-      </a>
-      <a href="{% url 'problem_list' %}" class="btn btn-hero btn-hero-secondary btn-lg">
-        <i class="bi bi-eye me-2"></i>Browse Problems
-      </a>
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <h2 class="display-4 fw-bold mb-4">Ready to Start Your Journey?</h2>
+        <p class="lead mb-5">Join thousands of programmers who are already improving their skills with MyOJ</p>
+        
+        {% if not user.is_authenticated %}
+        <div class="d-flex gap-3 justify-content-center flex-wrap">
+          <a href="{% url 'register' %}" class="btn btn-hero btn-hero-primary btn-lg pulse-animation">
+            <i class="bi bi-rocket-takeoff me-2"></i>Start Coding Now
+          </a>
+          <a href="{% url 'login' %}" class="btn btn-hero btn-hero-secondary btn-lg">
+            <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+          </a>
+        </div>
+        {% else %}
+        <div class="d-flex gap-3 justify-content-center flex-wrap">
+          <a href="{% url 'problem_list' %}" class="btn btn-hero btn-hero-primary btn-lg pulse-animation">
+            <i class="bi bi-code-slash me-2"></i>Continue Solving
+          </a>
+          <a href="{% url 'contest_list' %}" class="btn btn-hero btn-hero-secondary btn-lg">
+            <i class="bi bi-trophy-fill me-2"></i>Join Next Contest
+          </a>
+        </div>
+        {% endif %}
+      </div>
     </div>
   </div>
 </section>
-{% endif %}
-{% endblock %}
 
-{% block extra_js %}
+<!-- Footer -->
+<footer style="background: #1e293b; color: white; padding: 60px 0 20px;">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-lg-4 col-md-6">
+        <h5 class="fw-bold mb-4">MyOJ Platform</h5>
+        <p class="text-light opacity-75 mb-4">
+          The ultimate competitive programming platform designed to help you master algorithms and data structures.
+        </p>
+        <div class="d-flex gap-3">
+          <a href="#" class="text-light opacity-75 hover-opacity-100">
+            <i class="bi bi-github fs-5"></i>
+          </a>
+          <a href="#" class="text-light opacity-75 hover-opacity-100">
+            <i class="bi bi-twitter fs-5"></i>
+          </a>
+          <a href="#" class="text-light opacity-75 hover-opacity-100">
+            <i class="bi bi-discord fs-5"></i>
+          </a>
+          <a href="#" class="text-light opacity-75 hover-opacity-100">
+            <i class="bi bi-linkedin fs-5"></i>
+          </a>
+        </div>
+      </div>
+      
+      <div class="col-lg-2 col-md-6">
+        <h6 class="fw-bold mb-4">Platform</h6>
+        <ul class="list-unstyled">
+          <li class="mb-2"><a href="{% url 'problem_list' %}" class="text-light opacity-75 text-decoration-none hover-opacity-100">Problems</a></li>
+          <li class="mb-2"><a href="{% url 'contest_list' %}" class="text-light opacity-75 text-decoration-none hover-opacity-100">Contests</a></li>
+          <li class="mb-2"><a href="#" class="text-light opacity-75 text-decoration-none hover-opacity-100">Leaderboard</a></li>
+          <li class="mb-2"><a href="#" class="text-light opacity-75 text-decoration-none hover-opacity-100">Tutorials</a></li>
+        </ul>
+      </div>
+      
+      <div class="col-lg-2 col-md-6">
+        <h6 class="fw-bold mb-4">Community</h6>
+        <ul class="list-unstyled">
+          <li class="mb-2"><a href="#" class="text-light opacity-75 text-decoration-none hover-opacity-100">Forums</a></li>
+          <li class="mb-2"><a href="#" class="text-light opacity-75 text-decoration-none hover-opacity-100">Discord</a></li>
+          <li class="mb-2"><a href="#" class="text-light opacity-75 text-decoration-none hover-opacity-100">Blog</a></li>
+          <li class="mb-2"><a href="#" class="text-light opacity-75 text-decoration-none hover-opacity-100">Events</a></li>
+        </ul>
+      </div>
+      
+      <div class="col-lg-2 col-md-6">
+        <h6 class="fw-bold mb-4">Support</h6>
+        <ul class="list-unstyled">
+          <li class="mb-2"><a href="#" class="text-light opacity-75 text-decoration-none hover-opacity-100">Help Center</a></li>
+          <li class="mb-2"><a href="#" class="text-light opacity-75 text-decoration-none hover-opacity-100">Contact Us</a></li>
+          <li class="mb-2"><a href="#" class="text-light opacity-75 text-decoration-none hover-opacity-100">FAQ</a></li>
+          <li class="mb-2"><a href="#" class="text-light opacity-75 text-decoration-none hover-opacity-100">API Docs</a></li>
+        </ul>
+      </div>
+      
+      <div class="col-lg-2 col-md-6">
+        <h6 class="fw-bold mb-4">Legal</h6>
+        <ul class="list-unstyled">
+          <li class="mb-2"><a href="#" class="text-light opacity-75 text-decoration-none hover-opacity-100">Privacy Policy</a></li>
+          <li class="mb-2"><a href="#" class="text-light opacity-75 text-decoration-none hover-opacity-100">Terms of Service</a></li>
+          <li class="mb-2"><a href="#" class="text-light opacity-75 text-decoration-none hover-opacity-100">Cookie Policy</a></li>
+          <li class="mb-2"><a href="#" class="text-light opacity-75 text-decoration-none hover-opacity-100">Guidelines</a></li>
+        </ul>
+      </div>
+    </div>
+    
+    <hr class="my-5 opacity-25">
+    
+    <div class="row align-items-center">
+      <div class="col-md-8">
+        <p class="mb-0 text-light opacity-75">
+          © 2024 MyOJ Platform. All rights reserved. Built with ❤️ for competitive programmers.
+        </p>
+      </div>
+      <div class="col-md-4 text-md-end mt-3 mt-md-0">
+        <div class="d-flex justify-content-md-end justify-content-center gap-4">
+          <span class="badge bg-success">
+            <i class="bi bi-circle-fill me-1" style="font-size: 0.5rem;"></i>
+            System Online
+          </span>
+          <span class="text-light opacity-75 small">
+            <i class="bi bi-clock me-1"></i>
+            Uptime: 99.9%
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- Back to Top Button -->
+<button id="backToTop" class="btn btn-primary position-fixed bottom-0 end-0 m-4 rounded-circle d-none" style="z-index: 1000; width: 50px; height: 50px;">
+  <i class="bi bi-arrow-up"></i>
+</button>
+
 <script>
-// Add some interactive elements
-document.addEventListener('DOMContentLoaded', function() {
-  // Animate stats numbers
-  const animateNumbers = () => {
-    const numbers = document.querySelectorAll('.stats-number');
-    numbers.forEach(number => {
-      const target = parseInt(number.textContent.replace(/\D/g, ''));
-      const suffix = number.textContent.replace(/\d/g, '');
-      let current = 0;
-      const increment = target / 100;
-      const timer = setInterval(() => {
-        current += increment;
-        if (current >= target) {
-          number.textContent = target + suffix;
-          clearInterval(timer);
-        } else {
-          number.textContent = Math.floor(current) + suffix;
-        }
-      }, 20);
-    });
-  };
-
-  // Trigger animation when stats section is visible
-  const statsSection = document.querySelector('.stats-section');
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        animateNumbers();
-        observer.unobserve(entry.target);
-      }
-    });
-  });
-  
-  if (statsSection) {
-    observer.observe(statsSection);
+// Back to top functionality
+window.addEventListener('scroll', function() {
+  const backToTopBtn = document.getElementById('backToTop');
+  if (window.pageYOffset > 300) {
+    backToTopBtn.classList.remove('d-none');
+  } else {
+    backToTopBtn.classList.add('d-none');
   }
 });
+
+document.getElementById('backToTop').addEventListener('click', function() {
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  });
+});
+
+// Add smooth scrolling to all anchor links
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+  anchor.addEventListener('click', function (e) {
+    e.preventDefault();
+    const target = document.querySelector(this.getAttribute('href'));
+    if (target) {
+      target.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      });
+    }
+  });
+});
+
+// Add loading animation to CTA buttons
+document.querySelectorAll('.btn-hero').forEach(btn => {
+  btn.addEventListener('click', function(e) {
+    if (!this.classList.contains('loading')) {
+      this.classList.add('loading');
+      const originalText = this.innerHTML;
+      this.innerHTML = '<i class="bi bi-arrow-clockwise spinner-border spinner-border-sm me-2"></i>Loading...';
+      
+      // Simulate loading for demo purposes
+      setTimeout(() => {
+        this.classList.remove('loading');
+        this.innerHTML = originalText;
+      }, 1500);
+    }
+  });
+});
+
+// Add entrance animations on scroll
+const observerOptions = {
+  threshold: 0.1,
+  rootMargin: '0px 0px -50px 0px'
+};
+
+const observer = new IntersectionObserver(function(entries) {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.style.opacity = '1';
+      entry.target.style.transform = 'translateY(0)';
+    }
+  });
+}, observerOptions);
+
+// Observe elements for animation
+document.querySelectorAll('.stats-card, .feature-card, .dashboard-card, .leaderboard-item, .activity-card').forEach(el => {
+  el.style.opacity = '0';
+  el.style.transform = 'translateY(30px)';
+  el.style.transition = 'all 0.6s ease';
+  observer.observe(el);
+});
 </script>
+
+<style>
+/* Additional styles for hover effects */
+.hover-opacity-100:hover {
+  opacity: 1 !important;
+}
+
+.spinner-border-sm {
+  width: 1rem;
+  height: 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.spinner-border {
+  animation: spin 1s linear infinite;
+}
+
+/* Enhanced button loading state */
+.btn-hero.loading {
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+/* Smooth transitions for all interactive elements */
+.btn, .card, .badge {
+  transition: all 0.3s ease;
+}
+
+/* Custom scrollbar for webkit browsers */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+}
+</style>
+
 {% endblock %}
