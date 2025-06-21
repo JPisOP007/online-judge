@@ -14,7 +14,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 encoded_key = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS_B64")
 if encoded_key:
     try:
-        service_account_path = "/tmp/gemini-service-key.json"
+        service_account_path = "/app/gemini-service-key.json"
         with open(service_account_path, "wb") as f:
             f.write(base64.b64decode(encoded_key))
         os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = service_account_path
