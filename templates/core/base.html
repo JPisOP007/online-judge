@@ -462,7 +462,7 @@
         </li>
         {% if user.is_authenticated %}
           <li class="nav-item">
-            <a class="nav-link btn btn-primary" href="{% url 'problems' %}">
+            <a class="nav-link btn btn-primary" href="{% url 'problem_list' %}">
               <i class="bi bi-list-task"></i>Dashboard
             </a>
           </li>
@@ -497,14 +497,14 @@
                 <a href="{% url 'register' %}" class="btn btn-primary btn-hero">
                   <i class="bi bi-rocket-takeoff"></i>Start Coding Now
                 </a>
-                <a href="{% url 'problems' %}" class="btn btn-outline-light btn-hero">
+                <a href="{% url 'problem_list' %}" class="btn btn-outline-light btn-hero">
                   <i class="bi bi-eye"></i>Browse Problems
                 </a>
               {% else %}
-                <a href="{% url 'problems' %}" class="btn btn-primary btn-hero">
+                <a href="{% url 'problem_list' %}" class="btn btn-primary btn-hero">
                   <i class="bi bi-list-task"></i>Solve Problems
                 </a>
-                <a href="{% url 'contests' %}" class="btn btn-outline-light btn-hero">
+                <a href="{% url 'contest_list' %}" class="btn btn-outline-light btn-hero">
                   <i class="bi bi-trophy"></i>Join Contests
                 </a>
               {% endif %}
@@ -634,7 +634,7 @@
           </div>
           
           <div class="text-center mt-4">
-            <a href="{% url 'problems' %}" class="btn btn-primary btn-lg">
+            <a href="{% url 'problem_list' %}" class="btn btn-primary btn-lg">
               <i class="bi bi-arrow-right"></i>View All Problems
             </a>
           </div>
@@ -657,10 +657,10 @@
             <i class="bi bi-box-arrow-in-right"></i>Sign In
           </a>
         {% else %}
-          <a href="{% url 'problems' %}" class="btn btn-primary btn-hero me-3">
+          <a href="{% url 'problem_list' %}" class="btn btn-primary btn-hero me-3">
             <i class="bi bi-play-circle"></i>Start Solving
           </a>
-          <a href="{% url 'contests' %}" class="btn btn-outline-light btn-hero">
+          <a href="{% url 'contest_list' %}" class="btn btn-outline-light btn-hero">
             <i class="bi bi-trophy"></i>Join Contest
           </a>
         {% endif %}
