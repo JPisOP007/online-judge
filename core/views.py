@@ -212,7 +212,8 @@ def problem_detail(request, problem_id):
         if form.is_valid():
             language = form.cleaned_data['language']
             code = form.cleaned_data['source_code']
-            action = request.POST.get('action')
+            action = request.POST.get('action', '').capitalize()
+
 
             if action == "AI_Review":
                 try:
