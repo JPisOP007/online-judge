@@ -1036,6 +1036,7 @@ async function submitSolution() {
 }
 
 // AI Review Function
+// AI Review Function - FIXED VERSION
 async function getAIReview() {
   const aiBtn = document.getElementById('ai-review-btn');
   const aiSection = document.getElementById('ai-review-section');
@@ -1049,11 +1050,13 @@ async function getAIReview() {
   
   try {
     const formData = new FormData();
-    formData.append('action', 'ai_review');
+    formData.append('action', 'ai_review');  // Keep this consistent
     formData.append('source_code', editor ? editor.getValue() : document.getElementById('id_source_code').value);
     formData.append('language', document.getElementById('language-select').value);
     formData.append('problem_id', document.querySelector('#csrf-form input[name="problem_id"]').value);
     formData.append('csrfmiddlewaretoken', getCSRFToken());
+    
+    console.log('Sending AI review request with action:', 'ai_review');
     
     const response = await fetch(window.location.href, {
       method: 'POST',
@@ -1063,61 +1066,107 @@ async function getAIReview() {
       }
     });
     
-    // Check if response is actually JSON
-    const contentType = response.headers.get('content-type');
-    if (!contentType || !contentType.includes('application/json')) {
-      const textResponse = await response.text();
-      console.error('Server returned non-JSON response:', textResponse);
-      throw new Error('Server returned invalid response format. Check Django view.');
+    console.log('Response status:', response.status);
+    console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+    
+    // Get response as text first to debug
+    const responseText = await response.text();
+    console.log('Raw response:', responseText);
+    
+    // Try to parse as JSON
+    let data;
+    try {
+      data = JSON.parse(responseText);
+      console.log('Parsed JSON:', data);
+    } catch (jsonError) {
+      console.error('JSON parse error:', jsonError);
+      throw new Error('Server returned invalid JSON format. Raw response: ' + responseText.substring(0, 200));
     }
     
     if (response.ok) {
-      const data = await response.json();
+      // Handle the AI feedback data structure from your Django view
+      let reviewContent = '';
       
-      // Show AI review content
-      aiContent.textContent = data.review || data.feedback || 'AI review completed';
+      if (data.ai_feedback && typeof data.ai_feedback === 'object') {
+        // Format the structured AI feedback
+        const feedback = data.ai_feedback;
+        reviewContent = `📋 AI CODE REVIEW\n\n`;
+        
+        if (feedback.logic) {
+          reviewContent += `🧠 LOGIC & CORRECTNESS:\n${feedback.logic}\n\n`;
+        }
+        
+        if (feedback.efficiency) {
+          reviewContent += `⚡ EFFICIENCY & OPTIMIZATION:\n${feedback.efficiency}\n\n`;
+        }
+        
+        if (feedback.clarity) {
+          reviewContent += `📖 CLARITY & READABILITY:\n${feedback.clarity}\n\n`;
+        }
+        
+        if (feedback.best_practices) {
+          reviewContent += `✨ BEST PRACTICES:\n${feedback.best_practices}`;
+        }
+        
+        // If any section is empty, add a fallback
+        if (!reviewContent.trim() || reviewContent === '📋 AI CODE REVIEW\n\n') {
+          reviewContent = 'AI review completed, but no specific feedback was generated.';
+        }
+        
+      } else if (data.ai_feedback && typeof data.ai_feedback === 'string') {
+        // Handle string feedback
+        reviewContent = data.ai_feedback;
+      } else if (data.review) {
+        // Fallback to 'review' field
+        reviewContent = typeof data.review === 'object' 
+          ? JSON.stringify(data.review, null, 2) 
+          : data.review;
+      } else {
+        reviewContent = 'AI review completed, but no feedback was provided.';
+      }
+      
+      // Show any error from AI generation
+      if (data.error) {
+        reviewContent += `\n\n⚠️ Note: ${data.error}`;
+      }
+      
+      // Display the review content
+      aiContent.textContent = reviewContent;
       
       // Show the AI section
       aiSection.classList.add('show');
       aiSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
       
+      showSuccess('AI review completed!');
+      
     } else {
-      const errorData = await response.json();
-      throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+      // Handle HTTP error responses
+      const errorMessage = data.error || `HTTP ${response.status}: ${response.statusText}`;
+      throw new Error(errorMessage);
     }
     
   } catch (error) {
     console.error('AI Review failed:', error);
-    if (error.message.includes('Unexpected token')) {
-      showError('Server error: Please check your Django view returns JSON response');
+    
+    // Show user-friendly error message
+    let errorMessage = 'Failed to get AI review: ';
+    if (error.message.includes('JSON')) {
+      errorMessage += 'Server returned invalid response format. Check Django view.';
+    } else if (error.message.includes('fetch')) {
+      errorMessage += 'Network error. Please check your connection.';
     } else {
-      showError(`Failed to get AI review: ${error.message}`);
+      errorMessage += error.message;
     }
+    
+    showError(errorMessage);
+    
+    // Show fallback content in AI section
+    aiContent.textContent = `❌ AI Review Failed\n\nError: ${error.message}\n\nPlease try again or contact support if the issue persists.`;
+    aiSection.classList.add('show');
   } finally {
     hideLoadingState();
   }
 }
-
-// Event Listeners
-document.addEventListener('DOMContentLoaded', function() {
-  // Initialize CodeMirror
-  initializeCodeMirror();
-  
-  // Attach event listeners
-  document.getElementById('run-btn').addEventListener('click', runCode);
-  document.getElementById('submit-btn').addEventListener('click', submitSolution);
-  document.getElementById('ai-review-btn').addEventListener('click', getAIReview);
-  
-  // Handle form submission to prevent page reload
-  const form = document.querySelector('form');
-  if (form && !form.id) {  // Only prevent default for the main form, not csrf form
-    form.addEventListener('submit', function(e) {
-      e.preventDefault();
-      console.log('Form submission prevented - using AJAX instead');
-    });
-  }
-});
-
 // Handle browser back/forward buttons
 window.addEventListener('popstate', function(event) {
   // Optionally handle state changes

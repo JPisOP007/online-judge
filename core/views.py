@@ -214,38 +214,48 @@ def problem_detail(request, problem_id):
             code = form.cleaned_data['source_code']
             action = request.POST.get('action', '').capitalize()
 
-            if action == "Ai_Review":  # Note: might be "Ai_Review" instead of "AI_Review"
+            # Debug: Log the action received
+            import logging
+            logger = logging.getLogger(__name__)
+            raw_action = request.POST.get('action', '')
+            logger.info(f"Action received: '{action}' (original: '{raw_action}')")
+            
+            # More flexible AI review action matching
+            if raw_action.lower().replace('_', ' ').replace('-', ' ') in ['ai review', 'ai_review', 'aireview']:
                 try:
                     from core.utils.ai_review import generate_code_review
-                    ai_result = generate_code_review(code)
+                    logger.info(f"Starting AI review for code length: {len(code)}")
                     
-                    # Debug logging
-                    import logging
-                    logger = logging.getLogger(__name__)
+                    ai_result = generate_code_review(code)
                     logger.info(f"AI Review Result: {ai_result}")
         
                     if is_ajax:
-                        # Always return success with the review data, even if AI failed
-                        # The 'success' field in ai_result indicates if AI worked properly
-                        return JsonResponse({
+                        response_data = {
                             'success': True,  # AJAX call succeeded
-                            'ai_success': ai_result.get('success', False),  # AI generation success
-                            'ai_feedback': ai_result.get('review', {}),
-                            'error': ai_result.get('error', None) if not ai_result.get('success', False) else None
-                        })
+                            'ai_feedback': ai_result.get('review', {
+                                "logic": "No review generated",
+                                "efficiency": "No review generated",
+                                "clarity": "No review generated",
+                                "best_practices": "No review generated"
+                            })
+                        }
+                        
+                        # Add error info if AI generation failed
+                        if not ai_result.get('success', False):
+                            response_data['error'] = ai_result.get('error', 'Unknown AI error')
+                            
+                        logger.info(f"Returning AJAX response: {response_data}")
+                        return JsonResponse(response_data)
                     else:
                         # For non-AJAX requests, set ai_feedback for template
                         ai_feedback = ai_result.get('review', {})
                 
                 except Exception as e:
-                    import logging
-                    logger = logging.getLogger(__name__)
-                    logger.error(f"AI Review Exception: {str(e)}")
+                    logger.error(f"AI Review Exception: {str(e)}", exc_info=True)
                     
                     if is_ajax:
-                        return JsonResponse({
+                        error_response = {
                             'success': True,  # AJAX call succeeded
-                            'ai_success': False,  # AI generation failed
                             'error': f"AI review service error: {str(e)}",
                             'ai_feedback': {
                                 "logic": "AI review temporarily unavailable",
@@ -253,7 +263,9 @@ def problem_detail(request, problem_id):
                                 "clarity": "AI review temporarily unavailable", 
                                 "best_practices": "AI review temporarily unavailable"
                             }
-                        })
+                        }
+                        logger.info(f"Returning error response: {error_response}")
+                        return JsonResponse(error_response)
                     else:
                         ai_feedback = {
                             "logic": "AI review temporarily unavailable",
