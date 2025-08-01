@@ -214,65 +214,37 @@ def problem_detail(request, problem_id):
             code = form.cleaned_data['source_code']
             action = request.POST.get('action', '').capitalize()
 
-            # Debug: Log the action received
-            import logging
-            logger = logging.getLogger(__name__)
-            raw_action = request.POST.get('action', '')
-            logger.info(f"Action received: '{action}' (original: '{raw_action}')")
-            
-            # More flexible AI review action matching
-            if raw_action.lower().replace('_', ' ').replace('-', ' ') in ['ai review', 'ai_review', 'aireview']:
+
+            if action == "AI_Review":
                 try:
                     from core.utils.ai_review import generate_code_review
-                    logger.info(f"Starting AI review for code length: {len(code)}")
-                    
                     ai_result = generate_code_review(code)
-                    logger.info(f"AI Review Result: {ai_result}")
         
                     if is_ajax:
-                        response_data = {
-                            'success': True,  # AJAX call succeeded
-                            'ai_feedback': ai_result.get('review', {
-                                "logic": "No review generated",
-                                "efficiency": "No review generated",
-                                "clarity": "No review generated",
-                                "best_practices": "No review generated"
+                        if ai_result['success']:
+                            return JsonResponse({
+                                'success': True,
+                                'ai_feedback': ai_result['review']
                             })
-                        }
-                        
-                        # Add error info if AI generation failed
-                        if not ai_result.get('success', False):
-                            response_data['error'] = ai_result.get('error', 'Unknown AI error')
-                            
-                        logger.info(f"Returning AJAX response: {response_data}")
-                        return JsonResponse(response_data)
-                    else:
-                        # For non-AJAX requests, set ai_feedback for template
-                        ai_feedback = ai_result.get('review', {})
+                        else:
+                            return JsonResponse({
+                                'success': False,
+                                'error': ai_result['error'],
+                                'ai_feedback': ai_result['review']
+                            }, status=500)
                 
                 except Exception as e:
-                    logger.error(f"AI Review Exception: {str(e)}", exc_info=True)
-                    
                     if is_ajax:
-                        error_response = {
-                            'success': True,  # AJAX call succeeded
-                            'error': f"AI review service error: {str(e)}",
+                        return JsonResponse({
+                            'success': False,
+                            'error': str(e),
                             'ai_feedback': {
-                                "logic": "AI review temporarily unavailable",
-                                "efficiency": "AI review temporarily unavailable",
-                                "clarity": "AI review temporarily unavailable", 
-                                "best_practices": "AI review temporarily unavailable"
+                                "logic": "AI review unavailable",
+                                "efficiency": "AI review unavailable",
+                                "clarity": "AI review unavailable", 
+                                "best_practices": "AI review unavailable"
                             }
-                        }
-                        logger.info(f"Returning error response: {error_response}")
-                        return JsonResponse(error_response)
-                    else:
-                        ai_feedback = {
-                            "logic": "AI review temporarily unavailable",
-                            "efficiency": "AI review temporarily unavailable",
-                            "clarity": "AI review temporarily unavailable", 
-                            "best_practices": "AI review temporarily unavailable"
-                        }
+                        }, status=500)
 
             elif action == "Run":
                 sample_input = problem.sample_input.strip() if problem.sample_input else ""
@@ -408,20 +380,9 @@ def problem_detail(request, problem_id):
                 # Generate AI feedback for submitted solutions
                 try:
                     from core.utils.ai_review import generate_code_review
-                    ai_result = generate_code_review(code)
-                    ai_feedback = ai_result.get('review', {}) if ai_result.get('success') else {
-                        "logic": "AI review failed for submission",
-                        "efficiency": "AI review failed for submission",
-                        "clarity": "AI review failed for submission",
-                        "best_practices": "AI review failed for submission"
-                    }
+                    ai_feedback = generate_code_review(code)
                 except Exception as e:
-                    ai_feedback = {
-                        "logic": f"AI review error: {str(e)}",
-                        "efficiency": f"AI review error: {str(e)}",
-                        "clarity": f"AI review error: {str(e)}",
-                        "best_practices": f"AI review error: {str(e)}"
-                    }
+                    ai_feedback = f"⚠️ AI review failed: {e}"
 
                 if is_ajax:
                     return JsonResponse({
@@ -464,6 +425,7 @@ def problem_detail(request, problem_id):
         'user_solved': user_solved,
         'user_submissions': user_submissions,
     })
+
 
 @role_required(['participant', 'setter', 'admin'])
 def submit_solution(request, problem_id):
