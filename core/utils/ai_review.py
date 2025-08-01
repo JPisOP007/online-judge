@@ -1,6 +1,7 @@
 from vertexai.generative_models import GenerativeModel
 import json
 import logging
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -10,25 +11,19 @@ def generate_code_review(code):
         model = GenerativeModel("gemini-2.0-flash")
         
         prompt = f"""
-You are an AI code reviewer.
+You are an AI code reviewer. Review the following code and provide feedback in EXACTLY this JSON format (no additional text before or after):
 
-Review the following code based only on the following four criteria:
-
-1. Logic – Does it correctly solve the problem?
-2. Efficiency – Is it optimized in terms of time and space?
-3. Clarity – Is the code easy to read and understand?
-4. Best Practices – Does it follow standard naming, formatting, and style conventions?
-
-Respond strictly in this JSON format:
 {{
-    "logic": "your detailed comment here",
-    "efficiency": "your detailed comment here", 
-    "clarity": "your detailed comment here",
-    "best_practices": "your detailed comment here"
+    "logic": "your detailed comment about logic and correctness",
+    "efficiency": "your detailed comment about performance and optimization", 
+    "clarity": "your detailed comment about readability and understanding",
+    "best_practices": "your detailed comment about coding standards and conventions"
 }}
 
 Code to review:
 {code}
+
+Return ONLY the JSON object, no other text.
 """
 
         response = model.generate_content(prompt)
@@ -36,15 +31,33 @@ Code to review:
         if not response or not response.text:
             raise ValueError("Empty response from AI model")
         
-        # Try to parse as JSON first
+        # Clean the response text
+        response_text = response.text.strip()
+        
+        # Try to extract JSON from the response
+        json_match = re.search(r'\{.*\}', response_text, re.DOTALL)
+        if json_match:
+            json_text = json_match.group()
+        else:
+            json_text = response_text
+        
+        # Try to parse as JSON
         try:
-            structured_review = json.loads(response.text.strip())
+            structured_review = json.loads(json_text)
+            
+            # Validate that all required keys are present
+            required_keys = ["logic", "efficiency", "clarity", "best_practices"]
+            if not all(key in structured_review for key in required_keys):
+                raise ValueError("Missing required keys in JSON response")
+                
             return {
                 'success': True,
                 'review': structured_review,
                 'raw': response.text
             }
-        except json.JSONDecodeError:
+            
+        except (json.JSONDecodeError, ValueError) as e:
+            logger.warning(f"JSON parsing failed: {e}, attempting text parsing")
             # Fallback: parse text format
             structured_review = parse_text_review(response.text)
             return {
@@ -67,9 +80,8 @@ Code to review:
         }
 
 def parse_text_review(text):
-    """Parse text format review into structured data"""
+    """Parse text format review into structured data with improved parsing"""
     try:
-        lines = text.strip().split('\n')
         review = {
             "logic": "",
             "efficiency": "",
@@ -77,45 +89,122 @@ def parse_text_review(text):
             "best_practices": ""
         }
         
-        current_section = None
-        current_content = []
+        # Try different parsing strategies
         
-        for line in lines:
-            line = line.strip()
-            if line.startswith("Logic:"):
-                if current_section:
-                    review[current_section] = '\n'.join(current_content).strip()
-                current_section = "logic"
-                current_content = [line.replace("Logic:", "").strip()]
-            elif line.startswith("Efficiency:"):
-                if current_section:
-                    review[current_section] = '\n'.join(current_content).strip()
-                current_section = "efficiency"
-                current_content = [line.replace("Efficiency:", "").strip()]
-            elif line.startswith("Clarity:"):
-                if current_section:
-                    review[current_section] = '\n'.join(current_content).strip()
-                current_section = "clarity"
-                current_content = [line.replace("Clarity:", "").strip()]
-            elif line.startswith("Best Practices:"):
-                if current_section:
-                    review[current_section] = '\n'.join(current_content).strip()
-                current_section = "best_practices"
-                current_content = [line.replace("Best Practices:", "").strip()]
-            elif current_section and line:
-                current_content.append(line)
+        # Strategy 1: Look for numbered sections
+        sections = re.split(r'\d+\.\s*(Logic|Efficiency|Clarity|Best Practices)', text, flags=re.IGNORECASE)
+        if len(sections) > 1:
+            for i in range(1, len(sections), 2):
+                if i + 1 < len(sections):
+                    section_name = sections[i].lower().replace(' ', '_')
+                    section_content = sections[i + 1].strip()
+                    if section_name in review:
+                        review[section_name] = section_content
         
-        # Don't forget the last section
-        if current_section:
-            review[current_section] = '\n'.join(current_content).strip()
+        # Strategy 2: Look for section headers followed by content
+        else:
+            patterns = [
+                (r'Logic[:\-\s]+([^#]*?)(?=Efficiency|Clarity|Best Practices|$)', 'logic'),
+                (r'Efficiency[:\-\s]+([^#]*?)(?=Logic|Clarity|Best Practices|$)', 'efficiency'),
+                (r'Clarity[:\-\s]+([^#]*?)(?=Logic|Efficiency|Best Practices|$)', 'clarity'),
+                (r'Best Practices[:\-\s]+([^#]*?)(?=Logic|Efficiency|Clarity|$)', 'best_practices')
+            ]
             
+            for pattern, key in patterns:
+                match = re.search(pattern, text, re.IGNORECASE | re.DOTALL)
+                if match:
+                    review[key] = match.group(1).strip()
+        
+        # Strategy 3: If still empty, try simple keyword extraction
+        if not any(review.values()):
+            lines = text.split('\n')
+            current_section = None
+            current_content = []
+            
+            for line in lines:
+                line = line.strip()
+                if not line:
+                    continue
+                    
+                # Check for section headers
+                if any(keyword in line.lower() for keyword in ['logic', 'efficiency', 'clarity', 'best practices']):
+                    # Save previous section
+                    if current_section and current_content:
+                        review[current_section] = ' '.join(current_content)
+                    
+                    # Determine new section
+                    if 'logic' in line.lower():
+                        current_section = 'logic'
+                    elif 'efficiency' in line.lower():
+                        current_section = 'efficiency'
+                    elif 'clarity' in line.lower():
+                        current_section = 'clarity'
+                    elif 'best practices' in line.lower():
+                        current_section = 'best_practices'
+                    
+                    current_content = []
+                    # Add content after the header
+                    content_after_header = re.sub(r'^.*?(logic|efficiency|clarity|best practices)[:\-\s]*', '', line, flags=re.IGNORECASE)
+                    if content_after_header.strip():
+                        current_content.append(content_after_header.strip())
+                elif current_section:
+                    current_content.append(line)
+            
+            # Don't forget the last section
+            if current_section and current_content:
+                review[current_section] = ' '.join(current_content)
+        
+        # Fallback: if we still don't have content, provide a generic message
+        for key in review:
+            if not review[key]:
+                review[key] = "Unable to parse this section from AI response. Please try again."
+                
         return review
         
     except Exception as e:
         logger.error(f"Error parsing review text: {str(e)}")
         return {
-            "logic": "Error parsing AI response",
-            "efficiency": "Error parsing AI response",
-            "clarity": "Error parsing AI response",
-            "best_practices": "Error parsing AI response"
+            "logic": f"Error parsing AI response: {str(e)}",
+            "efficiency": f"Error parsing AI response: {str(e)}",
+            "clarity": f"Error parsing AI response: {str(e)}",
+            "best_practices": f"Error parsing AI response: {str(e)}"
         }
+
+# Alternative function with more robust error handling
+def generate_code_review_robust(code):
+    """More robust version with multiple retry strategies"""
+    max_retries = 2
+    
+    for attempt in range(max_retries):
+        try:
+            result = generate_code_review(code)
+            
+            # Check if we got a valid response
+            if result['success'] and all(
+                result['review'][key] and 
+                'failed' not in result['review'][key].lower() and
+                'error' not in result['review'][key].lower()
+                for key in ['logic', 'efficiency', 'clarity', 'best_practices']
+            ):
+                return result
+            
+            logger.warning(f"Attempt {attempt + 1} returned incomplete review, retrying...")
+            
+        except Exception as e:
+            logger.error(f"Attempt {attempt + 1} failed: {str(e)}")
+            
+        if attempt < max_retries - 1:
+            import time
+            time.sleep(1)  # Brief delay before retry
+    
+    # Final fallback
+    return {
+        'success': False,
+        'error': 'Failed to generate review after multiple attempts',
+        'review': {
+            "logic": "Unable to generate AI review after multiple attempts",
+            "efficiency": "Unable to generate AI review after multiple attempts",
+            "clarity": "Unable to generate AI review after multiple attempts", 
+            "best_practices": "Unable to generate AI review after multiple attempts"
+        }
+    }
