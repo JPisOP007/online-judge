@@ -214,37 +214,53 @@ def problem_detail(request, problem_id):
             code = form.cleaned_data['source_code']
             action = request.POST.get('action', '').capitalize()
 
-
-            if action == "AI_Review":
+            if action == "Ai_Review":  # Note: might be "Ai_Review" instead of "AI_Review"
                 try:
                     from core.utils.ai_review import generate_code_review
                     ai_result = generate_code_review(code)
+                    
+                    # Debug logging
+                    import logging
+                    logger = logging.getLogger(__name__)
+                    logger.info(f"AI Review Result: {ai_result}")
         
                     if is_ajax:
-                        if ai_result['success']:
-                            return JsonResponse({
-                                'success': True,
-                                'ai_feedback': ai_result['review']
-                            })
-                        else:
-                            return JsonResponse({
-                                'success': False,
-                                'error': ai_result['error'],
-                                'ai_feedback': ai_result['review']
-                            }, status=500)
+                        # Always return success with the review data, even if AI failed
+                        # The 'success' field in ai_result indicates if AI worked properly
+                        return JsonResponse({
+                            'success': True,  # AJAX call succeeded
+                            'ai_success': ai_result.get('success', False),  # AI generation success
+                            'ai_feedback': ai_result.get('review', {}),
+                            'error': ai_result.get('error', None) if not ai_result.get('success', False) else None
+                        })
+                    else:
+                        # For non-AJAX requests, set ai_feedback for template
+                        ai_feedback = ai_result.get('review', {})
                 
                 except Exception as e:
+                    import logging
+                    logger = logging.getLogger(__name__)
+                    logger.error(f"AI Review Exception: {str(e)}")
+                    
                     if is_ajax:
                         return JsonResponse({
-                            'success': False,
-                            'error': str(e),
+                            'success': True,  # AJAX call succeeded
+                            'ai_success': False,  # AI generation failed
+                            'error': f"AI review service error: {str(e)}",
                             'ai_feedback': {
-                                "logic": "AI review unavailable",
-                                "efficiency": "AI review unavailable",
-                                "clarity": "AI review unavailable", 
-                                "best_practices": "AI review unavailable"
+                                "logic": "AI review temporarily unavailable",
+                                "efficiency": "AI review temporarily unavailable",
+                                "clarity": "AI review temporarily unavailable", 
+                                "best_practices": "AI review temporarily unavailable"
                             }
-                        }, status=500)
+                        })
+                    else:
+                        ai_feedback = {
+                            "logic": "AI review temporarily unavailable",
+                            "efficiency": "AI review temporarily unavailable",
+                            "clarity": "AI review temporarily unavailable", 
+                            "best_practices": "AI review temporarily unavailable"
+                        }
 
             elif action == "Run":
                 sample_input = problem.sample_input.strip() if problem.sample_input else ""
@@ -380,9 +396,20 @@ def problem_detail(request, problem_id):
                 # Generate AI feedback for submitted solutions
                 try:
                     from core.utils.ai_review import generate_code_review
-                    ai_feedback = generate_code_review(code)
+                    ai_result = generate_code_review(code)
+                    ai_feedback = ai_result.get('review', {}) if ai_result.get('success') else {
+                        "logic": "AI review failed for submission",
+                        "efficiency": "AI review failed for submission",
+                        "clarity": "AI review failed for submission",
+                        "best_practices": "AI review failed for submission"
+                    }
                 except Exception as e:
-                    ai_feedback = f"⚠️ AI review failed: {e}"
+                    ai_feedback = {
+                        "logic": f"AI review error: {str(e)}",
+                        "efficiency": f"AI review error: {str(e)}",
+                        "clarity": f"AI review error: {str(e)}",
+                        "best_practices": f"AI review error: {str(e)}"
+                    }
 
                 if is_ajax:
                     return JsonResponse({
@@ -425,7 +452,6 @@ def problem_detail(request, problem_id):
         'user_solved': user_solved,
         'user_submissions': user_submissions,
     })
-
 
 @role_required(['participant', 'setter', 'admin'])
 def submit_solution(request, problem_id):
