@@ -333,7 +333,7 @@ def problem_detail(request, problem_id):
                             'error': 'No test cases available'
                         })
 
-            elif action == "Submit":
+            elif action == "submit":
                 try:
                     test_cases = json.loads(problem.test_cases_json or "[]")
                 except json.JSONDecodeError:
@@ -425,6 +425,15 @@ def problem_detail(request, problem_id):
                     })
                 
                 messages.success(request, f"Solution submitted! {feedback_message}")
+            
+            else:
+                # Unknown action
+                if is_ajax:
+                    return JsonResponse({
+                        'success': False,
+                        'error': f'Unknown action: {action}',
+                        'debug': f'Received action: "{action}", expected: "run", "submit", or "ai_review"'
+                    })
 
         else:
             # Form validation failed

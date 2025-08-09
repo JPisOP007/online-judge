@@ -55,7 +55,7 @@ DANGEROUS_PATTERNS = [
     r'compile\s*\(',
     r'open\s*\(',
     r'file\s*\(',
-    r'input\s*\(',
+
     r'raw_input\s*\(',
     r'System\.exit',
     r'System\.getProperty',
@@ -271,10 +271,13 @@ def restricted_import(name, *args, **kwargs):
 
 builtins.__import__ = restricted_import
 builtins.open = None
-builtins.input = None
 builtins.eval = None
 builtins.exec = None
 builtins.compile = None
+
+# Create a custom input function that reads from stdin
+# This allows input() to work with the provided test case input
+original_input = builtins.input
 
 try:
 {indented_code}
