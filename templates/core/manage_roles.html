@@ -28,7 +28,7 @@
               <td>
                 <select name="role_{{ user.id }}" class="form-select">
                   <option value="participant" {% if user.userprofile.role == 'participant' %}selected{% endif %}>Participant</option>
-                  <option value="problem_setter" {% if user.userprofile.role == 'problem_setter' %}selected{% endif %}>Problem Setter</option>
+                  <option value="setter" {% if user.userprofile.role == 'setter' %}selected{% endif %}>Problem Setter</option>
                   <option value="admin" {% if user.userprofile.role == 'admin' %}selected{% endif %}>Admin</option>
                 </select>
               </td>

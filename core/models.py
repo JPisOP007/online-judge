@@ -8,6 +8,7 @@ class UserProfile(models.Model):
     ROLE_CHOICES = (
         ('setter', 'Problem Setter'),
         ('participant', 'Participant'),
+        ('admin', 'Admin'),
     )
 
     user = models.OneToOneField(User, on_delete=models.CASCADE)
