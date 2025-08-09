@@ -1,6 +1,9 @@
 from django import forms
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 from .models import UserProfile, Problem
+from .utils.file_validators import validate_image_file
+import re
 
 
 # -------------------------------
@@ -12,7 +15,6 @@ class SubmitSolutionForm(forms.Form):
             ('python', 'Python 3'),
             ('cpp', 'C++'),
             ('java', 'Java'),
-            ('c', 'C'),
             ('javascript', 'JavaScript'),
         ],
         widget=forms.Select(attrs={'class': 'form-select'})
@@ -22,14 +24,38 @@ class SubmitSolutionForm(forms.Form):
             'class': 'form-control',
             'rows': 20,
             'placeholder': 'Enter your source code here...',
-            'style': 'font-family: monospace;'
-        })
+            'style': 'font-family: monospace;',
+            'maxlength': '50000'
+        }),
+        max_length=50000,
+        help_text="Maximum 50,000 characters"
     )
 
     problem_id = forms.CharField(
         widget=forms.HiddenInput(),
         required=False
     )
+    
+    def clean_source_code(self):
+        code = self.cleaned_data.get('source_code')
+        if not code or not code.strip():
+            raise ValidationError("Source code cannot be empty")
+        
+        # Basic security checks
+        dangerous_patterns = [
+            r'import\s+os',
+            r'import\s+subprocess',
+            r'import\s+sys',
+            r'__import__',
+            r'eval\s*\(',
+            r'exec\s*\(',
+        ]
+        
+        for pattern in dangerous_patterns:
+            if re.search(pattern, code, re.IGNORECASE):
+                raise ValidationError(f"Potentially dangerous code detected. Please remove: {pattern}")
+        
+        return code
 
 
 # -------------------------------
@@ -73,12 +99,22 @@ class ProblemForm(forms.ModelForm):
 # Form: UserProfileForm
 # -------------------------------
 class UserProfileForm(forms.ModelForm):
-    username = forms.CharField(max_length=150, label="Username")
+    username = forms.CharField(
+        max_length=150, 
+        label="Username",
+        help_text="Letters, digits and @/./+/-/_ only."
+    )
     email = forms.EmailField(label="Email")
 
     class Meta:
         model = UserProfile
         fields = ['photo', 'username', 'email']
+        widgets = {
+            'photo': forms.FileInput(attrs={
+                'class': 'form-control',
+                'accept': 'image/*'
+            })
+        }
 
     def __init__(self, *args, **kwargs):
         user = kwargs.pop('user', None)
@@ -87,6 +123,28 @@ class UserProfileForm(forms.ModelForm):
             self.fields['username'].initial = user.username
             self.fields['email'].initial = user.email
             self.user = user
+
+    def clean_username(self):
+        username = self.cleaned_data.get('username')
+        if not username:
+            raise ValidationError("Username is required")
+        
+        # Check for valid characters
+        if not re.match(r'^[\w.@+-]+$', username):
+            raise ValidationError("Username can only contain letters, digits and @/./+/-/_ characters")
+        
+        # Check if username is taken by another user
+        if hasattr(self, 'user'):
+            if User.objects.filter(username=username).exclude(id=self.user.id).exists():
+                raise ValidationError("This username is already taken")
+        
+        return username
+    
+    def clean_photo(self):
+        photo = self.cleaned_data.get('photo')
+        if photo:
+            validate_image_file(photo)
+        return photo
 
     def save(self, commit=True):
         profile = super().save(commit=False)

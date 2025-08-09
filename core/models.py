@@ -2,6 +2,7 @@ from django.contrib.auth.models import User
 from django.db import models
 import uuid
 from django.utils import timezone
+from .utils.file_validators import validate_image_file, get_upload_path
 
 
 class UserProfile(models.Model):
@@ -13,7 +14,13 @@ class UserProfile(models.Model):
 
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     role = models.CharField(max_length=20, choices=ROLE_CHOICES)
-    photo = models.ImageField(upload_to='profile_photos/', null=True, blank=True)
+    photo = models.ImageField(
+        upload_to=get_upload_path, 
+        null=True, 
+        blank=True,
+        validators=[validate_image_file],
+        help_text="Upload a profile photo (max 5MB, JPG/PNG/GIF/WEBP)"
+    )
 
     def __str__(self):
         return f"{self.user.username} ({self.role})"

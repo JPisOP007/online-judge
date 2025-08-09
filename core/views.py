@@ -22,7 +22,7 @@ from .forms import (
     ContestRegistrationForm, AnnouncementForm
 )
 
-from .utils.execution import execute_code
+from .utils.secure_execution import secure_execute_code, secure_evaluate_submission
 
 import json
 
@@ -261,7 +261,7 @@ def problem_detail(request, problem_id):
 
                 if sample_input and sample_output:
                     try:
-                        result = execute_code(language, code, sample_input, sample_output)
+                        result = secure_execute_code(language, code, sample_input, sample_output)
                         output = result.get('output', '') or result.get('error', '')
                         verdict = result.get('verdict', '')
                         feedback_message = get_feedback_message(verdict)
@@ -342,7 +342,7 @@ def problem_detail(request, problem_id):
                     expected_output = test_case.get("output", "").strip()
 
                     try:
-                        result = execute_code(language, code, test_input, expected_output)
+                        result = secure_execute_code(language, code, test_input, expected_output)
                         current_verdict = result.get('verdict', '')
                         current_output = result.get('output', '') or result.get('error', '')
 
