@@ -212,10 +212,32 @@ def problem_detail(request, problem_id):
         if form.is_valid():
             language = form.cleaned_data['language']
             code = form.cleaned_data['source_code']
-            action = request.POST.get('action', '').capitalize()
+            action = request.POST.get('action', '').lower()
 
-
-            if action == "AI_Review":
+            if action == "ai_review":
+                # Check if AI review is enabled by admin
+                from .models import AdminSettings
+                admin_settings = AdminSettings.get_settings()
+                
+                if not admin_settings.ai_review_enabled:
+                    if is_ajax:
+                        return JsonResponse({
+                            'success': False,
+                            'error': 'AI review is currently disabled by administrator',
+                            'review': {
+                                "logic": "AI review is currently disabled",
+                                "efficiency": "AI review is currently disabled",
+                                "clarity": "AI review is currently disabled", 
+                                "best_practices": "AI review is currently disabled"
+                            },
+                            'ai_feedback': {
+                                "logic": "AI review is currently disabled",
+                                "efficiency": "AI review is currently disabled",
+                                "clarity": "AI review is currently disabled", 
+                                "best_practices": "AI review is currently disabled"
+                            }
+                        }, status=403)
+                
                 try:
                     from core.utils.ai_review import generate_code_review
                     ai_result = generate_code_review(code)
@@ -224,12 +246,14 @@ def problem_detail(request, problem_id):
                         if ai_result['success']:
                             return JsonResponse({
                                 'success': True,
+                                'review': ai_result['review'],
                                 'ai_feedback': ai_result['review']
                             })
                         else:
                             return JsonResponse({
                                 'success': False,
                                 'error': ai_result['error'],
+                                'review': ai_result['review'],
                                 'ai_feedback': ai_result['review']
                             }, status=500)
                 
@@ -238,6 +262,12 @@ def problem_detail(request, problem_id):
                         return JsonResponse({
                             'success': False,
                             'error': str(e),
+                            'review': {
+                                "logic": "AI review unavailable",
+                                "efficiency": "AI review unavailable",
+                                "clarity": "AI review unavailable", 
+                                "best_practices": "AI review unavailable"
+                            },
                             'ai_feedback': {
                                 "logic": "AI review unavailable",
                                 "efficiency": "AI review unavailable",
@@ -246,7 +276,7 @@ def problem_detail(request, problem_id):
                             }
                         }, status=500)
 
-            elif action == "Run":
+            elif action == "run":
                 sample_input = problem.sample_input.strip() if problem.sample_input else ""
                 sample_output = problem.sample_output.strip() if problem.sample_output else ""
 
@@ -414,6 +444,10 @@ def problem_detail(request, problem_id):
         problem=problem
     ).order_by('-submitted_at')[:10]
 
+    # Get admin settings for AI review
+    from .models import AdminSettings
+    admin_settings = AdminSettings.get_settings()
+
     return render(request, 'core/problem_detail.html', {
         'problem': problem,
         'form': form,
@@ -424,6 +458,7 @@ def problem_detail(request, problem_id):
         'ai_feedback': ai_feedback,
         'user_solved': user_solved,
         'user_submissions': user_submissions,
+        'ai_review_enabled': admin_settings.ai_review_enabled,
     })
 
 
@@ -462,14 +497,38 @@ def profile_view(request):
         defaults={'role': 'participant'}
     )
 
-    if request.method == 'POST':
-        form = UserProfileForm(request.POST, request.FILES, instance=user_profile, user=request.user)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Profile updated successfully.')
-            return redirect('profile')
+    # Handle admin settings for admin users
+    admin_settings = None
+    if user_profile.role == 'admin':
+        from .models import AdminSettings
+        admin_settings = AdminSettings.get_settings()
+        
+        if request.method == 'POST':
+            # Check if it's admin settings update
+            if 'update_admin_settings' in request.POST:
+                ai_review_enabled = request.POST.get('ai_review_enabled') == 'on'
+                admin_settings.ai_review_enabled = ai_review_enabled
+                admin_settings.save()
+                messages.success(request, 'Admin settings updated successfully.')
+                return redirect('profile')
+            else:
+                # Regular profile update
+                form = UserProfileForm(request.POST, request.FILES, instance=user_profile, user=request.user)
+                if form.is_valid():
+                    form.save()
+                    messages.success(request, 'Profile updated successfully.')
+                    return redirect('profile')
+        else:
+            form = UserProfileForm(instance=user_profile, user=request.user)
     else:
-        form = UserProfileForm(instance=user_profile, user=request.user)
+        if request.method == 'POST':
+            form = UserProfileForm(request.POST, request.FILES, instance=user_profile, user=request.user)
+            if form.is_valid():
+                form.save()
+                messages.success(request, 'Profile updated successfully.')
+                return redirect('profile')
+        else:
+            form = UserProfileForm(instance=user_profile, user=request.user)
 
     # Contest statistics
     contest_participations = ContestParticipant.objects.filter(user=request.user).select_related('contest')
@@ -546,6 +605,7 @@ def profile_view(request):
         'recent_contests': recent_contests,
         'problem_stats': problem_stats,
         'recent_submissions': recent_submissions,
+        'admin_settings': admin_settings,
     })
 
 

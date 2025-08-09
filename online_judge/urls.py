@@ -9,9 +9,8 @@ urlpatterns = [
     path('', include('core.urls')),  # This includes ALL your core URLs
 ]
 
-# Media files configuration for development
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+# Media files configuration for development and production
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 # Alternative approach if you prefer:
 # urlpatterns = [

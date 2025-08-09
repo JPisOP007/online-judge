@@ -582,9 +582,10 @@
         <span>Submit Solution</span>
         <div class="loading-spinner" id="submit-spinner"></div>
       </button>
-      <button type="button" class="btn btn-ai-review" id="ai-review-btn">
+      <button type="button" class="btn btn-ai-review" id="ai-review-btn" 
+              {% if not ai_review_enabled %}disabled title="AI Review is currently disabled by administrator"{% endif %}>
         <i class="bi bi-robot"></i>
-        <span>Get AI Review</span>
+        <span>{% if ai_review_enabled %}Get AI Review{% else %}AI Review Disabled{% endif %}</span>
         <div class="loading-spinner" id="ai-review-spinner"></div>
       </button>
     </div>
@@ -1040,6 +1041,12 @@ async function getAIReview() {
   const aiBtn = document.getElementById('ai-review-btn');
   const aiSection = document.getElementById('ai-review-section');
   const aiContent = document.getElementById('ai-review-content');
+  
+  // Check if AI review is disabled
+  if (aiBtn.disabled) {
+    showError('AI Review is currently disabled by administrator');
+    return;
+  }
   
   showLoadingState(aiBtn);
   

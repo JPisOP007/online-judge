@@ -25,6 +25,29 @@ class UserProfile(models.Model):
     def __str__(self):
         return f"{self.user.username} ({self.role})"
 
+
+class AdminSettings(models.Model):
+    """Global admin settings for the platform"""
+    ai_review_enabled = models.BooleanField(
+        default=True,
+        help_text="Enable/disable AI code review feature for all users"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Admin Settings"
+        verbose_name_plural = "Admin Settings"
+    
+    def __str__(self):
+        return f"Admin Settings (AI Review: {'Enabled' if self.ai_review_enabled else 'Disabled'})"
+    
+    @classmethod
+    def get_settings(cls):
+        """Get or create admin settings"""
+        settings, created = cls.objects.get_or_create(pk=1)
+        return settings
+
 class Problem(models.Model):
     DIFFICULTY_CHOICES = [
         ('easy', 'Easy'),
