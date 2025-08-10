@@ -371,3 +371,65 @@ def secure_execute_code(language, code, input_data, expected_output):
     
     except Exception as e:
         return {'verdict': 'RE', 'error': f'Execution error: {str(e)}'}
+
+def secure_evaluate_submission(language, code, problem):
+    """Securely evaluate a submission against all test cases"""
+    import json
+    
+    try:
+        test_cases = json.loads(problem.test_cases_json or "[]")
+    except json.JSONDecodeError:
+        return {'verdict': 'IE', 'error': 'Invalid test case format', 'score': 0}
+
+    if not test_cases:
+        return {'verdict': 'IE', 'error': 'No test cases found', 'score': 0}
+
+    all_passed = True
+    total_cases = len(test_cases)
+    passed_cases = 0
+    last_output = ''
+    last_error = ''
+    total_execution_time = 0
+
+    for i, case in enumerate(test_cases, start=1):
+        input_data = case.get("input", "")
+        expected_output = case.get("output", "")
+        result = secure_execute_code(language, code, input_data, expected_output)
+
+        # Track execution time
+        if 'execution_time' in result:
+            total_execution_time += result['execution_time']
+
+        if result['verdict'] != 'AC':
+            all_passed = False
+            last_error = result.get('error', '')
+            last_output = result.get('output', '')
+            # If it's a security violation or compilation error, fail immediately
+            if result['verdict'] in ['CE', 'RE', 'TLE']:
+                return {
+                    'verdict': result['verdict'],
+                    'score': 0,
+                    'output': last_output,
+                    'error': last_error,
+                    'execution_time': total_execution_time
+                }
+        else:
+            passed_cases += 1
+            last_output = result.get('output', '')
+
+    if all_passed:
+        return {
+            'verdict': 'AC', 
+            'score': 100, 
+            'output': last_output,
+            'execution_time': total_execution_time
+        }
+    else:
+        partial_score = int((passed_cases / total_cases) * 100)
+        return {
+            'verdict': 'WA',
+            'score': partial_score,
+            'output': last_output,
+            'error': last_error,
+            'execution_time': total_execution_time
+        }
