@@ -335,37 +335,7 @@ def secure_execute_code(language, code, input_data, expected_output):
         return {'verdict': 'RE', 'error': f'Execution error: {str(e)}'}
 
 def create_safe_python_environment(code):
-    """Create a more permissive but still safe Python environment"""
-    
-    # Safe builtins that are allowed
-    safe_builtins = {
-        'abs', 'all', 'any', 'ascii', 'bin', 'bool', 'chr', 'dict',
-        'divmod', 'enumerate', 'filter', 'float', 'format', 'frozenset',
-        'hash', 'hex', 'id', 'int', 'isinstance', 'issubclass', 'iter', 
-        'len', 'list', 'map', 'max', 'min', 'next', 'oct', 'ord', 'pow', 
-        'print', 'range', 'repr', 'reversed', 'round', 'set', 'slice', 
-        'sorted', 'str', 'sum', 'tuple', 'type', 'zip', 'input',
-        # Additional builtin types needed by Python internals
-        'bytes', 'bytearray', 'memoryview', 'complex', 'property',
-        # Additional safe builtins
-        'callable', 'classmethod', 'staticmethod', 'property', 'super',
-        'object', 'Exception', 'ValueError', 'TypeError', 'IndexError',
-        'KeyError', 'AttributeError', 'RuntimeError', 'StopIteration',
-        # Exception types needed for proper error handling
-        'ImportError', 'ModuleNotFoundError', 'NameError', 'SyntaxError',
-        'IndentationError', 'TabError', 'SystemError', 'MemoryError',
-        'RecursionError', 'NotImplementedError', 'ZeroDivisionError',
-        'OverflowError', 'FloatingPointError', 'ArithmeticError',
-        'LookupError', 'AssertionError', 'EOFError', 'KeyboardInterrupt',
-        'OSError', 'IOError', 'FileNotFoundError', 'PermissionError',
-        'IsADirectoryError', 'NotADirectoryError', 'InterruptedError',
-        'BlockingIOError', 'ChildProcessError', 'ConnectionError',
-        'BrokenPipeError', 'ConnectionAbortedError', 'ConnectionRefusedError',
-        'ConnectionResetError', 'TimeoutError', 'ProcessLookupError',
-        # Built-in functions needed by import system
-        'locals', 'globals', 'vars', 'dir',  # Needed by import machinery
-        'getattr', 'setattr', 'hasattr',  # Needed for attribute access
-    }
+    """Create a simple but effective secure Python environment"""
     
     # Create the allowed imports dictionary as a string for the restricted environment
     allowed_imports_str = str(ALLOWED_IMPORTS).replace("'*'", "['*']")
@@ -374,6 +344,7 @@ def create_safe_python_environment(code):
     # Indent the user code
     indented_code = '\n'.join('    ' + line for line in code.split('\n'))
     
+    # Much simpler approach - just restrict imports, don't mess with builtins
     restricted_code = f"""import sys
 import builtins
 
@@ -386,7 +357,7 @@ ABSOLUTELY_FORBIDDEN = {absolutely_forbidden_str}
 
 def safe_import(name, globals=None, locals=None, fromlist=(), level=0):
     # Allow internal Python modules (starting with _) that are needed by the import system
-    if name and (name.startswith('_') or name in ['traceback', 'warnings', 'linecache']):
+    if name and name.startswith('_'):
         return original_import(name, globals, locals, fromlist, level)
     
     # Check if module is absolutely forbidden
@@ -413,42 +384,20 @@ def safe_import(name, globals=None, locals=None, fromlist=(), level=0):
 # Replace the import function
 builtins.__import__ = safe_import
 
-# Remove dangerous builtins explicitly (but keep delattr for our own use)
+# Only remove the most dangerous builtins - leave the rest alone
 dangerous_builtins = ['eval', 'exec', 'compile', 'open', 'file']
 for name in dangerous_builtins:
     if hasattr(builtins, name):
         try:
-            delattr(builtins, name)
+            setattr(builtins, name, None)  # Set to None instead of deleting
         except (AttributeError, TypeError):
             pass
-
-# Now restrict builtins to safe subset (after we've used delattr)
-safe_builtins_set = {safe_builtins}
-for name in list(builtins.__dict__.keys()):
-    if name not in safe_builtins_set and not name.startswith('__') and name not in ['delattr']:
-        try:
-            delattr(builtins, name)
-        except (AttributeError, TypeError):
-            pass  # Some builtins can't be deleted
-
-# Finally remove delattr itself
-try:
-    delattr(builtins, 'delattr')
-except (AttributeError, TypeError):
-    pass
 
 # Execution starts here
 try:
 {indented_code}
 except Exception as e:
-    import traceback
     print(f"Runtime Error: {{e}}", file=sys.stderr)
-    # Print a simplified traceback for debugging
-    tb_lines = traceback.format_exc().split('\\n')
-    # Filter out our wrapper code from traceback
-    filtered_tb = [line for line in tb_lines if 'main.py' in line or 'Error:' in line or 'Exception:' in line]
-    if len(filtered_tb) > 1:
-        print('\\n'.join(filtered_tb[-3:]), file=sys.stderr)
     sys.exit(1)
 """
     
@@ -731,8 +680,11 @@ def run_with_limits(cmd, input_data, expected_output, temp_dir):
                 # psutil not available, skip memory monitoring
                 pass
             
+            # Normalize input data to handle different line endings
+            normalized_input = input_data.replace('\r\n', '\n').replace('\r', '\n') if input_data else ''
+            
             out, err = process.communicate(
-                input=input_data,
+                input=normalized_input,
                 timeout=MAX_EXECUTION_TIME
             )
             
