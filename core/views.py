@@ -892,12 +892,63 @@ def contest_problem_detail(request, contest_uuid, problem_uuid):
             
             elif action == "submit":
                 try:
-                    from .utils.execution import evaluate_submission
-                    result = evaluate_submission(language, code, problem)
-                    
-                    verdict = result.get('verdict', 'IE')
-                    score = result.get('score', 0)
+                    test_cases = json.loads(problem.test_cases_json or "[]")
+                except json.JSONDecodeError:
+                    context.update({
+                        'verdict': 'IE',
+                        'feedback_message': 'Invalid test case format in the database'
+                    })
+                    return render(request, 'core/contest_problem_detail.html', context)
 
+                if not test_cases:
+                    context.update({
+                        'verdict': 'IE',
+                        'feedback_message': 'No test cases available for this problem'
+                    })
+                    return render(request, 'core/contest_problem_detail.html', context)
+
+                all_passed = True
+                failed_test_case = None
+                verdict = "AC"
+                output = ""
+                feedback_message = ""
+                score = 0
+
+                for i, test_case in enumerate(test_cases):
+                    test_input = test_case.get("input", "").strip()
+                    expected_output = test_case.get("output", "").strip()
+
+                    try:
+                        result = secure_execute_code(language, code, test_input, expected_output)
+                        current_verdict = result.get('verdict', '')
+                        current_output = result.get('output', '') or result.get('error', '')
+
+                        if current_verdict != 'AC':
+                            all_passed = False
+                            verdict = current_verdict
+                            output = current_output
+                            feedback_message = f"❌ Failed on test case {i+1}"
+                            failed_test_case = i + 1
+                            break
+                    except Exception as e:
+                        all_passed = False
+                        verdict = "IE"
+                        output = f"Execution error: {str(e)}"
+                        feedback_message = f"❌ Error on test case {i+1}"
+                        failed_test_case = i + 1
+                        break
+
+                if all_passed:
+                    verdict = "AC"
+                    output = "✅ All test cases passed."
+                    feedback_message = "🎉 Code Accepted!"
+                    score = 100
+                else:
+                    # Calculate partial score based on passed test cases
+                    passed_cases = failed_test_case - 1 if failed_test_case else 0
+                    score = int((passed_cases / len(test_cases)) * 100)
+
+                try:
                     solution = Solution.objects.create(
                         user=request.user,
                         problem=problem,
@@ -905,6 +956,7 @@ def contest_problem_detail(request, contest_uuid, problem_uuid):
                         code=code,
                         verdict=verdict,
                         status=verdict,
+                        output=output
                     )
 
                     submission = ContestSubmission.objects.create(
@@ -919,16 +971,12 @@ def contest_problem_detail(request, contest_uuid, problem_uuid):
 
                     context.update({
                         'verdict': submission.verdict,
-                        'feedback_message': get_feedback_message(submission.verdict),
+                        'feedback_message': feedback_message,
+                        'output': output,
                     })
 
-                    messages.success(request, f'Solution submitted! Verdict: {get_feedback_message(verdict)}')
+                    messages.success(request, f'Solution submitted! {feedback_message}')
 
-                except ImportError:
-                    context.update({
-                        'verdict': 'IE',
-                        'feedback_message': 'Evaluation service not available'
-                    })
                 except Exception as e:
                     context.update({
                         'verdict': 'IE',
