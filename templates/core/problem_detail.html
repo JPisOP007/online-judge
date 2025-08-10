@@ -979,6 +979,8 @@ async function submitSolution() {
       let outputText = '';
       if (data.output) {
         outputText = data.output;
+      } else if (data.feedback_message) {
+        outputText = data.feedback_message;
       } else if (data.feedback) {
         outputText = data.feedback;
       } else if (data.error) {

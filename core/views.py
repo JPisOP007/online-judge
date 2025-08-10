@@ -379,15 +379,15 @@ def problem_detail(request, problem_id):
                         if current_verdict != 'AC':
                             all_passed = False
                             verdict = current_verdict
-                            output = current_output
                             feedback_message = f"❌ Failed on test case {i+1}"
+                            output = feedback_message
                             debug = f"Failed on test case {i+1}:\nInput: '{test_input}'\nExpected: '{expected_output}'\nActual: '{current_output}'\nVerdict: {current_verdict}"
                             break
                     except Exception as e:
                         all_passed = False
                         verdict = "IE"
-                        output = f"Execution error: {str(e)}"
                         feedback_message = f"❌ Error on test case {i+1}"
+                        output = feedback_message
                         debug = f"Error on test case {i+1}: {str(e)}"
                         break
 
