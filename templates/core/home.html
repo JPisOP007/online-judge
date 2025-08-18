@@ -4,11 +4,30 @@
 
 {% block extra_css %}
 <style>
+  :root {
+    --primary-color: #2563eb;
+    --primary-dark: #1d4ed8;
+    --secondary-color: #64748b;
+    --accent-color: #0ea5e9;
+    --success-color: #059669;
+    --warning-color: #d97706;
+    --danger-color: #dc2626;
+    --light-bg: #f8fafc;
+    --white: #ffffff;
+    --dark: #1e293b;
+    --border-color: #e2e8f0;
+    --text-muted: #64748b;
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+  }
+
   /* Hero Section */
   .hero-section {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
     color: white;
-    padding: 100px 0;
+    padding: 120px 0 80px;
     position: relative;
     overflow: hidden;
   }
@@ -20,8 +39,9 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" fill="rgba(255,255,255,0.1)"><polygon points="0,0 1000,100 1000,0"/></svg>');
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120"><path d="M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V0Z" opacity=".25" fill="%23ffffff"></path></svg>') no-repeat;
     background-size: cover;
+    background-position: bottom;
   }
 
   .hero-content {
@@ -30,78 +50,52 @@
   }
 
   .hero-title {
-    font-size: 4rem;
-    font-weight: 800;
-    margin-bottom: 1rem;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    font-size: 3.5rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    line-height: 1.1;
   }
 
   .hero-subtitle {
-    font-size: 1.5rem;
-    margin-bottom: 2rem;
+    font-size: 1.25rem;
+    margin-bottom: 2.5rem;
     opacity: 0.9;
+    font-weight: 400;
   }
 
   /* Welcome Section for Authenticated Users */
   .welcome-section {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--primary-color);
     color: white;
-    padding: 60px 0;
+    padding: 80px 0;
     position: relative;
-    overflow: hidden;
   }
 
   .welcome-card {
     background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(15px);
-    border-radius: 20px;
-    padding: 2.5rem;
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    padding: 3rem;
     border: 1px solid rgba(255, 255, 255, 0.2);
     text-align: center;
     margin-bottom: 2rem;
   }
 
   .welcome-title {
-    font-size: 2.5rem;
-    font-weight: 700;
+    font-size: 2.25rem;
+    font-weight: 600;
     margin-bottom: 1rem;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
   }
 
   .role-badge {
     display: inline-block;
-    background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+    background: var(--accent-color);
     color: white;
-    padding: 8px 20px;
-    border-radius: 25px;
-    font-weight: 600;
-    font-size: 1rem;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 500;
+    font-size: 0.875rem;
     margin: 0.5rem;
-    box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
-  }
-
-  .quick-stats {
-    display: flex;
-    justify-content: center;
-    gap: 2rem;
-    margin-top: 1.5rem;
-    flex-wrap: wrap;
-  }
-
-  .quick-stat {
-    text-align: center;
-  }
-
-  .quick-stat .number {
-    font-size: 2rem;
-    font-weight: 800;
-    color: #60a5fa;
-    display: block;
-  }
-
-  .quick-stat .label {
-    font-size: 0.9rem;
-    opacity: 0.8;
   }
 
   .cta-buttons {
@@ -112,211 +106,176 @@
   }
 
   .btn-hero {
-    padding: 15px 30px;
-    font-size: 1.1rem;
-    font-weight: 600;
-    border-radius: 50px;
-    transition: all 0.3s ease;
+    padding: 12px 24px;
+    font-size: 1rem;
+    font-weight: 500;
+    border-radius: 8px;
+    transition: all 0.2s ease;
     border: none;
     cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
   }
 
   .btn-hero-primary {
-    background: linear-gradient(45deg, #ff6b6b, #ee5a24);
-    color: white;
-    box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+    background: var(--white);
+    color: var(--primary-color);
   }
 
   .btn-hero-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(255, 107, 107, 0.6);
-    color: white;
+    background: #f1f5f9;
+    color: var(--primary-dark);
+    transform: translateY(-1px);
   }
 
   .btn-hero-secondary {
-    background: rgba(255, 255, 255, 0.2);
+    background: transparent;
     color: white;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
   }
 
   .btn-hero-secondary:hover {
-    background: rgba(255, 255, 255, 0.3);
-    transform: translateY(-2px);
+    background: rgba(255, 255, 255, 0.1);
     color: white;
+    border-color: rgba(255, 255, 255, 0.5);
   }
 
   /* Dashboard Cards */
   .dashboard-section {
-    background: #f8fafc;
+    background: var(--light-bg);
     padding: 80px 0;
   }
 
   .dashboard-card {
-    background: white;
-    border-radius: 15px;
+    background: var(--white);
+    border-radius: 12px;
     padding: 2rem;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-    border: 1px solid #e2e8f0;
-    transition: all 0.3s ease;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+    transition: all 0.2s ease;
     height: 100%;
   }
 
   .dashboard-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
   }
 
   .dashboard-card h3 {
-    color: #1e293b;
-    font-weight: 700;
+    color: var(--dark);
+    font-weight: 600;
     margin-bottom: 1rem;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.75rem;
+    font-size: 1.125rem;
   }
 
   .dashboard-card .icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.2rem;
+    font-size: 1rem;
     color: white;
   }
 
-  .icon-problems { background: linear-gradient(45deg, #3b82f6, #1d4ed8); }
-  .icon-contests { background: linear-gradient(45deg, #f59e0b, #d97706); }
-  .icon-progress { background: linear-gradient(45deg, #10b981, #059669); }
-  .icon-community { background: linear-gradient(45deg, #8b5cf6, #7c3aed); }
+  .icon-problems { background: var(--primary-color); }
+  .icon-contests { background: var(--warning-color); }
+  .icon-progress { background: var(--success-color); }
+  .icon-community { background: #8b5cf6; }
 
   /* Stats Section */
   .stats-section {
-    background: white;
+    background: var(--white);
     padding: 80px 0;
-    margin-top: -50px;
-    position: relative;
-    z-index: 3;
   }
 
   .stats-card {
     text-align: center;
     padding: 2rem;
-    border-radius: 20px;
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    border: 1px solid #dee2e6;
-    transition: all 0.3s ease;
+    border-radius: 12px;
+    background: var(--white);
+    border: 1px solid var(--border-color);
+    transition: all 0.2s ease;
     height: 100%;
   }
 
   .stats-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
   }
 
   .stats-number {
-    font-size: 3rem;
-    font-weight: 800;
-    color: #2563eb;
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
     margin-bottom: 0.5rem;
   }
 
   .stats-label {
-    font-size: 1.1rem;
-    color: #64748b;
+    font-size: 1rem;
+    color: var(--text-muted);
     font-weight: 500;
   }
 
   /* Features Section */
   .features-section {
-    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-    padding: 100px 0;
+    background: var(--light-bg);
+    padding: 80px 0;
   }
 
   .feature-card {
-    background: white;
-    border-radius: 20px;
-    padding: 2.5rem;
+    background: var(--white);
+    border-radius: 12px;
+    padding: 2rem;
     text-align: center;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-    transition: all 0.3s ease;
-    border: 1px solid #e2e8f0;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.2s ease;
+    border: 1px solid var(--border-color);
     height: 100%;
   }
 
   .feature-card:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
   }
 
   .feature-icon {
-    width: 80px;
-    height: 80px;
+    width: 64px;
+    height: 64px;
     margin: 0 auto 1.5rem;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 50%;
+    background: var(--primary-color);
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 2rem;
+    font-size: 1.5rem;
     color: white;
   }
 
   .feature-title {
-    font-size: 1.5rem;
-    font-weight: 700;
+    font-size: 1.25rem;
+    font-weight: 600;
     margin-bottom: 1rem;
-    color: #1e293b;
+    color: var(--dark);
   }
 
   .feature-description {
-    color: #64748b;
+    color: var(--text-muted);
     line-height: 1.6;
-  }
-
-  /* Recent Activity Section */
-  .activity-section {
-    background: white;
-    padding: 100px 0;
-  }
-
-  .activity-card {
-    background: rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(10px);
-    border-radius: 15px;
-    padding: 1.5rem;
-    margin-bottom: 1rem;
-    border-left: 4px solid #60a5fa;
-    transition: all 0.3s ease;
-    color: white;
-  }
-
-  .activity-card:hover {
-    transform: translateX(5px);
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-    background: rgba(255, 255, 255, 0.2);
-  }
-
-  .activity-user {
-    font-weight: 600;
-    color: #60a5fa;
-  }
-
-  .activity-time {
-    color: rgba(255, 255, 255, 0.7);
-    font-size: 0.9rem;
   }
 
   /* Leaderboard Section */
   .leaderboard-section {
-    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+    background: var(--dark);
     color: white;
-    padding: 100px 0;
+    padding: 80px 0;
   }
 
-  /* Fixed: Proper alignment for leaderboard and activity sections */
   .leaderboard-container, .activity-container {
     height: 100%;
     display: flex;
@@ -338,97 +297,88 @@
   }
 
   .leaderboard-item {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    border-radius: 15px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
     padding: 1.5rem;
     margin-bottom: 1rem;
     display: flex;
     align-items: center;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
+    border: 1px solid rgba(255, 255, 255, 0.1);
   }
 
   .leaderboard-item:hover {
-    background: rgba(255, 255, 255, 0.15);
-    transform: translateY(-2px);
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-1px);
   }
 
   .rank-badge {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: 800;
+    font-weight: 600;
     margin-right: 1rem;
     flex-shrink: 0;
+    font-size: 0.875rem;
   }
 
-  .rank-1 { background: linear-gradient(45deg, #ffd700, #ffed4e); color: #1a1a1a; }
-  .rank-2 { background: linear-gradient(45deg, #c0c0c0, #e5e5e5); color: #1a1a1a; }
-  .rank-3 { background: linear-gradient(45deg, #cd7f32, #d2691e); color: white; }
-  .rank-other { background: linear-gradient(45deg, #4a5568, #2d3748); color: white; }
+  .rank-1 { background: #fbbf24; color: #1f2937; }
+  .rank-2 { background: #9ca3af; color: #1f2937; }
+  .rank-3 { background: #f97316; color: white; }
+  .rank-other { background: #374151; color: white; }
 
-  /* Make sure both columns have equal height */
-  .leaderboard-row {
-    display: flex;
-    align-items: stretch;
+  .activity-card {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    border-left: 3px solid var(--accent-color);
+    transition: all 0.2s ease;
+    color: white;
   }
 
-  .leaderboard-col {
-    display: flex;
-    flex-direction: column;
+  .activity-card:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateX(4px);
   }
 
-  /* Animated Code Background */
-  .code-bg {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    opacity: 0.1;
-    font-family: 'Courier New', monospace;
-    font-size: 14px;
-    line-height: 1.4;
-    overflow: hidden;
-    pointer-events: none;
+  .activity-user {
+    font-weight: 500;
+    color: var(--accent-color);
   }
 
-  .floating-code {
-    position: absolute;
-    animation: float 20s linear infinite;
-  }
-
-  @keyframes float {
-    0% { transform: translateY(100vh) translateX(0); }
-    100% { transform: translateY(-100vh) translateX(100px); }
+  .activity-time {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.875rem;
   }
 
   /* Responsive Design */
   @media (max-width: 768px) {
-    .hero-title, .welcome-title {
+    .hero-title {
       font-size: 2.5rem;
     }
     
-    .hero-subtitle {
-      font-size: 1.2rem;
+    .welcome-title {
+      font-size: 1.875rem;
     }
     
-    .cta-buttons, .quick-stats {
+    .hero-subtitle {
+      font-size: 1.125rem;
+    }
+    
+    .cta-buttons {
       justify-content: center;
+      flex-direction: column;
+      align-items: center;
     }
     
     .stats-number {
       font-size: 2rem;
     }
 
-    .quick-stats {
-      gap: 1rem;
-    }
-
-    /* Mobile responsiveness for equal height containers */
     .leaderboard-container, .activity-container {
       min-height: auto;
     }
@@ -436,16 +386,20 @@
     .leaderboard-items, .activity-items {
       min-height: auto;
     }
+
+    .dashboard-card, .feature-card {
+      margin-bottom: 1.5rem;
+    }
   }
 
-  /* Pulse Animation */
-  @keyframes pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-  }
-
-  .pulse-animation {
-    animation: pulse 2s infinite;
+  /* Utility Classes */
+  .text-purple { color: #8b5cf6; }
+  
+  /* CTA Section */
+  .cta-section {
+    background: var(--primary-color);
+    color: white;
+    padding: 80px 0;
   }
 </style>
 {% endblock %}
@@ -454,18 +408,6 @@
 {% if user.is_authenticated %}
 <!-- Welcome Section for Authenticated Users -->
 <section class="welcome-section">
-  <div class="code-bg">
-    <div class="floating-code" style="left: 10%; animation-delay: 0s;">
-      def solve():<br>
-      &nbsp;&nbsp;return "Hello World"
-    </div>
-    <div class="floating-code" style="left: 60%; animation-delay: 5s;">
-      for i in range(n):<br>
-      &nbsp;&nbsp;if arr[i] > max_val:<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;max_val = arr[i]
-    </div>
-  </div>
-  
   <div class="container">
     <div class="welcome-card">
       <h1 class="welcome-title">Welcome back, {{ user.username }}! 👋</h1>
@@ -554,18 +496,6 @@
 {% else %}
 <!-- Hero Section for Non-Authenticated Users -->
 <section class="hero-section">
-  <div class="code-bg">
-    <div class="floating-code" style="left: 10%; animation-delay: 0s;">
-      def solve():<br>
-      &nbsp;&nbsp;return "Hello World"
-    </div>
-    <div class="floating-code" style="left: 60%; animation-delay: 5s;">
-      for i in range(n):<br>
-      &nbsp;&nbsp;if arr[i] > max_val:<br>
-      &nbsp;&nbsp;&nbsp;&nbsp;max_val = arr[i]
-    </div>
-  </div>
-  
   <div class="hero-content">
     <div class="container text-center">
       <h1 class="hero-title">Code. Compete. Conquer.</h1>
@@ -840,32 +770,21 @@
 {% endif %}
 {% if not user.is_authenticated %}
 <!-- Call to Action Section -->
-<section class="cta-section" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 100px 0;">
+<section class="cta-section">
   <div class="container text-center">
     <div class="row justify-content-center">
       <div class="col-lg-8">
         <h2 class="display-4 fw-bold mb-4">Ready to Start Your Journey?</h2>
         <p class="lead mb-5">Join thousands of programmers who are already improving their skills with MyOJ</p>
         
-        {% if not user.is_authenticated %}
         <div class="d-flex gap-3 justify-content-center flex-wrap">
-          <a href="{% url 'register' %}" class="btn btn-hero btn-hero-primary btn-lg pulse-animation">
+          <a href="{% url 'register' %}" class="btn btn-hero btn-hero-primary btn-lg">
             <i class="bi bi-rocket-takeoff me-2"></i>Start Coding Now
           </a>
           <a href="{% url 'login' %}" class="btn btn-hero btn-hero-secondary btn-lg">
             <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
           </a>
         </div>
-        {% else %}
-        <div class="d-flex gap-3 justify-content-center flex-wrap">
-          <a href="{% url 'problem_list' %}" class="btn btn-hero btn-hero-primary btn-lg pulse-animation">
-            <i class="bi bi-code-slash me-2"></i>Continue Solving
-          </a>
-          <a href="{% url 'contest_list' %}" class="btn btn-hero btn-hero-secondary btn-lg">
-            <i class="bi bi-trophy-fill me-2"></i>Join Next Contest
-          </a>
-        </div>
-        {% endif %}
       </div>
     </div>
   </div>
@@ -999,96 +918,8 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     }
   });
 });
-
-// Add loading animation to CTA buttons
-document.querySelectorAll('.btn-hero').forEach(btn => {
-  btn.addEventListener('click', function(e) {
-    if (!this.classList.contains('loading')) {
-      this.classList.add('loading');
-      const originalText = this.innerHTML;
-      this.innerHTML = '<i class="bi bi-arrow-clockwise spinner-border spinner-border-sm me-2"></i>Loading...';
-      
-      // Simulate loading for demo purposes
-      setTimeout(() => {
-        this.classList.remove('loading');
-        this.innerHTML = originalText;
-      }, 1500);
-    }
-  });
-});
-
-// Add entrance animations on scroll
-const observerOptions = {
-  threshold: 0.1,
-  rootMargin: '0px 0px -50px 0px'
-};
-
-const observer = new IntersectionObserver(function(entries) {
-  entries.forEach(entry => {
-    if (entry.isIntersecting) {
-      entry.target.style.opacity = '1';
-      entry.target.style.transform = 'translateY(0)';
-    }
-  });
-}, observerOptions);
-
-// Observe elements for animation
-document.querySelectorAll('.stats-card, .feature-card, .dashboard-card, .leaderboard-item, .activity-card').forEach(el => {
-  el.style.opacity = '0';
-  el.style.transform = 'translateY(30px)';
-  el.style.transition = 'all 0.6s ease';
-  observer.observe(el);
-});
 </script>
 
-<style>
-/* Additional styles for hover effects */
-.hover-opacity-100:hover {
-  opacity: 1 !important;
-}
 
-.spinner-border-sm {
-  width: 1rem;
-  height: 1rem;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.spinner-border {
-  animation: spin 1s linear infinite;
-}
-
-/* Enhanced button loading state */
-.btn-hero.loading {
-  pointer-events: none;
-  opacity: 0.8;
-}
-
-/* Smooth transitions for all interactive elements */
-.btn, .card, .badge {
-  transition: all 0.3s ease;
-}
-
-/* Custom scrollbar for webkit browsers */
-::-webkit-scrollbar {
-  width: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: #f1f1f1;
-}
-
-::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
-}
-</style>
 
 {% endblock %}
