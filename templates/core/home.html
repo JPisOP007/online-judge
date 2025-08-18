@@ -401,6 +401,18 @@
     color: white;
     padding: 80px 0;
   }
+
+  /* Subtle fade-in animation */
+  .fade-in {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.6s ease;
+  }
+
+  .fade-in.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
 </style>
 {% endblock %}
 
@@ -439,7 +451,7 @@
     
     <div class="row g-4">
       <div class="col-lg-3 col-md-6">
-        <div class="dashboard-card">
+        <div class="dashboard-card fade-in">
           <h3><span class="icon icon-problems"><i class="bi bi-puzzle"></i></span> Practice</h3>
           <p class="text-muted mb-3">Solve algorithmic problems and improve your coding skills</p>
           <div class="d-flex justify-content-between align-items-center">
@@ -452,7 +464,7 @@
       </div>
       
       <div class="col-lg-3 col-md-6">
-        <div class="dashboard-card">
+        <div class="dashboard-card fade-in">
           <h3><span class="icon icon-contests"><i class="bi bi-trophy"></i></span> Contests</h3>
           <p class="text-muted mb-3">Participate in competitive programming contests</p>
           <div class="d-flex justify-content-between align-items-center">
@@ -465,7 +477,7 @@
       </div>
       
       <div class="col-lg-3 col-md-6">
-        <div class="dashboard-card">
+        <div class="dashboard-card fade-in">
           <h3><span class="icon icon-progress"><i class="bi bi-graph-up"></i></span> Profile and Progress</h3>
           <p class="text-muted mb-3">View your submission history and statistics</p>
           <div class="d-flex justify-content-between align-items-center">
@@ -478,7 +490,7 @@
       </div>
       
       <div class="col-lg-3 col-md-6">
-        <div class="dashboard-card">
+        <div class="dashboard-card fade-in">
           <h3><span class="icon icon-community"><i class="bi bi-people"></i></span> Community</h3>
           <p class="text-muted mb-3">Connect with other programmers and discuss solutions</p>
           <div class="d-flex justify-content-between align-items-center">
@@ -498,8 +510,8 @@
 <section class="hero-section">
   <div class="hero-content">
     <div class="container text-center">
-      <h1 class="hero-title">Code. Compete. Conquer.</h1>
-      <p class="hero-subtitle">Master algorithmic challenges and compete with programmers worldwide</p>
+      <h1 class="hero-title">Master Competitive Programming</h1>
+      <p class="hero-subtitle">Practice algorithms, compete in contests, and advance your coding skills with our comprehensive platform</p>
       
       <div class="cta-buttons">
         <a href="{% url 'register' %}" class="btn btn-hero btn-hero-primary">
@@ -550,8 +562,8 @@
   <div class="container">
     <div class="row text-center mb-5">
       <div class="col-12">
-        <h2 class="display-4 fw-bold mb-3">Why Choose MyOJ?</h2>
-        <p class="lead text-muted">Everything you need to master competitive programming</p>
+        <h2 class="display-4 fw-bold mb-3">Built for Competitive Programmers</h2>
+        <p class="lead text-muted">Professional tools and features designed to accelerate your coding journey</p>
       </div>
     </div>
     
@@ -561,9 +573,9 @@
           <div class="feature-icon">
             <i class="bi bi-lightning-charge"></i>
           </div>
-          <h3 class="feature-title">Lightning Fast</h3>
+          <h3 class="feature-title">Fast Execution</h3>
           <p class="feature-description">
-            Ultra-fast code execution with real-time feedback. Get results in milliseconds, not minutes.
+            Optimized judging system with sub-second execution times and instant feedback on your submissions.
           </p>
         </div>
       </div>
@@ -573,9 +585,9 @@
           <div class="feature-icon">
             <i class="bi bi-puzzle"></i>
           </div>
-          <h3 class="feature-title">Diverse Problems</h3>
+          <h3 class="feature-title">Curated Problem Set</h3>
           <p class="feature-description">
-            From beginner-friendly to expert-level challenges across all algorithmic domains.
+            Carefully selected problems covering algorithms, data structures, and competitive programming patterns.
           </p>
         </div>
       </div>
@@ -917,6 +929,25 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
       });
     }
   });
+});
+
+// Subtle fade-in animation on scroll
+const observerOptions = {
+  threshold: 0.1,
+  rootMargin: '0px 0px -50px 0px'
+};
+
+const observer = new IntersectionObserver(function(entries) {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+    }
+  });
+}, observerOptions);
+
+// Observe fade-in elements
+document.querySelectorAll('.fade-in').forEach(el => {
+  observer.observe(el);
 });
 </script>
 
