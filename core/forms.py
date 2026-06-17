@@ -143,7 +143,12 @@ class UserProfileForm(forms.ModelForm):
     def clean_photo(self):
         photo = self.cleaned_data.get('photo')
         if photo:
-            validate_image_file(photo)
+            # Validate the file
+            try:
+                validate_image_file(photo)
+            except ValidationError as e:
+                # Re-raise with more user-friendly message
+                raise ValidationError(f"Photo upload failed: {e.message}")
         return photo
 
     def save(self, commit=True):

@@ -6,7 +6,7 @@ RUN groupadd -r appuser && useradd -r -g appuser appuser
 # Install system packages with security updates
 RUN apt-get update && apt-get install -y \
     g++ \
-    openjdk-17-jdk \
+    default-jdk \
     nodejs \
     npm \
     gcc \

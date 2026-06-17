@@ -319,17 +319,44 @@
             <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
                 <div class="modal-body">
                     {% csrf_token %}
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger mb-3">
+                            <strong>Error:</strong>
+                            {% for error in form.non_field_errors %}
+                                <div>{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
                     <div class="mb-3">
                         <label for="id_username" class="form-label">Username</label>
                         {{ form.username|add_class:"form-control" }}
+                        {% if form.username.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.username.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
                     </div>
                     <div class="mb-3">
                         <label for="id_email" class="form-label">Email</label>
                         {{ form.email|add_class:"form-control" }}
+                        {% if form.email.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.email.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
                     </div>
                     <div class="mb-3">
                         <label for="id_photo" class="form-label">Profile Photo</label>
+                        <small class="form-text text-muted d-block mb-2">Max 20MB, up to 4096x4096 pixels (JPG/PNG/GIF/WEBP)</small>
                         {{ form.photo|add_class:"form-control" }}
+                        {% if form.photo.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.photo.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                        <div id="photo-preview" class="mt-2" style="display:none;">
+                            <img id="preview-img" style="max-width: 200px; max-height: 200px; border-radius: 8px;">
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -340,5 +367,42 @@
         </div>
     </div>
 </div>
+
+<script>
+// Image preview functionality
+document.getElementById('id_photo').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        // Show file info
+        const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+        console.log(`File size: ${sizeMB}MB`);
+        
+        // Show preview
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const preview = document.getElementById('photo-preview');
+            const img = document.getElementById('preview-img');
+            img.src = event.target.result;
+            preview.style.display = 'block';
+            
+            // Check image dimensions
+            const image = new Image();
+            image.onload = function() {
+                console.log(`Image dimensions: ${image.width}x${image.height}`);
+            };
+            image.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+// Show modal if there are form errors
+{% if form.errors %}
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = new bootstrap.Modal(document.getElementById('editProfileModal'));
+    modal.show();
+});
+{% endif %}
+</script>
 
 {% endblock %}

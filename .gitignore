@@ -1,9 +1,31 @@
-/credentials/gemini-service-key.json
+# Python
 *.pyc
+*.pyo
+*.pyd
 __pycache__/
-db.sqlite3
-.env
-/staticfiles/
-/media/
+
+# Virtual environment
 /venv/
 /.env/
+
+# Django
+db.sqlite3
+/staticfiles/
+/media/
+
+# Environment & secrets
+.env
+/credentials/
+encoded.txt
+encoded_key.txt
+
+# Logs
+*.log
+
+# AI tool metadata
+.zencoder/
+.zenflow/
+.gemini/
+
+# Root-level test scripts
+/test_*.py

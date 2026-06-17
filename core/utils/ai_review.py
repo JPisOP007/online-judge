@@ -1,4 +1,4 @@
-from vertexai.generative_models import GenerativeModel
+from django.conf import settings
 import json
 import logging
 import re
@@ -6,9 +6,23 @@ import re
 logger = logging.getLogger(__name__)
 
 def generate_code_review(code):
-    """Generate AI code review with structured response"""
+    """Generate AI code review with structured response using Groq"""
+    # Check if AI features are enabled
+    if not getattr(settings, 'AI_FEATURES_ENABLED', False):
+        return {
+            'success': False,
+            'error': 'AI features are not enabled. Please configure Groq API key.',
+            'review': {
+                "logic": "AI review not available - API key not configured",
+                "efficiency": "AI review not available - API key not configured",
+                "clarity": "AI review not available - API key not configured", 
+                "best_practices": "AI review not available - API key not configured"
+            }
+        }
+    
     try:
-        model = GenerativeModel("gemini-2.0-flash")
+        from groq import Groq
+        client = Groq(api_key=settings.GROQ_API_KEY)
         
         prompt = f"""
 You are an AI code reviewer. Review the following code and provide feedback in EXACTLY this JSON format (no additional text before or after):
@@ -26,13 +40,18 @@ Code to review:
 Return ONLY the JSON object, no other text.
 """
 
-        response = model.generate_content(prompt)
+        response = client.chat.completions.create(
+            messages=[{"role": "user", "content": prompt}],
+            model="llama-3.3-70b-versatile",
+            temperature=0.7,
+            max_tokens=1000
+        )
         
-        if not response or not response.text:
+        if not response or not response.choices:
             raise ValueError("Empty response from AI model")
         
         # Clean the response text
-        response_text = response.text.strip()
+        response_text = response.choices[0].message.content.strip()
         
         # Try to extract JSON from the response
         json_match = re.search(r'\{.*\}', response_text, re.DOTALL)
@@ -53,17 +72,17 @@ Return ONLY the JSON object, no other text.
             return {
                 'success': True,
                 'review': structured_review,
-                'raw': response.text
+                'raw': response_text
             }
             
         except (json.JSONDecodeError, ValueError) as e:
             logger.warning(f"JSON parsing failed: {e}, attempting text parsing")
             # Fallback: parse text format
-            structured_review = parse_text_review(response.text)
+            structured_review = parse_text_review(response_text)
             return {
                 'success': True,
                 'review': structured_review,
-                'raw': response.text
+                'raw': response_text
             }
             
     except Exception as e:

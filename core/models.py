@@ -19,7 +19,7 @@ class UserProfile(models.Model):
         null=True, 
         blank=True,
         validators=[validate_image_file],
-        help_text="Upload a profile photo (max 5MB, JPG/PNG/GIF/WEBP)"
+        help_text="Upload a profile photo (max 20MB, up to 4096x4096 pixels, JPG/PNG/GIF/WEBP)"
     )
 
     def __str__(self):

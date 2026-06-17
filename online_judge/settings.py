@@ -5,41 +5,76 @@ Django settings for online_judge project.
 import os
 import base64
 from pathlib import Path
-from google.cloud import aiplatform
 
 # === BASE DIR ===
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# === GOOGLE CREDENTIALS (Cloud and Local) ===
-encoded_key = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS_B64")
-if encoded_key:
-    try:
-        service_account_path = "/app/gemini-service-key.json"
-        with open(service_account_path, "wb") as f:
-            f.write(base64.b64decode(encoded_key))
-        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = service_account_path
-    except Exception as e:
-        raise Exception("Failed to decode or write GOOGLE_APPLICATION_CREDENTIALS_B64") from e
-else:
-    # Fallback for local development
-    local_creds = os.path.join(BASE_DIR, "credentials", "gemini-service-key.json")
-    if os.path.exists(local_creds):
-        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = local_creds
-    else:
-        raise EnvironmentError("Google credentials not found for cloud or local setup.")
+# === GROQ API CONFIGURATION ===
+# Set this flag to indicate whether AI features are available
+AI_FEATURES_ENABLED = False
 
-# Initialize Vertex AI
-aiplatform.init(project="gen-lang-client-0899179119", location="us-central1")
+# Read Groq API key from environment only — never hardcode secrets
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
+
+if GROQ_API_KEY:
+    AI_FEATURES_ENABLED = True
+else:
+    # AI features disabled when key is not provided
+    AI_FEATURES_ENABLED = False
 
 # === SECURITY ===
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-unsafe-default-key')
-DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
-ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', 'myoj.work.gd,localhost,127.0.0.1').split(',')
+DEBUG = os.getenv('DEBUG', 'True').lower() == 'true'  # Default to True for local development
+ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', 'myoj.work.gd,localhost,127.0.0.1,testserver').split(',')
 
 CSRF_TRUSTED_ORIGINS = [
     'https://myoj.work.gd',
     'http://myoj.work.gd',
 ]
+
+# === REST FRAMEWORK CONFIGURATION ===
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+    ],
+    'DEFAULT_FILTER_BACKENDS': [
+        'rest_framework.filters.SearchFilter',
+        'rest_framework.filters.OrderingFilter',
+    ],
+    'DEFAULT_PAGINATION_CLASS': 'core.pagination.StandardResultsSetPagination',
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'PAGE_SIZE': 20,
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle'
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/hour',
+        'user': '1000/hour'
+    }
+}
+
+# === JWT CONFIGURATION ===
+from datetime import timedelta
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': SECRET_KEY,
+}
+
+# === CORS SETTINGS ===
+CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', '').split(',') if os.getenv('CORS_ALLOWED_ORIGINS') else [
+    'http://localhost:3000',
+    'http://myapp.local:3000',
+]
+CORS_ALLOW_CREDENTIALS = True
 
 # === APPLICATIONS ===
 INSTALLED_APPS = [
@@ -52,6 +87,10 @@ INSTALLED_APPS = [
     'core.apps.CoreConfig',
     'widget_tweaks',
     'django_codemirror6',
+    'corsheaders',
+    'drf_spectacular',
+    'rest_framework',
+    'rest_framework_simplejwt',
 ]
 
 # === MIDDLEWARE ===
@@ -59,6 +98,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'core.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
