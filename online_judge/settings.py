@@ -31,6 +31,14 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-unsafe-default-key'
 DEBUG = os.getenv('DEBUG', 'True').lower() in ('true', '1', 'yes')  # Default to True for local development
 ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', 'myoj.work.gd,localhost,127.0.0.1,testserver').split(',')
 
+# Auto-add Render hostname
+_render_url = os.getenv('RENDER_EXTERNAL_URL', '')
+if _render_url:
+    from urllib.parse import urlparse
+    _render_host = urlparse(_render_url).hostname
+    if _render_host and _render_host not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(_render_host)
+
 CSRF_TRUSTED_ORIGINS = [
     'https://myoj.work.gd',
     'http://myoj.work.gd',
