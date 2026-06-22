@@ -5,9 +5,13 @@ Django settings for online_judge project.
 import os
 import base64
 from pathlib import Path
+from dotenv import load_dotenv
 
 # === BASE DIR ===
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Load .env file
+load_dotenv(BASE_DIR / '.env')
 
 # === GROQ API CONFIGURATION ===
 # Set this flag to indicate whether AI features are available
@@ -24,13 +28,17 @@ else:
 
 # === SECURITY ===
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-unsafe-default-key')
-DEBUG = os.getenv('DEBUG', 'True').lower() == 'true'  # Default to True for local development
+DEBUG = os.getenv('DEBUG', 'True').lower() in ('true', '1', 'yes')  # Default to True for local development
 ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', 'myoj.work.gd,localhost,127.0.0.1,testserver').split(',')
 
 CSRF_TRUSTED_ORIGINS = [
     'https://myoj.work.gd',
     'http://myoj.work.gd',
 ]
+# Dynamically add Render deployment URL if set
+_render_url = os.getenv('RENDER_EXTERNAL_URL', '')
+if _render_url:
+    CSRF_TRUSTED_ORIGINS.append(_render_url)
 
 # === REST FRAMEWORK CONFIGURATION ===
 REST_FRAMEWORK = {
@@ -78,9 +86,9 @@ CORS_ALLOW_CREDENTIALS = True
 
 # === APPLICATIONS ===
 INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
+    'online_judge.apps.MongoAdminConfig',
+    'online_judge.apps.MongoAuthConfig',
+    'online_judge.apps.MongoContentTypesConfig',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
@@ -130,10 +138,18 @@ TEMPLATES = [
 ]
 
 # === DATABASE ===
+import os
+
+# MongoDB configuration (django-mongodb-backend >= 6.0.x)
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+    "default": {
+        "ENGINE": "django_mongodb_backend",
+        "HOST": os.getenv(
+            "MONGODB_URI",
+            "mongodb://localhost:27017/online_judge"
+        ),
+        # Ensure the DB name is set (MongoDB uses the path component of the URI)
+        "NAME": "online_judge",
     }
 }
 
@@ -179,7 +195,7 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB
 FILE_UPLOAD_PERMISSIONS = 0o644
 
 # === DEFAULT PRIMARY KEY FIELD ===
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+DEFAULT_AUTO_FIELD = 'django_mongodb_backend.fields.ObjectIdAutoField'
 
 # === CODE EXECUTION CONFIG ===
 CODE_EXECUTION = {
@@ -203,8 +219,7 @@ LOGGING = {
     'handlers': {
         'file': {
             'level': 'WARNING',
-            'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, 'security.log'),
+            'class': 'logging.StreamHandler',  # Console logging for Render (ephemeral disk)
         },
         'console': {
             'level': 'INFO',

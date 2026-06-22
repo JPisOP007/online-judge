@@ -1,11 +1,8 @@
 from django.apps import AppConfig
 
 class CoreConfig(AppConfig):
-    default_auto_field = 'django.db.models.BigAutoField'
+    default_auto_field = 'django_mongodb_backend.fields.ObjectIdAutoField'
     name = 'core'
 
     def ready(self):
         import core.signals  # import signals here to register them
-
-def ready(self):
-    import core.signals
