@@ -1,7 +1,7 @@
 FROM python:3.13-slim
 
 # Create non-root user for security
-RUN groupadd -r appuser && useradd -r -g appuser appuser
+RUN groupadd -r appuser && useradd -r -g appuser -m appuser
 
 # Install system packages with security updates
 RUN apt-get update && apt-get install -y \
@@ -61,5 +61,5 @@ CMD ["gunicorn", "online_judge.wsgi:application", \
      "--workers", "2", \
      "--max-requests", "1000", \
      "--max-requests-jitter", "100", \
-     "--timeout", "30", \
+     "--timeout", "120", \
      "--keep-alive", "2"]
