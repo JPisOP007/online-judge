@@ -9,11 +9,11 @@
     <div class="card-section">
       <div class="row align-items-center">
         <div class="col-md-8">
-          <h5 class="mb-1">
+          <h5 class="mb-1" style="font-family: var(--font-heading); text-transform: uppercase;">
             <i class="bi bi-trophy text-warning me-2"></i>
-            <a href="{% url 'contest_detail' contest.uuid %}" class="text-decoration-none">{{ contest.title }}</a>
+            <a href="{% url 'contest_detail' contest.uuid %}" class="text-decoration-none" style="color: var(--primary);">{{ contest.title }}</a>
           </h5>
-          <small class="text-muted">
+          <small class="text-muted" style="text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">
             <i class="bi bi-clock me-1"></i>
             {% if contest.is_running %}
               <span class="text-success">Contest Running</span> - 
@@ -43,31 +43,31 @@
     <div class="card-section">
       <div class="d-flex justify-content-between align-items-start mb-4">
         <div>
-          <h2 class="mb-2">{{ problem.title }}</h2>
-          <div class="d-flex align-items-center gap-3 mb-3">
-            <span class="difficulty-{{ problem.difficulty|lower }}">{{ problem.get_difficulty_display }}</span>
-            <span class="badge bg-primary">{{ contest_problem.points }} points</span>
-            <small class="text-muted"><i class="bi bi-clock me-1"></i>{{ problem.time_limit }}s</small>
-            <small class="text-muted"><i class="bi bi-memory me-1"></i>{{ problem.memory_limit }}MB</small>
+          <h2 class="mb-2" style="font-family: var(--font-heading); text-transform: uppercase;">{{ problem.title }}</h2>
+          <div class="d-flex align-items-center gap-3 mb-3 flex-wrap">
+            <span class="difficulty-{{ problem.difficulty|lower }}" style="padding: 4px 10px; font-size: 0.8rem;">{{ problem.get_difficulty_display }}</span>
+            <span class="badge" style="background: var(--accent-yellow); color: var(--primary); border: 2px solid var(--border); font-size: 0.8rem;">{{ contest_problem.points }} points</span>
+            <span style="font-size: 0.8rem; font-weight: 700; font-family: 'Space Mono', monospace; border: 2px solid var(--border); padding: 4px 8px; background: var(--bg);"><i class="bi bi-clock me-1"></i>{{ problem.time_limit }}s</span>
+            <span style="font-size: 0.8rem; font-weight: 700; font-family: 'Space Mono', monospace; border: 2px solid var(--border); padding: 4px 8px; background: var(--bg);"><i class="bi bi-memory me-1"></i>{{ problem.memory_limit }}MB</span>
           </div>
         </div>
       </div>
 
       <div class="mb-4">
-        <h5><i class="bi bi-file-text me-2"></i>Problem Statement</h5>
+        <h5 style="font-family: var(--font-heading); text-transform: uppercase; border-bottom: 2px solid var(--border); padding-bottom: 8px;"><i class="bi bi-file-text me-2"></i>Problem Statement</h5>
         <div class="problem-content">{{ problem.description|linebreaks }}</div>
       </div>
 
       {% if problem.input_format %}
       <div class="mb-4">
-        <h5><i class="bi bi-arrow-down-circle me-2"></i>Input Format</h5>
+        <h5 style="font-family: var(--font-heading); text-transform: uppercase; border-bottom: 2px solid var(--border); padding-bottom: 8px;"><i class="bi bi-arrow-down-circle me-2"></i>Input Format</h5>
         <div class="problem-content">{{ problem.input_format|linebreaks }}</div>
       </div>
       {% endif %}
 
       {% if problem.output_format %}
       <div class="mb-4">
-        <h5><i class="bi bi-arrow-up-circle me-2"></i>Output Format</h5>
+        <h5 style="font-family: var(--font-heading); text-transform: uppercase; border-bottom: 2px solid var(--border); padding-bottom: 8px;"><i class="bi bi-arrow-up-circle me-2"></i>Output Format</h5>
         <div class="problem-content">{{ problem.output_format|linebreaks }}</div>
       </div>
       {% endif %}
@@ -75,15 +75,15 @@
       {% if problem.sample_input or problem.sample_output %}
       <div class="row mb-4">
         {% if problem.sample_input %}
-        <div class="col-md-6">
-          <h5><i class="bi bi-input-cursor me-2"></i>Sample Input</h5>
-          <pre class="bg-light p-3 border rounded"><code>{{ problem.sample_input }}</code></pre>
+        <div class="col-md-6 mb-3">
+          <h5 style="font-family: var(--font-heading); text-transform: uppercase; font-size: 1rem;"><i class="bi bi-input-cursor me-2"></i>Sample Input</h5>
+          <pre style="background: var(--bg); color: var(--primary); padding: 1rem; border: 2px solid var(--border); font-family: 'Space Mono', monospace; font-size: 0.9rem;"><code>{{ problem.sample_input }}</code></pre>
         </div>
         {% endif %}
         {% if problem.sample_output %}
-        <div class="col-md-6">
-          <h5><i class="bi bi-output me-2"></i>Sample Output</h5>
-          <pre class="bg-light p-3 border rounded"><code>{{ problem.sample_output }}</code></pre>
+        <div class="col-md-6 mb-3">
+          <h5 style="font-family: var(--font-heading); text-transform: uppercase; font-size: 1rem;"><i class="bi bi-output me-2"></i>Sample Output</h5>
+          <pre style="background: var(--bg); color: var(--primary); padding: 1rem; border: 2px solid var(--border); font-family: 'Space Mono', monospace; font-size: 0.9rem;"><code>{{ problem.sample_output }}</code></pre>
         </div>
         {% endif %}
       </div>
@@ -91,7 +91,7 @@
 
       {% if problem.constraints %}
       <div class="mb-4">
-        <h5><i class="bi bi-shield-check me-2"></i>Constraints</h5>
+        <h5 style="font-family: var(--font-heading); text-transform: uppercase; border-bottom: 2px solid var(--border); padding-bottom: 8px;"><i class="bi bi-shield-check me-2"></i>Constraints</h5>
         <div class="problem-content">{{ problem.constraints|linebreaks }}</div>
       </div>
       {% endif %}
@@ -101,7 +101,7 @@
   <!-- Submission Panel -->
   <div class="col-lg-4">
     <div class="card-section sticky-top" style="top: 20px;">
-      <h5 class="mb-3">
+      <h5 class="mb-3" style="font-family: var(--font-heading); text-transform: uppercase; border-bottom: 2px solid var(--border); padding-bottom: 8px;">
         <i class="bi bi-code-slash me-2"></i>Submit Solution
       </h5>
 
@@ -109,7 +109,7 @@
       {% if verdict or output %}
 <div class="mb-3">
   {% if verdict == 'AC' %}
-    <div class="alert alert-success">
+    <div class="alert alert-success" style="border: 2px solid var(--border); box-shadow: 3px 3px 0px #000; border-radius: 0;">
       <i class="bi bi-check-circle me-2"></i>
       <strong>Accepted!</strong>
       {% if feedback_message %}
@@ -117,7 +117,7 @@
       {% endif %}
     </div>
   {% elif verdict == 'WA' %}
-    <div class="alert alert-warning">
+    <div class="alert alert-warning" style="background: var(--accent-yellow); color: #000; border: 2px solid var(--border); box-shadow: 3px 3px 0px #000; border-radius: 0;">
       <i class="bi bi-x-circle me-2"></i>
       <strong>Wrong Answer</strong>
       {% if feedback_message %}
@@ -125,7 +125,7 @@
       {% endif %}
     </div>
   {% elif verdict == 'TLE' %}
-    <div class="alert alert-info">
+    <div class="alert alert-info" style="border: 2px solid var(--border); box-shadow: 3px 3px 0px #000; border-radius: 0;">
       <i class="bi bi-clock me-2"></i>
       <strong>Time Limit Exceeded</strong>
       {% if feedback_message %}
@@ -133,7 +133,7 @@
       {% endif %}
     </div>
   {% elif verdict == 'CE' %}
-    <div class="alert alert-danger">
+    <div class="alert alert-danger" style="border: 2px solid var(--border); box-shadow: 3px 3px 0px #000; border-radius: 0;">
       <i class="bi bi-exclamation-triangle me-2"></i>
       <strong>Compilation Error</strong>
       {% if feedback_message %}
@@ -141,7 +141,7 @@
       {% endif %}
     </div>
   {% elif verdict == 'RE' %}
-    <div class="alert alert-danger">
+    <div class="alert alert-danger" style="border: 2px solid var(--border); box-shadow: 3px 3px 0px #000; border-radius: 0;">
       <i class="bi bi-bug me-2"></i>
       <strong>Runtime Error</strong>
       {% if feedback_message %}
@@ -149,7 +149,7 @@
       {% endif %}
     </div>
   {% elif verdict == 'IE' %}
-    <div class="alert alert-secondary">
+    <div class="alert alert-secondary" style="border: 2px solid var(--border); box-shadow: 3px 3px 0px #000; border-radius: 0;">
       <i class="bi bi-gear me-2"></i>
       <strong>Internal Error</strong>
       {% if feedback_message %}
@@ -157,7 +157,7 @@
       {% endif %}
     </div>
   {% elif verdict %}
-    <div class="alert alert-secondary">
+    <div class="alert alert-secondary" style="border: 2px solid var(--border); box-shadow: 3px 3px 0px #000; border-radius: 0;">
       <i class="bi bi-info-circle me-2"></i>
       <strong>Verdict: {{ verdict }}</strong>
       {% if feedback_message %}
@@ -168,12 +168,12 @@
 
   {% if output %}
   <div class="mt-3">
-    <div class="card">
-      <div class="card-header">
-        <small class="text-muted"><i class="bi bi-terminal me-1"></i>Output:</small>
+    <div class="card" style="border: 2px solid var(--border); border-radius: 0;">
+      <div class="card-header" style="background: var(--bg); border-bottom: 2px solid var(--border); font-family: var(--font-heading); text-transform: uppercase;">
+        <i class="bi bi-terminal me-1"></i>Output:
       </div>
-      <div class="card-body">
-        <pre class="mb-0"><code>{{ output|truncatechars:1000 }}</code></pre>
+      <div class="card-body" style="padding: 0;">
+        <pre class="mb-0" style="background: var(--primary); color: #fff; padding: 1rem; margin: 0; font-family: 'Space Mono', monospace; font-size: 0.85rem;"><code>{{ output|truncatechars:1000 }}</code></pre>
       </div>
     </div>
   </div>
@@ -187,11 +187,11 @@
         <input type="hidden" name="action" id="action-input" value="">
         
         <div class="mb-3">
-          <label class="form-label">Programming Language</label>
+          <label class="form-label" style="font-family: var(--font-heading); text-transform: uppercase;">Programming Language</label>
           {{ form.language }}
         </div>
         <div class="mb-3">
-          <label class="form-label">Source Code</label>
+          <label class="form-label" style="font-family: var(--font-heading); text-transform: uppercase;">Source Code</label>
           {{ form.source_code }}
         </div>
         
@@ -207,34 +207,38 @@
 
       {% if user_submissions %}
       <div class="mt-4">
-        <h6 class="mb-3">
+        <h6 class="mb-3" style="font-family: var(--font-heading); text-transform: uppercase; border-bottom: 2px solid var(--border); padding-bottom: 8px;">
           <i class="bi bi-clock-history me-2"></i>Your Submissions
         </h6>
         <div class="table-responsive">
           <table class="table table-sm">
             <thead>
-              <tr><th>Time</th><th>Verdict</th><th>Points</th></tr>
+              <tr style="border-bottom: 2px solid var(--border);">
+                <th>Time</th>
+                <th>Verdict</th>
+                <th>Points</th>
+              </tr>
             </thead>
             <tbody>
               {% for submission in user_submissions %}
               <tr>
-                <td><small>{{ submission.submitted_at|date:"H:i" }}</small></td>
+                <td style="font-family: 'Space Mono', monospace;"><small>{{ submission.submitted_at|date:"H:i" }}</small></td>
                 <td>
                   {% if submission.solution.verdict == 'AC' %}
-                    <span class="badge bg-success">AC</span>
+                    <span class="badge bg-success" style="border: 1px solid var(--border);">AC</span>
                   {% elif submission.solution.verdict == 'WA' %}
-                    <span class="badge bg-warning">WA</span>
+                    <span class="badge" style="background: var(--accent-yellow); color: #000; border: 1px solid var(--border);">WA</span>
                   {% elif submission.solution.verdict == 'TLE' %}
-                    <span class="badge bg-info">TLE</span>
+                    <span class="badge bg-info" style="border: 1px solid var(--border);">TLE</span>
                   {% elif submission.solution.verdict == 'CE' %}
-                    <span class="badge bg-danger">CE</span>
+                    <span class="badge bg-danger" style="border: 1px solid var(--border);">CE</span>
                   {% elif submission.solution.verdict == 'RE' %}
-                    <span class="badge bg-danger">RE</span>
+                    <span class="badge bg-danger" style="border: 1px solid var(--border);">RE</span>
                   {% else %}
-                    <span class="badge bg-secondary">{{ submission.solution.verdict }}</span>
+                    <span class="badge bg-secondary" style="border: 1px solid var(--border);">{{ submission.solution.verdict }}</span>
                   {% endif %}
                 </td>
-                <td><strong>{{ submission.points_awarded }}</strong></td>
+                <td style="font-family: 'Space Mono', monospace; font-weight: 700;">{{ submission.points_awarded }}</td>
               </tr>
               {% endfor %}
             </tbody>
@@ -249,14 +253,11 @@
 
 {% block extra_css %}
 <style>
-  .problem-content { line-height: 1.7; }
+  .problem-content { line-height: 1.7; font-size: 1.05rem; }
   .sticky-top { position: sticky; z-index: 1020; }
   @media (max-width: 991.98px) {
     .sticky-top { position: static; }
   }
-  .difficulty-easy { color: #28a745; font-weight: bold; }
-  .difficulty-medium { color: #ffc107; font-weight: bold; }
-  .difficulty-hard { color: #dc3545; font-weight: bold; }
 </style>
 {% endblock %}
 

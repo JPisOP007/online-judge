@@ -1,101 +1,126 @@
 {% extends 'core/base.html' %}
 
-{% block title %}Home | MyOJ - Code. Compete. Conquer.{% endblock %}
+{% block title %}Home | MyOJ — Code. Compete. Conquer.{% endblock %}
 
 {% block extra_css %}
 <style>
-  :root {
-    --primary-color: #2563eb;
-    --primary-dark: #1d4ed8;
-    --secondary-color: #64748b;
-    --accent-color: #0ea5e9;
-    --success-color: #059669;
-    --warning-color: #d97706;
-    --danger-color: #dc2626;
-    --light-bg: #f8fafc;
-    --white: #ffffff;
-    --dark: #1e293b;
-    --border-color: #e2e8f0;
-    --text-muted: #64748b;
-    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
-    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
-  }
-
-  /* Hero Section */
+  /* ---- HERO (logged out) ---- */
   .hero-section {
-    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
-    color: white;
-    padding: 120px 0 80px;
+    background: var(--primary);
+    color: #fff;
+    padding: 100px 0 80px;
+    border-bottom: 6px solid var(--accent-yellow);
     position: relative;
-    overflow: hidden;
-  }
-
-  .hero-section::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120"><path d="M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V0Z" opacity=".25" fill="%23ffffff"></path></svg>') no-repeat;
-    background-size: cover;
-    background-position: bottom;
-  }
-
-  .hero-content {
-    position: relative;
-    z-index: 2;
   }
 
   .hero-title {
-    font-size: 3.5rem;
+    font-family: var(--font-heading);
+    font-size: 4rem;
     font-weight: 700;
+    line-height: 1.05;
     margin-bottom: 1.5rem;
-    line-height: 1.1;
+    text-transform: uppercase;
+  }
+
+  .hero-title .highlight {
+    color: var(--accent-yellow);
   }
 
   .hero-subtitle {
-    font-size: 1.25rem;
+    font-size: 1.15rem;
     margin-bottom: 2.5rem;
-    opacity: 0.9;
+    opacity: 0.8;
     font-weight: 400;
+    max-width: 540px;
   }
 
-  /* Welcome Section for Authenticated Users */
+  .hero-cta {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .btn-hero-primary {
+    background: var(--accent-yellow);
+    color: #000;
+    border: var(--border-w) solid var(--border);
+    box-shadow: var(--shadow);
+    padding: 14px 28px;
+    font-weight: 700;
+    font-size: 1rem;
+    text-decoration: none;
+    text-transform: uppercase;
+    font-family: var(--font-body);
+    display: inline-flex;
+    align-items: center;
+    transition: transform var(--transition), box-shadow var(--transition);
+  }
+
+  .btn-hero-primary:hover {
+    transform: translate(2px, 2px);
+    box-shadow: var(--shadow-hover);
+    color: #000;
+    background: var(--accent-yellow);
+  }
+
+  .btn-hero-secondary {
+    background: transparent;
+    color: #fff;
+    border: var(--border-w) solid #fff;
+    box-shadow: 3px 3px 0px rgba(255,255,255,0.3);
+    padding: 14px 28px;
+    font-weight: 700;
+    font-size: 1rem;
+    text-decoration: none;
+    text-transform: uppercase;
+    font-family: var(--font-body);
+    display: inline-flex;
+    align-items: center;
+    transition: transform var(--transition), box-shadow var(--transition);
+  }
+
+  .btn-hero-secondary:hover {
+    background: #fff;
+    color: #000;
+    transform: translate(2px, 2px);
+    box-shadow: 1px 1px 0px rgba(255,255,255,0.3);
+  }
+
+  /* ---- WELCOME (logged in) ---- */
   .welcome-section {
-    background: var(--primary-color);
-    color: white;
-    padding: 80px 0;
-    position: relative;
+    background: var(--accent-yellow);
+    color: #000;
+    padding: 60px 0;
+    border-bottom: 6px solid var(--primary);
   }
 
   .welcome-card {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    border-radius: 16px;
-    padding: 3rem;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: var(--surface);
+    border: var(--border-w) solid var(--border);
+    box-shadow: var(--shadow);
+    padding: 2.5rem;
     text-align: center;
     margin-bottom: 2rem;
   }
 
   .welcome-title {
-    font-size: 2.25rem;
-    font-weight: 600;
+    font-family: var(--font-heading);
+    font-size: 2rem;
+    font-weight: 700;
     margin-bottom: 1rem;
   }
 
   .role-badge {
     display: inline-block;
-    background: var(--accent-color);
-    color: white;
-    padding: 8px 16px;
-    border-radius: 20px;
-    font-weight: 500;
-    font-size: 0.875rem;
+    background: var(--primary);
+    color: var(--accent-yellow);
+    padding: 6px 16px;
+    border: 2px solid var(--border);
+    font-weight: 700;
+    font-size: 0.85rem;
     margin: 0.5rem;
+    text-transform: uppercase;
+    font-family: var(--font-heading);
   }
 
   .cta-buttons {
@@ -108,310 +133,279 @@
   .btn-hero {
     padding: 12px 24px;
     font-size: 1rem;
-    font-weight: 500;
-    border-radius: 8px;
-    transition: all 0.2s ease;
-    border: none;
+    font-weight: 700;
+    transition: transform var(--transition), box-shadow var(--transition);
+    border: var(--border-w) solid var(--border);
+    box-shadow: var(--shadow-sm);
     cursor: pointer;
     text-decoration: none;
     display: inline-flex;
     align-items: center;
+    text-transform: uppercase;
+    font-family: var(--font-body);
   }
 
-  .btn-hero-primary {
-    background: var(--white);
-    color: var(--primary-color);
+  .btn-hero:hover {
+    transform: translate(2px, 2px);
+    box-shadow: 1px 1px 0px #000;
   }
 
-  .btn-hero-primary:hover {
-    background: #f1f5f9;
-    color: var(--primary-dark);
-    transform: translateY(-1px);
+  .btn-welcome-primary {
+    background: var(--accent-yellow);
+    color: #000;
   }
 
-  .btn-hero-secondary {
+  .btn-welcome-secondary {
     background: transparent;
-    color: white;
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #000;
+    border-color: var(--border);
   }
 
-  .btn-hero-secondary:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
-    border-color: rgba(255, 255, 255, 0.5);
+  .btn-welcome-secondary:hover {
+    background: var(--primary);
+    color: #fff;
   }
 
-  /* Dashboard Cards */
+  /* ---- DASHBOARD ---- */
   .dashboard-section {
-    background: var(--light-bg);
-    padding: 80px 0;
+    background: var(--bg);
+    padding: 60px 0;
   }
 
   .dashboard-card {
-    background: var(--white);
-    border-radius: 12px;
-    padding: 2rem;
-    box-shadow: var(--shadow-sm);
-    border: 1px solid var(--border-color);
-    transition: all 0.2s ease;
+    background: var(--surface);
+    border: var(--border-w) solid var(--border);
+    box-shadow: var(--shadow);
+    padding: 1.5rem;
     height: 100%;
+    transition: transform var(--transition), box-shadow var(--transition);
   }
 
   .dashboard-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
+    transform: translate(-2px, -2px);
+    box-shadow: 7px 7px 0px #000;
   }
 
   .dashboard-card h3 {
-    color: var(--dark);
-    font-weight: 600;
-    margin-bottom: 1rem;
+    font-family: var(--font-heading);
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    font-size: 1.125rem;
+    text-transform: uppercase;
   }
 
   .dashboard-card .icon {
-    width: 36px;
-    height: 36px;
-    border-radius: 8px;
+    width: 40px;
+    height: 40px;
+    border: 2px solid var(--border);
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 1rem;
-    color: white;
+    color: #000;
+    flex-shrink: 0;
   }
 
-  .icon-problems { background: var(--primary-color); }
-  .icon-contests { background: var(--warning-color); }
-  .icon-progress { background: var(--success-color); }
-  .icon-community { background: #8b5cf6; }
+  .icon-problems { background: var(--accent-blue); color: #fff; }
+  .icon-contests { background: var(--accent-yellow); }
+  .icon-progress { background: var(--success); }
+  .icon-community { background: var(--accent-pink); color: #fff; }
 
-  /* Stats Section */
+  /* ---- STATS ---- */
   .stats-section {
-    background: var(--white);
-    padding: 80px 0;
+    background: var(--surface);
+    padding: 60px 0;
+    border-top: var(--border-w) solid var(--border);
+    border-bottom: var(--border-w) solid var(--border);
   }
 
   .stats-card {
     text-align: center;
     padding: 2rem;
-    border-radius: 12px;
-    background: var(--white);
-    border: 1px solid var(--border-color);
-    transition: all 0.2s ease;
+    background: var(--surface);
+    border: var(--border-w) solid var(--border);
+    box-shadow: var(--shadow);
     height: 100%;
-  }
-
-  .stats-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
   }
 
   .stats-number {
-    font-size: 2.5rem;
+    font-size: 3rem;
     font-weight: 700;
-    color: var(--primary-color);
-    margin-bottom: 0.5rem;
+    font-family: var(--font-heading);
+    color: var(--primary);
+    margin-bottom: 0.25rem;
   }
 
   .stats-label {
-    font-size: 1rem;
-    color: var(--text-muted);
-    font-weight: 500;
+    font-size: 0.9rem;
+    color: var(--muted);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
   }
 
-  /* Features Section */
+  /* ---- FEATURES ---- */
   .features-section {
-    background: var(--light-bg);
-    padding: 80px 0;
+    background: var(--bg);
+    padding: 60px 0;
   }
 
   .feature-card {
-    background: var(--white);
-    border-radius: 12px;
+    background: var(--surface);
+    border: var(--border-w) solid var(--border);
+    box-shadow: var(--shadow);
     padding: 2rem;
-    text-align: center;
-    box-shadow: var(--shadow-sm);
-    transition: all 0.2s ease;
-    border: 1px solid var(--border-color);
+    text-align: left;
     height: 100%;
+    transition: transform var(--transition), box-shadow var(--transition);
   }
 
   .feature-card:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-lg);
+    transform: translate(-2px, -2px);
+    box-shadow: 7px 7px 0px #000;
   }
 
   .feature-icon {
-    width: 64px;
-    height: 64px;
-    margin: 0 auto 1.5rem;
-    background: var(--primary-color);
-    border-radius: 12px;
+    width: 56px;
+    height: 56px;
+    margin-bottom: 1.25rem;
+    background: var(--accent-yellow);
+    border: 2px solid var(--border);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.5rem;
-    color: white;
+    font-size: 1.25rem;
+    color: #000;
+  }
+
+  .feature-card:nth-child(2n) .feature-icon {
+    background: var(--accent-pink);
+    color: #fff;
+  }
+
+  .feature-card:nth-child(3n) .feature-icon {
+    background: var(--accent-blue);
+    color: #fff;
   }
 
   .feature-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    margin-bottom: 1rem;
-    color: var(--dark);
+    font-family: var(--font-heading);
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+    text-transform: uppercase;
   }
 
   .feature-description {
-    color: var(--text-muted);
+    color: var(--muted);
     line-height: 1.6;
+    font-size: 0.95rem;
   }
 
-  /* Leaderboard Section */
+  /* ---- LEADERBOARD ---- */
   .leaderboard-section {
-    background: var(--dark);
+    background: var(--primary);
     color: white;
-    padding: 80px 0;
-  }
-
-  .leaderboard-container, .activity-container {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .leaderboard-content, .activity-content {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-  }
-
-  .leaderboard-items, .activity-items {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    min-height: 400px;
+    padding: 60px 0;
+    border-top: 6px solid var(--accent-yellow);
   }
 
   .leaderboard-item {
     background: rgba(255, 255, 255, 0.05);
-    border-radius: 12px;
-    padding: 1.5rem;
-    margin-bottom: 1rem;
+    border: 2px solid rgba(255,255,255,0.15);
+    padding: 1.25rem;
+    margin-bottom: 0.75rem;
     display: flex;
     align-items: center;
-    transition: all 0.2s ease;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: background var(--transition);
   }
 
   .leaderboard-item:hover {
     background: rgba(255, 255, 255, 0.1);
-    transform: translateY(-1px);
   }
 
   .rank-badge {
-    width: 40px;
-    height: 40px;
-    border-radius: 8px;
+    width: 44px;
+    height: 44px;
+    border: 2px solid var(--border);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: 600;
+    font-weight: 700;
+    font-family: var(--font-heading);
     margin-right: 1rem;
     flex-shrink: 0;
-    font-size: 0.875rem;
+    font-size: 0.9rem;
   }
 
-  .rank-1 { background: #fbbf24; color: #1f2937; }
-  .rank-2 { background: #9ca3af; color: #1f2937; }
-  .rank-3 { background: #f97316; color: white; }
-  .rank-other { background: #374151; color: white; }
+  .rank-1 { background: var(--accent-yellow); color: #000; }
+  .rank-2 { background: #C0C0C0; color: #000; }
+  .rank-3 { background: #CD7F32; color: #fff; }
+  .rank-other { background: #374151; color: white; border-color: #555; }
 
   .activity-card {
     background: rgba(255, 255, 255, 0.05);
-    border-radius: 12px;
-    padding: 1.5rem;
-    margin-bottom: 1rem;
-    border-left: 3px solid var(--accent-color);
-    transition: all 0.2s ease;
+    border: 2px solid rgba(255,255,255,0.15);
+    border-left: 4px solid var(--accent-yellow);
+    padding: 1.25rem;
+    margin-bottom: 0.75rem;
+    transition: background var(--transition);
     color: white;
   }
 
   .activity-card:hover {
     background: rgba(255, 255, 255, 0.1);
-    transform: translateX(4px);
   }
 
   .activity-user {
-    font-weight: 500;
-    color: var(--accent-color);
+    font-weight: 700;
+    color: var(--accent-yellow);
+    font-family: var(--font-heading);
   }
 
   .activity-time {
-    color: rgba(255, 255, 255, 0.7);
-    font-size: 0.875rem;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.85rem;
   }
 
-  /* Responsive Design */
+  /* ---- CTA ---- */
+  .cta-section {
+    background: var(--accent-yellow);
+    color: #000;
+    padding: 60px 0;
+    border-top: var(--border-w) solid var(--border);
+    border-bottom: var(--border-w) solid var(--border);
+  }
+
+  /* ---- RESPONSIVE ---- */
   @media (max-width: 768px) {
     .hero-title {
       font-size: 2.5rem;
     }
     
     .welcome-title {
-      font-size: 1.875rem;
+      font-size: 1.5rem;
     }
-    
+
     .hero-subtitle {
-      font-size: 1.125rem;
+      font-size: 1rem;
     }
-    
-    .cta-buttons {
-      justify-content: center;
+
+    .hero-cta, .cta-buttons {
       flex-direction: column;
-      align-items: center;
+      align-items: stretch;
     }
     
     .stats-number {
       font-size: 2rem;
     }
 
-    .leaderboard-container, .activity-container {
-      min-height: auto;
-    }
-
-    .leaderboard-items, .activity-items {
-      min-height: auto;
-    }
-
     .dashboard-card, .feature-card {
       margin-bottom: 1.5rem;
     }
-  }
-
-  /* Utility Classes */
-  .text-purple { color: #8b5cf6; }
-  
-  /* CTA Section */
-  .cta-section {
-    background: var(--primary-color);
-    color: white;
-    padding: 80px 0;
-  }
-
-  /* Subtle fade-in animation */
-  .fade-in {
-    opacity: 0;
-    transform: translateY(20px);
-    transition: all 0.6s ease;
-  }
-
-  .fade-in.visible {
-    opacity: 1;
-    transform: translateY(0);
   }
 </style>
 {% endblock %}
@@ -422,16 +416,16 @@
 <section class="welcome-section">
   <div class="container">
     <div class="welcome-card">
-      <h1 class="welcome-title">Welcome back, {{ user.username }}! 👋</h1>
+      <h1 class="welcome-title">Welcome back, {{ user.username }}!</h1>
       <div class="role-badge">
         <i class="bi bi-person-badge me-2"></i>{{ user.userprofile.role|title }}
       </div>
       
       <div class="cta-buttons mt-4">
-        <a href="{% url 'problem_list' %}" class="btn btn-hero btn-hero-primary">
+        <a href="{% url 'problem_list' %}" class="btn btn-hero btn-welcome-primary">
           <i class="bi bi-code-slash me-2"></i>Solve Problems
         </a>
-        <a href="{% url 'contest_list' %}" class="btn btn-hero btn-hero-secondary">
+        <a href="{% url 'contest_list' %}" class="btn btn-hero btn-welcome-secondary">
           <i class="bi bi-trophy me-2"></i>Join Contest
         </a>
       </div>
@@ -442,20 +436,20 @@
 <!-- Dashboard Section -->
 <section class="dashboard-section">
   <div class="container">
-    <div class="row text-center mb-5">
+    <div class="row text-center mb-4">
       <div class="col-12">
-        <h2 class="display-5 fw-bold mb-3">Your Dashboard</h2>
-        <p class="lead text-muted">Track your progress and explore new challenges</p>
+        <h2 style="font-family: var(--font-heading); font-size: 2rem; text-transform: uppercase;">Your Dashboard</h2>
+        <p style="color: var(--muted); font-weight: 500;">Track your progress and explore new challenges</p>
       </div>
     </div>
     
     <div class="row g-4">
       <div class="col-lg-3 col-md-6">
-        <div class="dashboard-card fade-in">
+        <div class="dashboard-card">
           <h3><span class="icon icon-problems"><i class="bi bi-puzzle"></i></span> Practice</h3>
-          <p class="text-muted mb-3">Solve algorithmic problems and improve your coding skills</p>
+          <p style="color: var(--muted);" class="mb-3">Solve algorithmic problems and improve your coding skills</p>
           <div class="d-flex justify-content-between align-items-center">
-            <span class="text-primary fw-bold">{{ total_problems|default:"150+" }} Problems</span>
+            <span style="font-weight: 700; font-family: var(--font-heading);">{{ total_problems|default:"150+" }} Problems</span>
             <a href="{% url 'problem_list' %}" class="btn btn-outline-primary btn-sm">
               <i class="bi bi-arrow-right"></i>
             </a>
@@ -464,11 +458,11 @@
       </div>
       
       <div class="col-lg-3 col-md-6">
-        <div class="dashboard-card fade-in">
+        <div class="dashboard-card">
           <h3><span class="icon icon-contests"><i class="bi bi-trophy"></i></span> Contests</h3>
-          <p class="text-muted mb-3">Participate in competitive programming contests</p>
+          <p style="color: var(--muted);" class="mb-3">Participate in competitive programming contests</p>
           <div class="d-flex justify-content-between align-items-center">
-            <span class="text-warning fw-bold">{{ active_contests|default:"View and register" }} Active</span>
+            <span style="font-weight: 700; font-family: var(--font-heading);">{{ active_contests|default:"View" }} Active</span>
             <a href="{% url 'contest_list' %}" class="btn btn-outline-warning btn-sm">
               <i class="bi bi-arrow-right"></i>
             </a>
@@ -477,11 +471,11 @@
       </div>
       
       <div class="col-lg-3 col-md-6">
-        <div class="dashboard-card fade-in">
-          <h3><span class="icon icon-progress"><i class="bi bi-graph-up"></i></span> Profile and Progress</h3>
-          <p class="text-muted mb-3">View your submission history and statistics</p>
+        <div class="dashboard-card">
+          <h3><span class="icon icon-progress"><i class="bi bi-graph-up"></i></span> Progress</h3>
+          <p style="color: var(--muted);" class="mb-3">View your submission history and statistics</p>
           <div class="d-flex justify-content-between align-items-center">
-            <span class="text-success fw-bold">{{ solve_rate|default:"View" }} Success</span>
+            <span style="font-weight: 700; font-family: var(--font-heading);">{{ solve_rate|default:"View" }} Stats</span>
             <a href="{% url 'profile' %}" class="btn btn-outline-success btn-sm">
               <i class="bi bi-arrow-right"></i>
             </a>
@@ -490,11 +484,11 @@
       </div>
       
       <div class="col-lg-3 col-md-6">
-        <div class="dashboard-card fade-in">
+        <div class="dashboard-card">
           <h3><span class="icon icon-community"><i class="bi bi-people"></i></span> Community</h3>
-          <p class="text-muted mb-3">Connect with other programmers and discuss solutions</p>
+          <p style="color: var(--muted);" class="mb-3">Connect with other programmers and discuss solutions</p>
           <div class="d-flex justify-content-between align-items-center">
-            <span class="text-purple fw-bold">{{ community_rank|default:"Top 20%" }}</span>
+            <span style="font-weight: 700; font-family: var(--font-heading);">{{ community_rank|default:"Top 20%" }}</span>
             <a href="#" class="btn btn-outline-primary btn-sm">
               <i class="bi bi-arrow-right"></i>
             </a>
@@ -508,19 +502,17 @@
 {% else %}
 <!-- Hero Section for Non-Authenticated Users -->
 <section class="hero-section">
-  <div class="hero-content">
-    <div class="container text-center">
-      <h1 class="hero-title">Master Competitive Programming</h1>
-      <p class="hero-subtitle">Practice algorithms, compete in contests, and advance your coding skills with our comprehensive platform</p>
-      
-      <div class="cta-buttons">
-        <a href="{% url 'register' %}" class="btn btn-hero btn-hero-primary">
-          <i class="bi bi-person-plus me-2"></i>Get Started Free
-        </a>
-        <a href="{% url 'problem_list' %}" class="btn btn-hero btn-hero-secondary">
-          <i class="bi bi-code-slash me-2"></i>Browse Problems
-        </a>
-      </div>
+  <div class="container">
+    <h1 class="hero-title">Master<br>Competitive<br><span class="highlight">Programming.</span></h1>
+    <p class="hero-subtitle">Practice algorithms, compete in contests, and level up your coding skills. No fluff, just code.</p>
+    
+    <div class="hero-cta">
+      <a href="{% url 'register' %}" class="btn-hero-primary">
+        <i class="bi bi-person-plus me-2"></i>Get Started Free
+      </a>
+      <a href="{% url 'problem_list' %}" class="btn-hero-secondary">
+        <i class="bi bi-code-slash me-2"></i>Browse Problems
+      </a>
     </div>
   </div>
 </section>
@@ -532,25 +524,25 @@
       <div class="col-md-3 col-sm-6">
         <div class="stats-card">
           <div class="stats-number">150+</div>
-          <div class="stats-label">Problems Available</div>
+          <div class="stats-label">Problems</div>
         </div>
       </div>
       <div class="col-md-3 col-sm-6">
         <div class="stats-card">
           <div class="stats-number">500+</div>
-          <div class="stats-label">Active Users</div>
+          <div class="stats-label">Users</div>
         </div>
       </div>
       <div class="col-md-3 col-sm-6">
         <div class="stats-card">
           <div class="stats-number">50+</div>
-          <div class="stats-label">Contests Held</div>
+          <div class="stats-label">Contests</div>
         </div>
       </div>
       <div class="col-md-3 col-sm-6">
         <div class="stats-card">
           <div class="stats-number">99.9%</div>
-          <div class="stats-label">Platform Uptime</div>
+          <div class="stats-label">Uptime</div>
         </div>
       </div>
     </div>
@@ -560,10 +552,10 @@
 <!-- Features Section -->
 <section class="features-section">
   <div class="container">
-    <div class="row text-center mb-5">
+    <div class="row mb-4">
       <div class="col-12">
-        <h2 class="display-4 fw-bold mb-3">Built for Competitive Programmers</h2>
-        <p class="lead text-muted">Professional tools and features designed to accelerate your coding journey</p>
+        <h2 style="font-family: var(--font-heading); font-size: 2.5rem; text-transform: uppercase; margin-bottom: 0.5rem;">Built for Coders</h2>
+        <p style="color: var(--muted); font-weight: 500; font-size: 1.1rem;">Tools that get out of your way and let you write code.</p>
       </div>
     </div>
     
@@ -585,7 +577,7 @@
           <div class="feature-icon">
             <i class="bi bi-puzzle"></i>
           </div>
-          <h3 class="feature-title">Curated Problem Set</h3>
+          <h3 class="feature-title">Curated Problems</h3>
           <p class="feature-description">
             Carefully selected problems covering algorithms, data structures, and competitive programming patterns.
           </p>
@@ -597,7 +589,7 @@
           <div class="feature-icon">
             <i class="bi bi-trophy"></i>
           </div>
-          <h3 class="feature-title">Competitive Contests</h3>
+          <h3 class="feature-title">Live Contests</h3>
           <p class="feature-description">
             Regular contests with real-time rankings and exciting prizes for top performers.
           </p>
@@ -609,7 +601,7 @@
           <div class="feature-icon">
             <i class="bi bi-code-square"></i>
           </div>
-          <h3 class="feature-title">Multi-Language Support</h3>
+          <h3 class="feature-title">Multi-Language</h3>
           <p class="feature-description">
             Code in Python, C++, Java, JavaScript and more. Choose your weapon of choice.
           </p>
@@ -633,7 +625,7 @@
           <div class="feature-icon">
             <i class="bi bi-people"></i>
           </div>
-          <h3 class="feature-title">Community Driven</h3>
+          <h3 class="feature-title">Community</h3>
           <p class="feature-description">
             Join a vibrant community of programmers, share solutions, and learn together.
           </p>
@@ -644,136 +636,128 @@
 </section>
 {% endif %}
 
-<!-- Leaderboard Section - Show for both authenticated and non-authenticated users -->
+<!-- Leaderboard Section - Show for non-authenticated users -->
  {% if not user.is_authenticated %}
 <section class="leaderboard-section">
   <div class="container">
-    <div class="row leaderboard-row">
-      <div class="col-lg-6 leaderboard-col">
-        <div class="leaderboard-container">
-          <div class="leaderboard-content">
-            <h2 class="display-5 fw-bold mb-4">🏆 Top Performers</h2>
-            <p class="lead mb-4">See who's dominating the competitive programming arena</p>
-            
-            <div class="leaderboard-items">
-              <div class="leaderboard-item">
-                <div class="rank-badge rank-1">1</div>
-                <div class="flex-grow-1">
-                  <div class="fw-bold">CodeMaster2024</div>
-                  <div class="text-light opacity-75">2,847 problems solved</div>
-                </div>
-                <div class="text-warning">
-                  <i class="bi bi-star-fill"></i> 3,250 pts
-                </div>
-              </div>
-              
-              <div class="leaderboard-item">
-                <div class="rank-badge rank-2">2</div>
-                <div class="flex-grow-1">
-                  <div class="fw-bold">AlgoNinja</div>
-                  <div class="text-light opacity-75">2,634 problems solved</div>
-                </div>
-                <div class="text-warning">
-                  <i class="bi bi-star-fill"></i> 3,100 pts
-                </div>
-              </div>
-              
-              <div class="leaderboard-item">
-                <div class="rank-badge rank-3">3</div>
-                <div class="flex-grow-1">
-                  <div class="fw-bold">ByteWarrior</div>
-                  <div class="text-light opacity-75">2,421 problems solved</div>
-                </div>
-                <div class="text-warning">
-                  <i class="bi bi-star-fill"></i> 2,950 pts
-                </div>
-              </div>
-              
-              <div class="leaderboard-item">
-                <div class="rank-badge rank-other">4</div>
-                <div class="flex-grow-1">
-                  <div class="fw-bold">DevProdigy</div>
-                  <div class="text-light opacity-75">2,187 problems solved</div>
-                </div>
-                <div class="text-warning">
-                  <i class="bi bi-star-fill"></i> 2,800 pts
-                </div>
-              </div>
+    <div class="row">
+      <div class="col-lg-6">
+        <h2 style="font-family: var(--font-heading); font-size: 2rem; text-transform: uppercase; margin-bottom: 1rem;">Top Performers</h2>
+        <p style="opacity: 0.6; margin-bottom: 1.5rem;">Who's dominating the arena right now.</p>
+        
+        <div>
+          <div class="leaderboard-item">
+            <div class="rank-badge rank-1">1</div>
+            <div class="flex-grow-1">
+              <div class="fw-bold">CodeMaster2024</div>
+              <div style="opacity: 0.5; font-size: 0.85rem;">2,847 problems solved</div>
             </div>
-            
-            <div class="text-center mt-4">
-              <a href="{% url 'problem_list' %}" class="btn btn-outline-light btn-lg">
-                <i class="bi bi-arrow-right me-2"></i>View Full Leaderboard
-              </a>
+            <div style="color: var(--accent-yellow); font-family: var(--font-heading); font-weight: 700;">
+              3,250 pts
+            </div>
+          </div>
+          
+          <div class="leaderboard-item">
+            <div class="rank-badge rank-2">2</div>
+            <div class="flex-grow-1">
+              <div class="fw-bold">AlgoNinja</div>
+              <div style="opacity: 0.5; font-size: 0.85rem;">2,634 problems solved</div>
+            </div>
+            <div style="color: var(--accent-yellow); font-family: var(--font-heading); font-weight: 700;">
+              3,100 pts
+            </div>
+          </div>
+          
+          <div class="leaderboard-item">
+            <div class="rank-badge rank-3">3</div>
+            <div class="flex-grow-1">
+              <div class="fw-bold">ByteWarrior</div>
+              <div style="opacity: 0.5; font-size: 0.85rem;">2,421 problems solved</div>
+            </div>
+            <div style="color: var(--accent-yellow); font-family: var(--font-heading); font-weight: 700;">
+              2,950 pts
+            </div>
+          </div>
+          
+          <div class="leaderboard-item">
+            <div class="rank-badge rank-other">4</div>
+            <div class="flex-grow-1">
+              <div class="fw-bold">DevProdigy</div>
+              <div style="opacity: 0.5; font-size: 0.85rem;">2,187 problems solved</div>
+            </div>
+            <div style="color: var(--accent-yellow); font-family: var(--font-heading); font-weight: 700;">
+              2,800 pts
             </div>
           </div>
         </div>
+        
+        <div class="mt-3">
+          <a href="{% url 'problem_list' %}" class="btn btn-outline-light btn-lg">
+            <i class="bi bi-arrow-right me-2"></i>Full Leaderboard
+          </a>
+        </div>
       </div>
       
-      <div class="col-lg-6 leaderboard-col">
-        <div class="activity-container">
-          <div class="activity-content">
-            <h2 class="display-5 fw-bold mb-4">📊 Recent Activity</h2>
-            <p class="lead mb-4">Latest submissions and achievements</p>
-            
-            <div class="activity-items">
-              <div class="activity-card">
-                <div class="d-flex justify-content-between align-items-start">
-                  <div>
-                    <span class="activity-user">CodeMaster2024</span> solved 
-                    <strong>"Two Sum Problem"</strong>
-                  </div>
-                  <span class="activity-time">2 min ago</span>
-                </div>
+      <div class="col-lg-6 mt-5 mt-lg-0">
+        <h2 style="font-family: var(--font-heading); font-size: 2rem; text-transform: uppercase; margin-bottom: 1rem;">Recent Activity</h2>
+        <p style="opacity: 0.6; margin-bottom: 1.5rem;">Latest submissions and achievements.</p>
+        
+        <div>
+          <div class="activity-card">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <span class="activity-user">CodeMaster2024</span> solved 
+                <strong>"Two Sum Problem"</strong>
               </div>
-              
-              <div class="activity-card">
-                <div class="d-flex justify-content-between align-items-start">
-                  <div>
-                    <span class="activity-user">AlgoNinja</span> achieved 
-                    <strong>100 day streak!</strong> 🔥
-                  </div>
-                  <span class="activity-time">5 min ago</span>
-                </div>
-              </div>
-              
-              <div class="activity-card">
-                <div class="d-flex justify-content-between align-items-start">
-                  <div>
-                    <span class="activity-user">ByteWarrior</span> won 
-                    <strong>"Weekly Contest #47"</strong> 🏆
-                  </div>
-                  <span class="activity-time">15 min ago</span>
-                </div>
-              </div>
-              
-              <div class="activity-card">
-                <div class="d-flex justify-content-between align-items-start">
-                  <div>
-                    <span class="activity-user">DevProdigy</span> solved 
-                    <strong>"Dynamic Programming Challenge"</strong>
-                  </div>
-                  <span class="activity-time">23 min ago</span>
-                </div>
-              </div>
-              
-              <div class="activity-card">
-                <div class="d-flex justify-content-between align-items-start">
-                  <div>
-                    <span class="activity-user">PythonPro</span> reached 
-                    <strong>Expert level!</strong> ⭐
-                  </div>
-                  <span class="activity-time">1 hr ago</span>
-                </div>
-              </div>
-            </div>
-            
-            <div class="text-center mt-4">
-              <a href="#" class="btn btn-outline-light btn-lg">
-                <i class="bi bi-activity me-2"></i>View All Activity
-              </a>
+              <span class="activity-time">2 min ago</span>
             </div>
           </div>
+          
+          <div class="activity-card">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <span class="activity-user">AlgoNinja</span> achieved 
+                <strong>100 day streak!</strong>
+              </div>
+              <span class="activity-time">5 min ago</span>
+            </div>
+          </div>
+          
+          <div class="activity-card">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <span class="activity-user">ByteWarrior</span> won 
+                <strong>"Weekly Contest #47"</strong>
+              </div>
+              <span class="activity-time">15 min ago</span>
+            </div>
+          </div>
+          
+          <div class="activity-card">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <span class="activity-user">DevProdigy</span> solved 
+                <strong>"Dynamic Programming Challenge"</strong>
+              </div>
+              <span class="activity-time">23 min ago</span>
+            </div>
+          </div>
+          
+          <div class="activity-card">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <span class="activity-user">PythonPro</span> reached 
+                <strong>Expert level!</strong>
+              </div>
+              <span class="activity-time">1 hr ago</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="mt-3">
+          <a href="#" class="btn btn-outline-light btn-lg">
+            <i class="bi bi-activity me-2"></i>All Activity
+          </a>
         </div>
       </div>
     </div>
@@ -783,17 +767,17 @@
 {% if not user.is_authenticated %}
 <!-- Call to Action Section -->
 <section class="cta-section">
-  <div class="container text-center">
+  <div class="container">
     <div class="row justify-content-center">
-      <div class="col-lg-8">
-        <h2 class="display-4 fw-bold mb-4">Ready to Start Your Journey?</h2>
-        <p class="lead mb-5">Join thousands of programmers who are already improving their skills with MyOJ</p>
+      <div class="col-lg-8 text-center">
+        <h2 style="font-family: var(--font-heading); font-size: 2.5rem; text-transform: uppercase; margin-bottom: 1rem;">Ready to Start?</h2>
+        <p style="font-size: 1.15rem; margin-bottom: 2rem; font-weight: 500;">Join thousands of programmers who are already improving their skills with MyOJ.</p>
         
         <div class="d-flex gap-3 justify-content-center flex-wrap">
-          <a href="{% url 'register' %}" class="btn btn-hero btn-hero-primary btn-lg">
+          <a href="{% url 'register' %}" class="btn btn-hero btn-hero-primary" style="background: var(--primary); color: var(--accent-yellow); border-color: var(--primary);">
             <i class="bi bi-rocket-takeoff me-2"></i>Start Coding Now
           </a>
-          <a href="{% url 'login' %}" class="btn btn-hero btn-hero-secondary btn-lg">
+          <a href="{% url 'login' %}" class="btn btn-hero btn-hero-secondary">
             <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
           </a>
         </div>
@@ -801,101 +785,85 @@
     </div>
   </div>
 </section>
-{% endif %}
 
-{% if not user.is_authenticated %}
 <!-- Footer -->
-<footer style="background: #1e293b; color: white; padding: 60px 0 20px;">
+<footer style="background: var(--primary); color: white; padding: 40px 0 20px; border-top: 6px solid var(--accent-yellow);">
   <div class="container">
     <div class="row g-4">
       <div class="col-lg-4 col-md-6">
-        <h5 class="fw-bold mb-4">MyOJ Platform</h5>
-        <p class="text-light opacity-75 mb-4">
-          The ultimate competitive programming platform designed to help you master algorithms and data structures.
+        <h5 style="font-family: var(--font-heading); font-weight: 700; margin-bottom: 1rem; text-transform: uppercase;">MyOJ Platform</h5>
+        <p style="opacity: 0.6; margin-bottom: 1rem;">
+          The competitive programming platform. Solve problems. Win contests. Get better.
         </p>
         <div class="d-flex gap-3">
-          <a href="#" class="text-light opacity-75 hover-opacity-100">
-            <i class="bi bi-github fs-5"></i>
+          <a href="#" style="color: var(--accent-yellow); font-size: 1.25rem; text-decoration: none;">
+            <i class="bi bi-github"></i>
           </a>
-          <a href="#" class="text-light opacity-75 hover-opacity-100">
-            <i class="bi bi-twitter fs-5"></i>
+          <a href="#" style="color: var(--accent-yellow); font-size: 1.25rem; text-decoration: none;">
+            <i class="bi bi-twitter"></i>
           </a>
-          <a href="#" class="text-light opacity-75 hover-opacity-100">
-            <i class="bi bi-discord fs-5"></i>
-          </a>
-          <a href="#" class="text-light opacity-75 hover-opacity-100">
-            <i class="bi bi-linkedin fs-5"></i>
+          <a href="#" style="color: var(--accent-yellow); font-size: 1.25rem; text-decoration: none;">
+            <i class="bi bi-discord"></i>
           </a>
         </div>
       </div>
       
       <div class="col-lg-2 col-md-6">
-        <h6 class="fw-bold mb-4">Platform</h6>
-        <ul class="list-unstyled">
-          <li class="mb-2"><a href="{% url 'problem_list' %}" class="text-light opacity-75 text-decoration-none hover-opacity-100">Problems</a></li>
-          <li class="mb-2"><a href="{% url 'contest_list' %}" class="text-light opacity-75 text-decoration-none hover-opacity-100">Contests</a></li>
-          <li class="mb-2"><a href="#" class="text-light opacity-75 text-decoration-none hover-opacity-100">Leaderboard</a></li>
-          <li class="mb-2"><a href="#" class="text-light opacity-75 text-decoration-none hover-opacity-100">Tutorials</a></li>
+        <h6 style="font-family: var(--font-heading); font-weight: 700; margin-bottom: 1rem; text-transform: uppercase; color: var(--accent-yellow);">Platform</h6>
+        <ul class="list-unstyled" style="font-size: 0.9rem;">
+          <li class="mb-2"><a href="{% url 'problem_list' %}" style="color: rgba(255,255,255,0.6); text-decoration: none;">Problems</a></li>
+          <li class="mb-2"><a href="{% url 'contest_list' %}" style="color: rgba(255,255,255,0.6); text-decoration: none;">Contests</a></li>
+          <li class="mb-2"><a href="#" style="color: rgba(255,255,255,0.6); text-decoration: none;">Leaderboard</a></li>
         </ul>
       </div>
       
       <div class="col-lg-2 col-md-6">
-        <h6 class="fw-bold mb-4">Community</h6>
-        <ul class="list-unstyled">
-          <li class="mb-2"><a href="#" class="text-light opacity-75 text-decoration-none hover-opacity-100">Forums</a></li>
-          <li class="mb-2"><a href="#" class="text-light opacity-75 text-decoration-none hover-opacity-100">Discord</a></li>
-          <li class="mb-2"><a href="#" class="text-light opacity-75 text-decoration-none hover-opacity-100">Blog</a></li>
-          <li class="mb-2"><a href="#" class="text-light opacity-75 text-decoration-none hover-opacity-100">Events</a></li>
+        <h6 style="font-family: var(--font-heading); font-weight: 700; margin-bottom: 1rem; text-transform: uppercase; color: var(--accent-yellow);">Community</h6>
+        <ul class="list-unstyled" style="font-size: 0.9rem;">
+          <li class="mb-2"><a href="#" style="color: rgba(255,255,255,0.6); text-decoration: none;">Discord</a></li>
+          <li class="mb-2"><a href="#" style="color: rgba(255,255,255,0.6); text-decoration: none;">Blog</a></li>
+          <li class="mb-2"><a href="#" style="color: rgba(255,255,255,0.6); text-decoration: none;">Events</a></li>
         </ul>
       </div>
       
       <div class="col-lg-2 col-md-6">
-        <h6 class="fw-bold mb-4">Support</h6>
-        <ul class="list-unstyled">
-          <li class="mb-2"><a href="#" class="text-light opacity-75 text-decoration-none hover-opacity-100">Help Center</a></li>
-          <li class="mb-2"><a href="#" class="text-light opacity-75 text-decoration-none hover-opacity-100">Contact Us</a></li>
-          <li class="mb-2"><a href="#" class="text-light opacity-75 text-decoration-none hover-opacity-100">FAQ</a></li>
-          <li class="mb-2"><a href="#" class="text-light opacity-75 text-decoration-none hover-opacity-100">API Docs</a></li>
+        <h6 style="font-family: var(--font-heading); font-weight: 700; margin-bottom: 1rem; text-transform: uppercase; color: var(--accent-yellow);">Support</h6>
+        <ul class="list-unstyled" style="font-size: 0.9rem;">
+          <li class="mb-2"><a href="#" style="color: rgba(255,255,255,0.6); text-decoration: none;">Help</a></li>
+          <li class="mb-2"><a href="#" style="color: rgba(255,255,255,0.6); text-decoration: none;">Contact</a></li>
+          <li class="mb-2"><a href="#" style="color: rgba(255,255,255,0.6); text-decoration: none;">API Docs</a></li>
         </ul>
       </div>
-      
+
       <div class="col-lg-2 col-md-6">
-        <h6 class="fw-bold mb-4">Legal</h6>
-        <ul class="list-unstyled">
-          <li class="mb-2"><a href="#" class="text-light opacity-75 text-decoration-none hover-opacity-100">Privacy Policy</a></li>
-          <li class="mb-2"><a href="#" class="text-light opacity-75 text-decoration-none hover-opacity-100">Terms of Service</a></li>
-          <li class="mb-2"><a href="#" class="text-light opacity-75 text-decoration-none hover-opacity-100">Cookie Policy</a></li>
-          <li class="mb-2"><a href="#" class="text-light opacity-75 text-decoration-none hover-opacity-100">Guidelines</a></li>
+        <h6 style="font-family: var(--font-heading); font-weight: 700; margin-bottom: 1rem; text-transform: uppercase; color: var(--accent-yellow);">Legal</h6>
+        <ul class="list-unstyled" style="font-size: 0.9rem;">
+          <li class="mb-2"><a href="#" style="color: rgba(255,255,255,0.6); text-decoration: none;">Privacy</a></li>
+          <li class="mb-2"><a href="#" style="color: rgba(255,255,255,0.6); text-decoration: none;">Terms</a></li>
         </ul>
       </div>
     </div>
     
-    <hr class="my-5 opacity-25">
+    <hr style="border-color: rgba(255,255,255,0.15); margin: 2rem 0 1rem;">
     
     <div class="row align-items-center">
       <div class="col-md-8">
-        <p class="mb-0 text-light opacity-75">
-          © 2024 MyOJ Platform. All rights reserved.
+        <p class="mb-0" style="opacity: 0.5; font-size: 0.85rem;">
+          &copy; 2024 MyOJ Platform. All rights reserved.
         </p>
       </div>
-      <div class="col-md-4 text-md-end mt-3 mt-md-0">
-        <div class="d-flex justify-content-md-end justify-content-center gap-4">
-          <span class="badge bg-success">
-            <i class="bi bi-circle-fill me-1" style="font-size: 0.5rem;"></i>
-            System Online
-          </span>
-          <span class="text-light opacity-75 small">
-            <i class="bi bi-clock me-1"></i>
-            Uptime: 99.9%
-          </span>
-        </div>
+      <div class="col-md-4 text-md-end mt-2 mt-md-0">
+        <span style="background: var(--success); color: #000; border: 2px solid var(--border); padding: 4px 10px; font-size: 0.75rem; font-weight: 700; font-family: var(--font-heading); text-transform: uppercase;">
+          <i class="bi bi-circle-fill me-1" style="font-size: 0.4rem;"></i>
+          Online
+        </span>
       </div>
     </div>
   </div>
 </footer>
 {% endif %}
 <!-- Back to Top Button -->
-<button id="backToTop" class="btn btn-primary position-fixed bottom-0 end-0 m-4 rounded-circle d-none" style="z-index: 1000; width: 50px; height: 50px;">
+<button id="backToTop" class="btn btn-primary position-fixed bottom-0 end-0 m-4 d-none" style="z-index: 1000; width: 50px; height: 50px;">
   <i class="bi bi-arrow-up"></i>
 </button>
 
@@ -929,25 +897,6 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
       });
     }
   });
-});
-
-// Subtle fade-in animation on scroll
-const observerOptions = {
-  threshold: 0.1,
-  rootMargin: '0px 0px -50px 0px'
-};
-
-const observer = new IntersectionObserver(function(entries) {
-  entries.forEach(entry => {
-    if (entry.isIntersecting) {
-      entry.target.classList.add('visible');
-    }
-  });
-}, observerOptions);
-
-// Observe fade-in elements
-document.querySelectorAll('.fade-in').forEach(el => {
-  observer.observe(el);
 });
 </script>
 

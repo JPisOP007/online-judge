@@ -5,27 +5,26 @@
 {% block content %}
 <div class="container mt-4">
     <!-- Profile Header Card -->
-    <div class="card-section fade-in">
+    <div class="card-section">
         <div class="row align-items-center">
             <div class="col-md-3 text-center">
                 {% if user_profile.photo %}
-                    <img src="{{ user_profile.photo.url }}" class="rounded-circle shadow-lg" 
-                         alt="Profile Photo" style="width: 120px; height: 120px; object-fit: cover; border: 4px solid var(--primary-color);">
+                    <img src="{{ user_profile.photo.url }}" alt="Profile Photo" style="width: 120px; height: 120px; object-fit: cover; border: var(--border-w) solid var(--border); box-shadow: var(--shadow-sm);">
                 {% else %}
-                    <div class="bg-gradient-primary rounded-circle shadow-lg mx-auto d-flex align-items-center justify-content-center" 
-                         style="width: 120px; height: 120px; background: linear-gradient(135deg, var(--primary-color) 0%, #1d4ed8 100%);">
-                        <i class="bi bi-person-fill text-white" style="font-size: 3rem;"></i>
+                    <div class="mx-auto d-flex align-items-center justify-content-center" 
+                         style="width: 120px; height: 120px; background: var(--accent-yellow); border: var(--border-w) solid var(--border); box-shadow: var(--shadow-sm);">
+                        <i class="bi bi-person-fill" style="font-size: 3rem;"></i>
                     </div>
                 {% endif %}
             </div>
             <div class="col-md-9">
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
-                        <h2 class="fw-bold mb-1">{{ request.user.username }}</h2>
-                        <p class="text-muted mb-2">{{ request.user.email }}</p>
+                        <h2 style="font-family: var(--font-heading); font-weight: 700; margin-bottom: 0.25rem; text-transform: uppercase;">{{ request.user.username }}</h2>
+                        <p style="color: var(--muted); margin-bottom: 0.5rem;">{{ request.user.email }}</p>
                         <div class="d-flex align-items-center gap-3">
                             <span class="badge bg-primary">{{ user_profile.get_role_display }}</span>
-                            <small class="text-muted">Member since {{ request.user.date_joined|date:"M Y" }}</small>
+                            <small style="color: var(--muted);">Member since {{ request.user.date_joined|date:"M Y" }}</small>
                         </div>
                     </div>
                     <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editProfileModal">
@@ -39,46 +38,34 @@
     <!-- Statistics Cards -->
     <div class="row mb-4">
         <div class="col-md-3 col-sm-6 mb-3">
-            <div class="card text-center h-100">
+            <div class="card text-center h-100" style="background: var(--accent-blue); color: #fff;">
                 <div class="card-body">
-                    <div class="text-primary mb-2">
-                        <i class="bi bi-trophy-fill" style="font-size: 2rem;"></i>
-                    </div>
-                    <h4 class="fw-bold mb-0">{{ contest_stats.contests_participated }}</h4>
-                    <small class="text-muted">Contests Participated</small>
+                    <h4 style="font-family: var(--font-heading); font-weight: 700; margin-bottom: 0;">{{ contest_stats.contests_participated }}</h4>
+                    <small style="text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">Contests</small>
                 </div>
             </div>
         </div>
         <div class="col-md-3 col-sm-6 mb-3">
-            <div class="card text-center h-100">
+            <div class="card text-center h-100" style="background: var(--success); color: #000;">
                 <div class="card-body">
-                    <div class="text-success mb-2">
-                        <i class="bi bi-award-fill" style="font-size: 2rem;"></i>
-                    </div>
-                    <h4 class="fw-bold mb-0">{{ contest_stats.top_3_finishes }}</h4>
-                    <small class="text-muted">Top 3 Finishes</small>
+                    <h4 style="font-family: var(--font-heading); font-weight: 700; margin-bottom: 0;">{{ contest_stats.top_3_finishes }}</h4>
+                    <small style="text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">Top 3 Finishes</small>
                 </div>
             </div>
         </div>
         <div class="col-md-3 col-sm-6 mb-3">
-            <div class="card text-center h-100">
+            <div class="card text-center h-100" style="background: var(--accent-yellow); color: #000;">
                 <div class="card-body">
-                    <div class="text-warning mb-2">
-                        <i class="bi bi-star-fill" style="font-size: 2rem;"></i>
-                    </div>
-                    <h4 class="fw-bold mb-0">{{ contest_stats.total_points }}</h4>
-                    <small class="text-muted">Total Contest Points</small>
+                    <h4 style="font-family: var(--font-heading); font-weight: 700; margin-bottom: 0;">{{ contest_stats.total_points }}</h4>
+                    <small style="text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">Total Points</small>
                 </div>
             </div>
         </div>
         <div class="col-md-3 col-sm-6 mb-3">
-            <div class="card text-center h-100">
+            <div class="card text-center h-100" style="background: var(--accent-pink); color: #fff;">
                 <div class="card-body">
-                    <div class="text-info mb-2">
-                        <i class="bi bi-code-slash" style="font-size: 2rem;"></i>
-                    </div>
-                    <h4 class="fw-bold mb-0">{{ problem_stats.problems_solved }}</h4>
-                    <small class="text-muted">Problems Solved</small>
+                    <h4 style="font-family: var(--font-heading); font-weight: 700; margin-bottom: 0;">{{ problem_stats.problems_solved }}</h4>
+                    <small style="text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">Problems Solved</small>
                 </div>
             </div>
         </div>
@@ -89,39 +76,33 @@
         <div class="col-lg-6 mb-4">
             <div class="card-section">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="fw-bold mb-0">Recent Contest Participation</h5>
+                    <h5 style="font-family: var(--font-heading); font-weight: 700; margin: 0; text-transform: uppercase; font-size: 1rem;">Recent Contests</h5>
                     <a href="{% url 'contest_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
                 </div>
                 {% if recent_contests %}
-                    <div class="list-group list-group-flush">
-                        {% for participation in recent_contests %}
-                            <div class="list-group-item d-flex justify-content-between align-items-center border-0 px-0">
-                                <div>
-                                    <h6 class="mb-1">{{ participation.contest.title }}</h6>
-                                    <small class="text-muted">{{ participation.contest.start_time|date:"M d, Y" }}</small>
-                                </div>
-                                <div class="text-end">
-                                    {% if participation.rank %}
-                                        {% if participation.rank <= 3 %}
-                                            <span class="badge bg-success">
-                                                Rank #{{ participation.rank }}
-                                            </span>
-                                        {% else %}
-                                            <span class="badge bg-secondary">
-                                                Rank #{{ participation.rank }}
-                                            </span>
-                                        {% endif %}
-                                    {% else %}
-                                        <span class="badge bg-secondary">Participated</span>
-                                    {% endif %}
-                                </div>
+                    {% for participation in recent_contests %}
+                        <div style="border-bottom: 2px solid var(--border); padding: 0.75rem 0; display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h6 style="margin-bottom: 0.25rem; font-weight: 700;">{{ participation.contest.title }}</h6>
+                                <small style="color: var(--muted);">{{ participation.contest.start_time|date:"M d, Y" }}</small>
                             </div>
-                        {% endfor %}
-                    </div>
+                            <div>
+                                {% if participation.rank %}
+                                    {% if participation.rank <= 3 %}
+                                        <span class="badge bg-success">Rank #{{ participation.rank }}</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Rank #{{ participation.rank }}</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="badge bg-secondary">Participated</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
                 {% else %}
                     <div class="text-center py-4">
-                        <i class="bi bi-trophy text-muted" style="font-size: 3rem;"></i>
-                        <p class="text-muted mt-2">No contest participation yet</p>
+                        <i class="bi bi-trophy" style="font-size: 3rem; color: var(--muted);"></i>
+                        <p style="color: var(--muted); margin-top: 0.5rem;">No contest participation yet</p>
                         <a href="{% url 'contest_list' %}" class="btn btn-primary">Browse Contests</a>
                     </div>
                 {% endif %}
@@ -131,33 +112,31 @@
         <!-- Problem Solving Stats -->
         <div class="col-lg-6 mb-4">
             <div class="card-section">
-                <h5 class="fw-bold mb-3">Problem Solving Statistics</h5>
-                <div class="row">
+                <h5 style="font-family: var(--font-heading); font-weight: 700; margin-bottom: 1rem; text-transform: uppercase; font-size: 1rem;">Solving Stats</h5>
+                <div class="row g-2">
                     <div class="col-6">
-                        <div class="text-center p-3 bg-light rounded">
+                        <div style="text-align: center; padding: 1rem; border: 2px solid var(--border); background: var(--bg);">
                             <div class="difficulty-easy mb-2">Easy</div>
-                            <h6 class="fw-bold">{{ problem_stats.easy_solved }}</h6>
+                            <h6 style="font-family: var(--font-heading); font-weight: 700;">{{ problem_stats.easy_solved }}</h6>
                         </div>
                     </div>
                     <div class="col-6">
-                        <div class="text-center p-3 bg-light rounded">
+                        <div style="text-align: center; padding: 1rem; border: 2px solid var(--border); background: var(--bg);">
                             <div class="difficulty-medium mb-2">Medium</div>
-                            <h6 class="fw-bold">{{ problem_stats.medium_solved }}</h6>
+                            <h6 style="font-family: var(--font-heading); font-weight: 700;">{{ problem_stats.medium_solved }}</h6>
                         </div>
                     </div>
-                </div>
-                <div class="row mt-3">
                     <div class="col-6">
-                        <div class="text-center p-3 bg-light rounded">
+                        <div style="text-align: center; padding: 1rem; border: 2px solid var(--border); background: var(--bg);">
                             <div class="difficulty-hard mb-2">Hard</div>
-                            <h6 class="fw-bold">{{ problem_stats.hard_solved }}</h6>
+                            <h6 style="font-family: var(--font-heading); font-weight: 700;">{{ problem_stats.hard_solved }}</h6>
                         </div>
                     </div>
                     <div class="col-6">
-                        <div class="text-center p-3 bg-light rounded">
-                            <div class="text-muted mb-2">Total</div>
-                            <h6 class="fw-bold">{{ problem_stats.total_submissions }}</h6>
-                            <small class="text-muted">Submissions</small>
+                        <div style="text-align: center; padding: 1rem; border: 2px solid var(--border); background: var(--bg);">
+                            <div style="font-weight: 700; text-transform: uppercase; font-size: 0.8rem; color: var(--muted); margin-bottom: 0.5rem;">Total</div>
+                            <h6 style="font-family: var(--font-heading); font-weight: 700;">{{ problem_stats.total_submissions }}</h6>
+                            <small style="color: var(--muted);">Submissions</small>
                         </div>
                     </div>
                 </div>
@@ -168,13 +147,13 @@
     <!-- Recent Submissions -->
     <div class="card-section">
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="fw-bold mb-0">Recent Submissions</h5>
+            <h5 style="font-family: var(--font-heading); font-weight: 700; margin: 0; text-transform: uppercase; font-size: 1rem;">Recent Submissions</h5>
             <a href="{% url 'problem_list' %}" class="btn btn-sm btn-outline-primary">View Problems</a>
         </div>
         {% if recent_submissions %}
             <div class="table-responsive">
                 <table class="table table-hover">
-                    <thead class="table-light">
+                    <thead>
                         <tr>
                             <th>Problem</th>
                             <th>Language</th>
@@ -187,7 +166,7 @@
                         {% for submission in recent_submissions %}
                             <tr>
                                 <td>
-                                    <a href="{% url 'problem_detail' submission.problem.uuid %}" class="text-decoration-none">
+                                    <a href="{% url 'problem_detail' submission.problem.uuid %}" style="text-decoration: none; font-weight: 600;">
                                         {{ submission.problem.title }}
                                     </a>
                                 </td>
@@ -220,8 +199,8 @@
             </div>
         {% else %}
             <div class="text-center py-4">
-                <i class="bi bi-code-slash text-muted" style="font-size: 3rem;"></i>
-                <p class="text-muted mt-2">No submissions yet</p>
+                <i class="bi bi-code-slash" style="font-size: 3rem; color: var(--muted);"></i>
+                <p style="color: var(--muted); margin-top: 0.5rem;">No submissions yet</p>
                 <a href="{% url 'problem_list' %}" class="btn btn-primary">Start Solving Problems</a>
             </div>
         {% endif %}
@@ -229,30 +208,30 @@
 
     <!-- Achievement Badges -->
     <div class="card-section">
-        <h5 class="fw-bold mb-3">Achievements</h5>
+        <h5 style="font-family: var(--font-heading); font-weight: 700; margin-bottom: 1rem; text-transform: uppercase; font-size: 1rem;">Achievements</h5>
         <div class="d-flex flex-wrap gap-2">
             {% if contest_stats.contests_participated >= 1 %}
-                <span class="badge bg-primary fs-6 py-2 px-3">
+                <span style="background: var(--accent-blue); color: #fff; border: 2px solid var(--border); padding: 6px 14px; font-weight: 700; font-size: 0.85rem; text-transform: uppercase;">
                     <i class="bi bi-trophy me-1"></i>Contest Participant
                 </span>
             {% endif %}
             {% if contest_stats.top_3_finishes >= 1 %}
-                <span class="badge bg-success fs-6 py-2 px-3">
+                <span style="background: var(--success); color: #000; border: 2px solid var(--border); padding: 6px 14px; font-weight: 700; font-size: 0.85rem; text-transform: uppercase;">
                     <i class="bi bi-award me-1"></i>Top Performer
                 </span>
             {% endif %}
             {% if problem_stats.problems_solved >= 10 %}
-                <span class="badge bg-info fs-6 py-2 px-3">
+                <span style="background: var(--accent-pink); color: #fff; border: 2px solid var(--border); padding: 6px 14px; font-weight: 700; font-size: 0.85rem; text-transform: uppercase;">
                     <i class="bi bi-code-square me-1"></i>Problem Solver
                 </span>
             {% endif %}
             {% if problem_stats.problems_solved >= 50 %}
-                <span class="badge bg-warning fs-6 py-2 px-3">
+                <span style="background: var(--accent-yellow); color: #000; border: 2px solid var(--border); padding: 6px 14px; font-weight: 700; font-size: 0.85rem; text-transform: uppercase;">
                     <i class="bi bi-star me-1"></i>Coding Expert
                 </span>
             {% endif %}
             {% if not contest_stats.contests_participated and not problem_stats.problems_solved %}
-                <span class="text-muted">Complete your first contest or solve problems to earn achievements!</span>
+                <span style="color: var(--muted);">Complete your first contest or solve problems to earn achievements!</span>
             {% endif %}
         </div>
     </div>
@@ -260,8 +239,8 @@
     {% if admin_settings and user_profile.role == 'admin' %}
     <!-- Admin Settings Section -->
     <div class="card-section">
-        <h5 class="fw-bold mb-3">
-            <i class="bi bi-gear-fill text-primary me-2"></i>Admin Settings
+        <h5 style="font-family: var(--font-heading); font-weight: 700; margin-bottom: 1rem; text-transform: uppercase; font-size: 1rem;">
+            <i class="bi bi-gear-fill me-2"></i>Admin Settings
         </h5>
         <div class="alert alert-info">
             <i class="bi bi-info-circle me-2"></i>
@@ -275,21 +254,21 @@
             <div class="col-md-6">
                 <div class="card">
                     <div class="card-body">
-                        <h6 class="card-title">
+                        <h6 class="card-title" style="font-family: var(--font-heading); text-transform: uppercase; font-size: 0.9rem;">
                             <i class="bi bi-robot me-2"></i>AI Code Review
                         </h6>
-                        <p class="card-text text-muted small">
+                        <p style="color: var(--muted); font-size: 0.85rem;">
                             Enable or disable AI-powered code review feature for all users.
                         </p>
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" id="ai_review_enabled" 
                                    name="ai_review_enabled" {% if admin_settings.ai_review_enabled %}checked{% endif %}>
                             <label class="form-check-label" for="ai_review_enabled">
-                                <span class="fw-bold">
+                                <span style="font-weight: 700;">
                                     {% if admin_settings.ai_review_enabled %}
-                                        <span class="text-success">Enabled</span>
+                                        <span style="color: var(--success);">Enabled</span>
                                     {% else %}
-                                        <span class="text-danger">Disabled</span>
+                                        <span style="color: var(--danger);">Disabled</span>
                                     {% endif %}
                                 </span>
                             </label>
@@ -347,7 +326,7 @@
                     </div>
                     <div class="mb-3">
                         <label for="id_photo" class="form-label">Profile Photo</label>
-                        <small class="form-text text-muted d-block mb-2">Max 20MB, up to 4096x4096 pixels (JPG/PNG/GIF/WEBP)</small>
+                        <small class="form-text d-block mb-2" style="color: var(--muted);">Max 20MB, up to 4096x4096 pixels (JPG/PNG/GIF/WEBP)</small>
                         {{ form.photo|add_class:"form-control" }}
                         {% if form.photo.errors %}
                             <div class="invalid-feedback d-block">
@@ -355,7 +334,7 @@
                             </div>
                         {% endif %}
                         <div id="photo-preview" class="mt-2" style="display:none;">
-                            <img id="preview-img" style="max-width: 200px; max-height: 200px; border-radius: 8px;">
+                            <img id="preview-img" style="max-width: 200px; max-height: 200px; border: 2px solid var(--border);">
                         </div>
                     </div>
                 </div>

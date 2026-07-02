@@ -207,14 +207,15 @@
   .avatar-circle {
     width: 40px;
     height: 40px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--primary-color) 0%, #1d4ed8 100%);
-    color: white;
+    background: var(--accent-yellow);
+    color: var(--primary);
+    border: 2px solid var(--border);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: 600;
+    font-weight: 700;
     font-size: 1.1rem;
+    font-family: var(--font-heading);
   }
 
   .rank-badge {
@@ -225,44 +226,37 @@
   }
 
   .problem-header {
-    background-color: var(--light-bg);
-    border-left: 1px solid var(--border-color);
+    background-color: var(--bg);
+    border-left: 2px solid var(--border);
   }
 
   .problem-cell {
-    border-left: 1px solid var(--border-color);
+    border-left: 2px solid var(--border);
     padding: 12px 8px;
     min-height: 60px;
     vertical-align: middle;
   }
 
   .problem-accepted {
-    background-color: rgba(34, 197, 94, 0.1);
-    border-radius: 8px;
+    background-color: #DCFCE7;
     padding: 8px 4px;
-    border: 2px solid rgba(34, 197, 94, 0.3);
+    border: 2px solid var(--border);
   }
 
   .problem-attempted {
-    background-color: rgba(239, 68, 68, 0.1);
-    border-radius: 8px;
+    background-color: #FEE2E2;
     padding: 8px 4px;
-    border: 2px solid rgba(239, 68, 68, 0.3);
+    border: 2px solid var(--border);
   }
 
   .problem-not-attempted {
     padding: 8px 4px;
   }
 
-  .table-hover tbody tr:hover {
-    background-color: rgba(var(--primary-color), 0.05);
-  }
-
   .table-warning {
-    background-color: rgba(255, 193, 7, 0.1);
+    background-color: var(--accent-yellow) !important;
   }
 
-  /* Responsive adjustments */
   @media (max-width: 768px) {
     .problem-header,
     .problem-cell {

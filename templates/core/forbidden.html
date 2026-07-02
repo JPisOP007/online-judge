@@ -1,66 +1,76 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Access Denied - Online Judge</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <title>Access Denied — Online Judge</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+      body {
+        background: #FFFEF2;
+        font-family: 'Space Grotesk', sans-serif;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+      }
+    </style>
 </head>
-<body class="bg-light">
+<body>
     <div class="container">
-        <div class="row justify-content-center min-vh-100 align-items-center">
+        <div class="row justify-content-center">
             <div class="col-md-6">
-                <div class="card shadow">
-                    <div class="card-body text-center p-5">
-                        <div class="mb-4">
-                            <i class="fas fa-lock text-danger" style="font-size: 4rem;"></i>
-                        </div>
-                        
-                        <h2 class="card-title text-danger mb-3">Access Denied</h2>
-                        
-                        <p class="card-text text-muted mb-4">
-                            Sorry, you don't have permission to access this page.
-                        </p>
-                        
-                        {% if required_roles %}
-                        <div class="alert alert-info">
-                            <strong>Required Role(s):</strong> 
-                            {% for role in required_roles %}
-                                <span class="badge bg-primary me-1">{{ role|title }}</span>
-                            {% endfor %}
-                        </div>
-                        {% endif %}
-                        
-                        {% if user.is_authenticated %}
-                        <div class="alert alert-warning">
-                            <strong>Your current role:</strong> 
-                            <span class="badge bg-secondary">{{ user.userprofile.role|title }}</span>
-                        </div>
-                        {% endif %}
-                        
-                        <div class="d-grid gap-2">
-                            <a href="{% url 'home' %}" class="btn btn-primary">
-                                <i class="fas fa-home me-2"></i>Go to Home
-                            </a>
-                            
-                            {% if not user.is_authenticated %}
-                            <a href="{% url 'login' %}" class="btn btn-outline-secondary">
-                                <i class="fas fa-sign-in-alt me-2"></i>Login
-                            </a>
-                            {% else %}
-                            <a href="{% url 'profile' %}" class="btn btn-outline-secondary">
-                                <i class="fas fa-user me-2"></i>View Profile
-                            </a>
-                            {% endif %}
-                        </div>
-                        
-                        <hr class="my-4">
-                        
-                        <small class="text-muted">
-                            If you believe this is an error, please contact the administrator.
-                        </small>
+                <div style="border: 3px solid #000; background: #fff; box-shadow: 8px 8px 0px #000; padding: 3rem; text-align: center;">
+                    <div style="background: #FF5C8A; width: 80px; height: 80px; border: 3px solid #000; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                        <i class="bi bi-lock-fill" style="font-size: 2.5rem; color: #fff;"></i>
                     </div>
+                    
+                    <h2 style="font-family: 'Space Mono', monospace; text-transform: uppercase; margin-bottom: 1rem; font-size: 1.5rem;">Access Denied</h2>
+                    
+                    <p style="color: #6B7280; margin-bottom: 1.5rem;">
+                        Sorry, you don't have permission to access this page.
+                    </p>
+                    
+                    {% if required_roles %}
+                    <div style="background: #DBEAFE; border: 2px solid #000; border-left: 6px solid #3B82F6; padding: 0.75rem 1rem; margin-bottom: 1rem; text-align: left;">
+                        <strong style="text-transform: uppercase; font-size: 0.8rem;">Required Role(s):</strong> 
+                        {% for role in required_roles %}
+                            <span style="background: #3B82F6; color: #fff; border: 2px solid #000; padding: 2px 8px; font-weight: 700; font-size: 0.8rem; text-transform: uppercase;">{{ role|title }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    {% if user.is_authenticated %}
+                    <div style="background: #FEF3C7; border: 2px solid #000; border-left: 6px solid #F59E0B; padding: 0.75rem 1rem; margin-bottom: 1.5rem; text-align: left;">
+                        <strong style="text-transform: uppercase; font-size: 0.8rem;">Your current role:</strong> 
+                        <span style="background: #6B7280; color: #fff; border: 2px solid #000; padding: 2px 8px; font-weight: 700; font-size: 0.8rem; text-transform: uppercase;">{{ user.userprofile.role|title }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'home' %}" style="display: block; background: #FFD600; color: #000; border: 3px solid #000; box-shadow: 3px 3px 0px #000; padding: 12px; font-weight: 700; text-decoration: none; text-transform: uppercase; font-family: 'Space Grotesk', sans-serif; text-align: center; transition: transform 0.1s, box-shadow 0.1s;" onmouseover="this.style.transform='translate(2px,2px)'; this.style.boxShadow='1px 1px 0px #000';" onmouseout="this.style.transform='none'; this.style.boxShadow='3px 3px 0px #000';">
+                            <i class="bi bi-house me-2"></i>Go to Home
+                        </a>
+                        
+                        {% if not user.is_authenticated %}
+                        <a href="{% url 'login' %}" style="display: block; background: transparent; color: #000; border: 3px solid #000; box-shadow: 3px 3px 0px #000; padding: 12px; font-weight: 700; text-decoration: none; text-transform: uppercase; font-family: 'Space Grotesk', sans-serif; text-align: center; transition: transform 0.1s, box-shadow 0.1s;" onmouseover="this.style.transform='translate(2px,2px)'; this.style.boxShadow='1px 1px 0px #000';" onmouseout="this.style.transform='none'; this.style.boxShadow='3px 3px 0px #000';">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>Login
+                        </a>
+                        {% else %}
+                        <a href="{% url 'profile' %}" style="display: block; background: transparent; color: #000; border: 3px solid #000; box-shadow: 3px 3px 0px #000; padding: 12px; font-weight: 700; text-decoration: none; text-transform: uppercase; font-family: 'Space Grotesk', sans-serif; text-align: center; transition: transform 0.1s, box-shadow 0.1s;" onmouseover="this.style.transform='translate(2px,2px)'; this.style.boxShadow='1px 1px 0px #000';" onmouseout="this.style.transform='none'; this.style.boxShadow='3px 3px 0px #000';">
+                            <i class="bi bi-person me-2"></i>View Profile
+                        </a>
+                        {% endif %}
+                    </div>
+                    
+                    <hr style="border-color: #000; margin: 1.5rem 0 1rem;">
+                    
+                    <small style="color: #6B7280;">
+                        If you believe this is an error, please contact the administrator.
+                    </small>
                 </div>
             </div>
         </div>

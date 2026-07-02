@@ -1,49 +1,49 @@
 {% extends "core/base.html" %}
 {% load static %}
 
-{% block title %}{{ problem.title }} - MyOJ{% endblock %}
+{% block title %}{{ problem.title }} — MyOJ{% endblock %}
 
 {% block extra_css %}
 <style>
   .section-title {
-    font-size: 1.25rem;
-    font-weight: 600;
+    font-family: var(--font-heading);
+    font-size: 1.1rem;
+    font-weight: 700;
     margin-bottom: 1rem;
     padding-bottom: 0.5rem;
-    border-bottom: 2px solid var(--border-color);
-    color: var(--dark-color);
+    border-bottom: var(--border-w) solid var(--border);
+    color: var(--primary);
     display: flex;
     align-items: center;
     gap: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
   }
 
   .sample-box {
-    background: rgba(248, 250, 252, 0.8);
-    border: 2px solid var(--border-color);
-    border-radius: var(--border-radius);
+    background: var(--surface);
+    border: var(--border-w) solid var(--border);
     padding: 1.5rem;
     margin-bottom: 1rem;
-    backdrop-filter: blur(10px);
-    transition: all 0.3s ease;
+    box-shadow: var(--shadow-sm);
+    transition: transform var(--transition), box-shadow var(--transition);
   }
 
   .sample-box:hover {
-    border-color: var(--primary-color);
-    box-shadow: var(--shadow-md);
+    transform: translate(-2px, -2px);
+    box-shadow: 5px 5px 0px #000;
   }
 
   .sample-box pre {
-    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+    background: var(--primary);
     color: #e2e8f0;
-    border: none;
-    border-radius: 8px;
+    border: 2px solid var(--border);
     padding: 1.5rem;
     font-size: 0.95rem;
-    font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+    font-family: 'Space Mono', 'Courier New', monospace;
     white-space: pre-wrap;
     word-break: break-word;
     margin: 0;
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
     line-height: 1.5;
   }
 
@@ -56,113 +56,132 @@
   }
 
   .btn-run {
-    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    background: var(--accent-blue);
     color: white;
-    border: none;
+    border: var(--border-w) solid var(--border);
     padding: 12px 24px;
-    border-radius: 8px;
-    font-weight: 600;
+    font-weight: 700;
     display: flex;
     align-items: center;
     gap: 8px;
-    transition: all 0.2s ease;
+    box-shadow: var(--shadow-sm);
+    transition: transform var(--transition), box-shadow var(--transition);
     cursor: pointer;
+    text-transform: uppercase;
+    font-family: var(--font-body);
   }
 
   .btn-run:hover:not(:disabled) {
-    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-md);
+    transform: translate(2px, 2px);
+    box-shadow: 1px 1px 0px #000;
     color: white;
+    background: #2563EB;
   }
 
   .btn-submit {
-    background: linear-gradient(135deg, var(--success-color) 0%, #047857 100%);
-    color: white;
-    border: none;
+    background: var(--success);
+    color: #000;
+    border: var(--border-w) solid var(--border);
     padding: 12px 24px;
-    border-radius: 8px;
-    font-weight: 600;
+    font-weight: 700;
     display: flex;
     align-items: center;
     gap: 8px;
-    transition: all 0.2s ease;
+    box-shadow: var(--shadow-sm);
+    transition: transform var(--transition), box-shadow var(--transition);
     cursor: pointer;
+    text-transform: uppercase;
+    font-family: var(--font-body);
   }
 
   .btn-submit:hover:not(:disabled) {
-    background: linear-gradient(135deg, #047857 0%, #065f46 100%);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-md);
-    color: white;
+    transform: translate(2px, 2px);
+    box-shadow: 1px 1px 0px #000;
+    color: #000;
+    background: #16A34A;
   }
 
   .btn-ai-review {
-    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-    color: white;
-    border: none;
+    background: var(--accent-pink);
+    color: #fff;
+    border: var(--border-w) solid var(--border);
     padding: 12px 24px;
-    border-radius: 8px;
-    font-weight: 600;
+    font-weight: 700;
     display: flex;
     align-items: center;
     gap: 8px;
-    transition: all 0.2s ease;
+    box-shadow: var(--shadow-sm);
+    transition: transform var(--transition), box-shadow var(--transition);
     cursor: pointer;
+    text-transform: uppercase;
+    font-family: var(--font-body);
   }
 
   .btn-ai-review:hover:not(:disabled) {
-    background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-md);
-    color: white;
+    transform: translate(2px, 2px);
+    box-shadow: 1px 1px 0px #000;
+    color: #fff;
+    background: #E74C72;
   }
 
   .problem-header {
-    background: linear-gradient(135deg, rgba(37, 99, 235, 0.1) 0%, rgba(29, 78, 216, 0.1) 100%);
-    border: 2px solid rgba(37, 99, 235, 0.2);
-    border-radius: var(--border-radius);
+    background: var(--accent-yellow);
+    border: var(--border-w) solid var(--border);
     padding: 2rem;
     margin-bottom: 2rem;
-    backdrop-filter: blur(10px);
+    box-shadow: var(--shadow);
   }
 
   .problem-title {
-    font-size: 2rem;
+    font-family: var(--font-heading);
+    font-size: 1.75rem;
     font-weight: 700;
-    color: var(--dark-color);
+    color: var(--primary);
     margin-bottom: 0;
     display: flex;
     align-items: center;
     gap: 12px;
+    text-transform: uppercase;
   }
 
   .editor-container {
-    border: 2px solid var(--border-color);
-    border-radius: var(--border-radius);
+    border: var(--border-w) solid var(--border);
     overflow: hidden;
-    background: white;
-    box-shadow: var(--shadow-md);
+    background: var(--surface);
+    box-shadow: var(--shadow);
     margin-bottom: 1rem;
   }
 
   .editor-header {
-    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    background: var(--primary);
+    color: #fff;
     padding: 12px 20px;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: var(--border-w) solid var(--border);
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 16px;
   }
 
+  .editor-header .form-label {
+    color: #fff;
+    margin-bottom: 0;
+    text-transform: uppercase;
+  }
+
   .language-selector {
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
+    border: 2px solid #fff;
     padding: 6px 12px;
-    background: white;
-    font-weight: 500;
+    background: var(--primary);
+    color: #fff;
+    font-weight: 700;
+    font-family: var(--font-heading);
     min-width: 120px;
+  }
+
+  .language-selector option {
+    background: var(--primary);
+    color: #fff;
   }
 
   .editor-wrapper {
@@ -173,7 +192,7 @@
 
   .CodeMirror {
     height: 100%;
-    font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace !important;
+    font-family: 'Space Mono', 'Courier New', monospace !important;
     font-size: 14px !important;
     line-height: 1.5 !important;
   }
@@ -184,7 +203,7 @@
 
   .CodeMirror-gutters {
     background: rgba(30, 41, 59, 0.8) !important;
-    border-right: 1px solid #475569 !important;
+    border-right: 2px solid #475569 !important;
   }
 
   .CodeMirror-linenumber {
@@ -197,7 +216,7 @@
     border: none;
     outline: none;
     padding: 20px;
-    font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+    font-family: 'Space Mono', 'Courier New', monospace;
     font-size: 14px;
     background: #1e293b;
     color: #e2e8f0;
@@ -206,13 +225,14 @@
     display: none;
   }
 
-  /* SEPARATE SECTIONS FOR RUN AND SUBMIT */
+  /* Run/Submit/AI Sections */
   .run-output-section {
-    background: white !important;
-    border: 2px solid #3b82f6 !important;
-    border-radius: var(--border-radius) !important;
+    background: var(--surface) !important;
+    border: var(--border-w) solid var(--accent-blue) !important;
+    border-left: 6px solid var(--accent-blue) !important;
     padding: 1.5rem !important;
     margin-top: 2rem !important;
+    box-shadow: var(--shadow-sm) !important;
     display: none;
   }
 
@@ -221,20 +241,23 @@
   }
 
   .run-output-section h5 {
-    color: #3b82f6 !important;
-    font-weight: 600 !important;
+    font-family: var(--font-heading) !important;
+    color: var(--accent-blue) !important;
+    font-weight: 700 !important;
     margin-bottom: 1rem !important;
     display: flex !important;
     align-items: center !important;
     gap: 8px !important;
+    text-transform: uppercase !important;
   }
 
   .submission-result-section {
-    background: white !important;
-    border: 2px solid #059669 !important;
-    border-radius: var(--border-radius) !important;
+    background: var(--surface) !important;
+    border: var(--border-w) solid var(--success) !important;
+    border-left: 6px solid var(--success) !important;
     padding: 1.5rem !important;
     margin-top: 2rem !important;
+    box-shadow: var(--shadow-sm) !important;
     display: none;
   }
 
@@ -243,21 +266,22 @@
   }
 
   .submission-result-section h5 {
-    color: #059669 !important;
-    font-weight: 600 !important;
+    font-family: var(--font-heading) !important;
+    color: var(--success) !important;
+    font-weight: 700 !important;
     margin-bottom: 1rem !important;
     display: flex !important;
     align-items: center !important;
     gap: 8px !important;
+    text-transform: uppercase !important;
   }
 
   .output-content {
-    background: #f8f9fa !important;
-    color: #212529 !important;
-    border: 1px solid #dee2e6 !important;
-    border-radius: 8px !important;
+    background: var(--primary) !important;
+    color: #e2e8f0 !important;
+    border: 2px solid var(--border) !important;
     padding: 1.5rem !important;
-    font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace !important;
+    font-family: 'Space Mono', 'Courier New', monospace !important;
     white-space: pre-wrap !important;
     word-break: break-word !important;
     font-size: 0.95rem !important;
@@ -269,11 +293,12 @@
   }
 
   .ai-review-section {
-    background: white !important;
-    border: 2px solid #8b5cf6 !important;
-    border-radius: var(--border-radius) !important;
+    background: var(--surface) !important;
+    border: var(--border-w) solid var(--accent-pink) !important;
+    border-left: 6px solid var(--accent-pink) !important;
     padding: 1.5rem !important;
     margin-top: 2rem !important;
+    box-shadow: var(--shadow-sm) !important;
     display: none;
   }
 
@@ -282,21 +307,22 @@
   }
 
   .ai-review-section h5 {
-    color: #8b5cf6 !important;
-    font-weight: 600 !important;
+    font-family: var(--font-heading) !important;
+    color: var(--accent-pink) !important;
+    font-weight: 700 !important;
     margin-bottom: 1rem !important;
     display: flex !important;
     align-items: center !important;
     gap: 8px !important;
+    text-transform: uppercase !important;
   }
 
   .ai-review-content {
-    background: #faf5ff !important;
-    color: #1f2937 !important;
-    border: 1px solid #e5e7eb !important;
-    border-radius: 8px !important;
+    background: #FFF5F7 !important;
+    color: var(--primary) !important;
+    border: 2px solid var(--border) !important;
     padding: 1.5rem !important;
-    font-family: system-ui, -apple-system, sans-serif !important;
+    font-family: var(--font-body) !important;
     white-space: pre-wrap !important;
     word-break: break-word !important;
     font-size: 0.95rem !important;
@@ -308,93 +334,100 @@
   }
 
   .verdict-badge {
-    padding: 8px 16px !important;
-    border-radius: 20px !important;
-    font-weight: 600 !important;
+    padding: 6px 16px !important;
+    border: 2px solid var(--border) !important;
+    font-weight: 700 !important;
     font-size: 0.9rem !important;
+    font-family: var(--font-heading) !important;
     display: inline-flex !important;
     align-items: center !important;
     gap: 6px !important;
     margin-top: 1rem !important;
+    text-transform: uppercase !important;
   }
 
   .verdict-AC {
-    background: #28a745 !important;
-    color: white !important;
+    background: var(--success) !important;
+    color: #000 !important;
   }
 
   .verdict-WA {
-    background: #dc3545 !important;
+    background: var(--danger) !important;
     color: white !important;
   }
 
   .verdict-TLE, .verdict-RE, .verdict-CE {
-    background: #ffc107 !important;
-    color: #212529 !important;
+    background: var(--accent-yellow) !important;
+    color: #000 !important;
   }
 
   .run-status {
-    padding: 8px 16px !important;
-    border-radius: 20px !important;
-    font-weight: 600 !important;
+    padding: 6px 16px !important;
+    border: 2px solid var(--border) !important;
+    font-weight: 700 !important;
     font-size: 0.9rem !important;
+    font-family: var(--font-heading) !important;
     display: inline-flex !important;
     align-items: center !important;
     gap: 6px !important;
     margin-top: 1rem !important;
+    text-transform: uppercase !important;
   }
 
   .run-status.success {
-    background: #dcfce7 !important;
+    background: #DCFCE7 !important;
     color: #166534 !important;
-    border: 1px solid #bbf7d0 !important;
+    border: 2px solid var(--border) !important;
   }
 
   .run-status.error {
-    background: #fef2f2 !important;
-    color: #dc2626 !important;
-    border: 1px solid #fecaca !important;
+    background: #FEE2E2 !important;
+    color: #991B1B !important;
+    border: 2px solid var(--border) !important;
   }
 
   .form-help-text {
-    background: rgba(59, 130, 246, 0.1);
-    border-left: 4px solid var(--primary-color);
+    background: var(--accent-yellow);
+    border: 2px solid var(--border);
+    border-left: 6px solid var(--primary);
     padding: 12px 16px;
-    border-radius: 0 8px 8px 0;
-    color: var(--primary-color);
+    color: var(--primary);
     font-size: 0.9rem;
     margin-top: 1rem;
+    font-weight: 500;
   }
 
   .back-button {
-    background: rgba(100, 116, 139, 0.1);
-    border: 2px solid var(--secondary-color);
-    color: var(--secondary-color);
+    background: var(--surface);
+    border: var(--border-w) solid var(--border);
+    color: var(--primary);
     padding: 10px 20px;
-    border-radius: 8px;
     text-decoration: none;
-    font-weight: 500;
+    font-weight: 700;
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    transition: all 0.2s ease;
+    box-shadow: var(--shadow-sm);
+    transition: transform var(--transition), box-shadow var(--transition);
+    text-transform: uppercase;
+    font-family: var(--font-body);
+    font-size: 0.85rem;
   }
 
   .back-button:hover {
-    background: var(--secondary-color);
-    color: white;
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-md);
+    transform: translate(2px, 2px);
+    box-shadow: 1px 1px 0px #000;
+    color: var(--primary);
   }
 
   .loading-spinner {
     display: none;
     width: 20px;
     height: 20px;
-    border: 2px solid #f3f3f3;
-    border-top: 2px solid var(--primary-color);
+    border: 3px solid rgba(255,255,255,0.3);
+    border-top: 3px solid #fff;
     border-radius: 50%;
-    animation: spin 1s linear infinite;
+    animation: spin 0.6s linear infinite;
   }
 
   @keyframes spin {
@@ -403,22 +436,21 @@
   }
 
   .btn:disabled {
-    opacity: 0.6;
+    opacity: 0.5;
     cursor: not-allowed;
   }
 
   .card-section {
-    background: white;
-    border-radius: var(--border-radius);
+    background: var(--surface);
+    border: var(--border-w) solid var(--border);
     padding: 2rem;
     margin-bottom: 2rem;
-    box-shadow: var(--shadow-md);
-    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow);
   }
 
   .alert {
     padding: 12px 16px;
-    border-radius: 8px;
+    border: var(--border-w) solid var(--border);
     margin-top: 1rem;
     display: flex;
     align-items: center;
@@ -426,52 +458,54 @@
   }
 
   .alert-success {
-    background: #d1fae5;
-    color: #065f46;
-    border: 1px solid #a7f3d0;
+    background: #DCFCE7;
+    color: #166534;
+    border-left: 6px solid var(--success);
   }
 
   .alert-danger {
-    background: #fee2e2;
-    color: #dc2626;
-    border: 1px solid #fecaca;
+    background: #FEE2E2;
+    color: #991B1B;
+    border-left: 6px solid var(--danger);
   }
 
   .alert-info {
-    background: #dbeafe;
-    color: #1e40af;
-    border: 1px solid #93c5fd;
+    background: #DBEAFE;
+    color: #1E40AF;
+    border-left: 6px solid var(--accent-blue);
   }
 
   .ai-review-structured {
     display: grid;
-    gap: 1.5rem;
+    gap: 1rem;
   }
 
   .review-section {
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
+    background: var(--bg);
+    border: 2px solid var(--border);
     padding: 1rem;
   }
 
   .review-section h6 {
     margin: 0 0 0.5rem 0;
-    font-weight: 600;
+    font-weight: 700;
+    font-family: var(--font-heading);
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    text-transform: uppercase;
+    font-size: 0.85rem;
   }
 
   .review-section p {
     margin: 0;
     line-height: 1.6;
-    color: #374151;
+    color: var(--primary);
   }
 
   @media (max-width: 768px) {
     .problem-title {
-      font-size: 1.5rem;
+      font-size: 1.25rem;
       flex-direction: column;
       align-items: flex-start;
     }
@@ -494,26 +528,25 @@
 
 {% block content %}
 <div class="container py-4">
-  <div class="mb-4 fade-in">
+  <div class="mb-4">
     <a href="/problems/" class="back-button">
       <i class="bi bi-arrow-left"></i> Back to Problems
     </a>
   </div>
 
-  <section class="problem-header slide-up">
+  <section class="problem-header">
     <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
       <h1 class="problem-title">
         <i class="bi bi-puzzle"></i>
         {{ problem.title }}
       </h1>
       <span class="difficulty-{{ problem.difficulty|lower }}">
-        <i class="bi bi-star-fill"></i>
         {{ problem.difficulty|upper }}
       </span>
     </div>
   </section>
 
-  <section class="card-section slide-up">
+  <section class="card-section">
     <div class="mb-4">
       <div class="section-title">
         <i class="bi bi-file-text"></i>
@@ -569,7 +602,7 @@
     </div>
   </section>
 
-  <section class="card-section slide-up">
+  <section class="card-section">
     <div class="section-title mb-4">
       <i class="bi bi-code-slash"></i>
       Submit Your Solution
@@ -587,9 +620,9 @@
           <option value="java">Java</option>
           <option value="javascript">JavaScript</option>
         </select>
-        <div class="ms-auto text-muted small">
-          <i class="bi bi-info-circle me-1"></i>
-          Code Editor
+        <div class="ms-auto" style="color: rgba(255,255,255,0.5); font-size: 0.8rem;">
+          <i class="bi bi-keyboard me-1"></i>
+          Ctrl+Enter = Run
         </div>
       </div>
       <div class="editor-wrapper">
@@ -621,10 +654,10 @@
         <i class="bi bi-lightbulb flex-shrink-0 mt-1"></i>
         <div>
           <strong>Tips:</strong><br>
-          • Click <strong>Run Code</strong> to test your solution with sample input (debug mode)<br>
-          • Click <strong>Submit Solution</strong> to evaluate against all test cases (judge mode)<br>
-          • Click <strong>Get AI Review</strong> to analyze your code for improvements<br>
-          • Use Ctrl+Space for code completion, Ctrl+/ for comments
+          &bull; <strong>Run Code</strong> — test with sample input (debug mode)<br>
+          &bull; <strong>Submit Solution</strong> — evaluate against all test cases<br>
+          &bull; <strong>Get AI Review</strong> — analyze your code for improvements<br>
+          &bull; Ctrl+Space for completion, Ctrl+/ for comments
         </div>
       </div>
     </div>

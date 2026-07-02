@@ -4,8 +4,8 @@
 {% block content %}
 <div class="container mt-4">
     <!-- Page Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold">Programming Contests</h2>
+    <div class="d-flex justify-content-between align-items-center mb-4" style="border-bottom: var(--border-w) solid var(--border); padding-bottom: 1rem;">
+        <h2 style="font-family: var(--font-heading); text-transform: uppercase; margin: 0;">Programming Contests</h2>
         {% if user.is_staff %}
             <a href="{% url 'create_contest' %}" class="btn btn-primary">
                 <i class="bi bi-plus-circle me-1"></i>Create Contest
@@ -14,46 +14,37 @@
     </div>
 
     <!-- Filters and Search -->
-    <div class="card mb-4">
-        <div class="card-body">
-            <form method="GET" class="row g-3">
-                <!-- Search -->
-                <div class="col-md-4">
-                    <label class="form-label">Search Contests</label>
-                    <input type="text" class="form-control" name="search" 
-                           value="{{ search_query }}" placeholder="Enter contest title...">
-                </div>
-                
-                <!-- Status Filter -->
-                <div class="col-md-3">
-                    <label class="form-label">Status</label>
-                    <select name="status" class="form-select">
-                        <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All Contests</option>
-                        <option value="upcoming" {% if status_filter == 'upcoming' %}selected{% endif %}>Upcoming</option>
-                        <option value="running" {% if status_filter == 'running' %}selected{% endif %}>Running</option>
-                        <option value="ended" {% if status_filter == 'ended' %}selected{% endif %}>Ended</option>
-                    </select>
-                </div>
-                
-                <!-- Type Filter -->
-                <div class="col-md-3">
-                    <label class="form-label">Type</label>
-                    <select name="type" class="form-select">
-                        <option value="all" {% if type_filter == 'all' %}selected{% endif %}>All Types</option>
-                        <option value="public" {% if type_filter == 'public' %}selected{% endif %}>Public</option>
-                        <option value="private" {% if type_filter == 'private' %}selected{% endif %}>Private</option>
-                        <option value="educational" {% if type_filter == 'educational' %}selected{% endif %}>Educational</option>
-                    </select>
-                </div>
-                
-                <!-- Filter Button -->
-                <div class="col-md-2 d-flex align-items-end">
-                    <button type="submit" class="btn btn-outline-primary w-100">
-                        <i class="bi bi-search me-1"></i>Filter
-                    </button>
-                </div>
-            </form>
-        </div>
+    <div style="border: var(--border-w) solid var(--border); background: var(--surface); box-shadow: var(--shadow); padding: 1.5rem; margin-bottom: 2rem;">
+        <form method="GET" class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">Search Contests</label>
+                <input type="text" class="form-control" name="search" 
+                       value="{{ search_query }}" placeholder="Enter contest title...">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Status</label>
+                <select name="status" class="form-select">
+                    <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All Contests</option>
+                    <option value="upcoming" {% if status_filter == 'upcoming' %}selected{% endif %}>Upcoming</option>
+                    <option value="running" {% if status_filter == 'running' %}selected{% endif %}>Running</option>
+                    <option value="ended" {% if status_filter == 'ended' %}selected{% endif %}>Ended</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Type</label>
+                <select name="type" class="form-select">
+                    <option value="all" {% if type_filter == 'all' %}selected{% endif %}>All Types</option>
+                    <option value="public" {% if type_filter == 'public' %}selected{% endif %}>Public</option>
+                    <option value="private" {% if type_filter == 'private' %}selected{% endif %}>Private</option>
+                    <option value="educational" {% if type_filter == 'educational' %}selected{% endif %}>Educational</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-outline-primary w-100">
+                    <i class="bi bi-search me-1"></i>Filter
+                </button>
+            </div>
+        </form>
     </div>
 
     <!-- Contest List -->
@@ -61,17 +52,14 @@
         <div class="row">
             {% for contest in contests %}
                 <div class="col-lg-6 mb-4">
-                    <div class="card h-100 shadow-sm">
-                        <div class="card-body">
-                            <!-- Contest Header -->
+                    <div class="card h-100">
+                        <div class="card-body" style="padding: 1.5rem;">
                             <div class="d-flex justify-content-between align-items-start mb-3">
                                 <h5 class="card-title mb-0">
-                                    <a href="{% url 'contest_detail' contest.uuid %}" class="text-decoration-none">
+                                    <a href="{% url 'contest_detail' contest.uuid %}" style="color: var(--primary); text-decoration: none; font-family: var(--font-heading);">
                                         {{ contest.title }}
                                     </a>
                                 </h5>
-                                
-                                <!-- Contest Status Badge -->
                                 {% if contest.is_upcoming %}
                                     <span class="badge bg-info">Upcoming</span>
                                 {% elif contest.is_running %}
@@ -81,69 +69,54 @@
                                 {% endif %}
                             </div>
 
-                            <!-- Contest Info -->
                             <div class="mb-3">
-                                <div class="row text-sm">
+                                <div class="row" style="font-size: 0.85rem;">
                                     <div class="col-6">
-                                        <small class="text-muted">
-                                            <i class="bi bi-calendar3 me-1"></i>
-                                            {{ contest.start_time|date:"M d, Y" }}
-                                        </small>
+                                        <i class="bi bi-calendar3 me-1"></i>
+                                        {{ contest.start_time|date:"M d, Y" }}
                                     </div>
                                     <div class="col-6">
-                                        <small class="text-muted">
-                                            <i class="bi bi-clock me-1"></i>
-                                            {{ contest.start_time|date:"H:i" }}
-                                        </small>
+                                        <i class="bi bi-clock me-1"></i>
+                                        {{ contest.start_time|date:"H:i" }}
                                     </div>
                                 </div>
-                                
-                                <div class="row text-sm mt-1">
+                                <div class="row mt-1" style="font-size: 0.85rem;">
                                     <div class="col-6">
-                                        <small class="text-muted">
-                                            <i class="bi bi-hourglass-split me-1"></i>
-                                            {{ contest.duration_hours }}h {{ contest.duration_minutes }}m
-                                        </small>
+                                        <i class="bi bi-hourglass-split me-1"></i>
+                                        {{ contest.duration_hours }}h {{ contest.duration_minutes }}m
                                     </div>
                                     <div class="col-6">
-                                        <small class="text-muted">
-                                            <i class="bi bi-people me-1"></i>
-                                            {{ contest.participant_count }} participants
-                                        </small>
+                                        <i class="bi bi-people me-1"></i>
+                                        {{ contest.participant_count }} participants
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Contest Description -->
                             {% if contest.description %}
-                                <p class="card-text text-muted small">
+                                <p style="color: var(--muted); font-size: 0.9rem;">
                                     {{ contest.description|truncatewords:20 }}
                                 </p>
                             {% endif %}
 
-                            <!-- Contest Type and Registration Info -->
                             <div class="d-flex justify-content-between align-items-center mb-3">
-                                <span class="badge bg-light text-dark">{{ contest.get_contest_type_display }}</span>
-                                
+                                <span class="badge bg-light">{{ contest.get_contest_type_display }}</span>
                                 {% if contest.registration_required %}
                                     {% if contest.is_registered %}
-                                        <small class="text-success">
+                                        <small style="color: var(--success); font-weight: 700;">
                                             <i class="bi bi-check-circle me-1"></i>Registered
                                         </small>
                                     {% elif contest.is_upcoming %}
-                                        <small class="text-warning">
+                                        <small style="color: var(--warning); font-weight: 700;">
                                             <i class="bi bi-exclamation-circle me-1"></i>Registration Required
                                         </small>
                                     {% endif %}
                                 {% endif %}
                             </div>
 
-                            <!-- Action Buttons -->
                             <div class="d-flex gap-2">
                                 <a href="{% url 'contest_detail' contest.uuid %}" class="btn btn-outline-primary btn-sm flex-fill">
                                     <i class="bi bi-eye me-1"></i>View Details
                                 </a>
-                                
                                 {% if contest.is_running and contest.is_registered %}
                                     <a href="{% url 'contest_problems' contest.uuid %}" class="btn btn-success btn-sm flex-fill">
                                         <i class="bi bi-play-circle me-1"></i>Enter Contest
@@ -157,7 +130,6 @@
                                         <i class="bi bi-trophy me-1"></i>Standings
                                     </a>
                                 {% endif %}
-                                
                                 {% if user.is_staff %}
                                     <a href="{% url 'edit_contest' contest.uuid %}" class="btn btn-outline-secondary btn-sm">
                                         <i class="bi bi-pencil"></i>
@@ -218,15 +190,14 @@
         {% endif %}
 
     {% else %}
-        <!-- No Contests Found -->
         <div class="text-center py-5">
-            <i class="bi bi-trophy text-muted" style="font-size: 4rem;"></i>
-            <h4 class="text-muted mt-3">No Contests Found</h4>
+            <i class="bi bi-trophy" style="font-size: 4rem; color: var(--muted);"></i>
+            <h4 style="font-family: var(--font-heading); color: var(--muted); margin-top: 1rem; text-transform: uppercase;">No Contests Found</h4>
             {% if search_query or status_filter != 'all' or type_filter != 'all' %}
-                <p class="text-muted">Try adjusting your search filters</p>
+                <p style="color: var(--muted);">Try adjusting your search filters</p>
                 <a href="{% url 'contest_list' %}" class="btn btn-outline-primary">Clear Filters</a>
             {% else %}
-                <p class="text-muted">No contests are available at the moment</p>
+                <p style="color: var(--muted);">No contests are available at the moment</p>
                 {% if user.is_staff %}
                     <a href="{% url 'create_contest' %}" class="btn btn-primary">Create First Contest</a>
                 {% endif %}
@@ -234,26 +205,4 @@
         </div>
     {% endif %}
 </div>
-
-<style>
-.text-sm {
-    font-size: 0.875rem;
-}
-
-.card {
-    transition: transform 0.2s ease-in-out;
-}
-
-.card:hover {
-    transform: translateY(-2px);
-}
-
-.badge {
-    font-size: 0.75rem;
-}
-
-.btn-sm {
-    font-size: 0.8rem;
-}
-</style>
 {% endblock %}

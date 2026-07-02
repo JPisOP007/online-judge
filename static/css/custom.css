@@ -1,53 +1,32 @@
-:root {
-    --primary-color: #2c3e50;
-    --secondary-color: #3498db;
-    --success-color: #27ae60;
-    --danger-color: #e74c3c;
+/* custom.css - Kept for legacy compatibility if needed. Neo-Brutalist styles are defined in base.html */
+
+/* Helper classes if needed */
+.difficulty-easy {
+  background-color: var(--success);
+  color: #000;
+  border: 2px solid var(--border);
+  padding: 4px 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.85rem;
 }
 
-body {
-    background-color: #f8f9fa;
-    color: #2c3e50;
+.difficulty-medium {
+  background-color: var(--accent-yellow);
+  color: var(--primary);
+  border: 2px solid var(--border);
+  padding: 4px 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.85rem;
 }
 
-.navbar {
-    background-color: var(--primary-color) !important;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.btn-primary {
-    background-color: var(--secondary-color);
-    border-color: var(--secondary-color);
-}
-
-.btn-primary:hover {
-    background-color: #2980b9;
-    border-color: #2980b9;
-}
-
-.code-block {
-    font-family: 'Fira Code', monospace;
-    font-size: 0.9rem;
-    line-height: 1.6;
-    border-radius: 8px;
-}
-
-.badge-difficulty-easy {
-  background-color: #198754 !important;  
-  color: white !important;
-}
-
-.badge-difficulty-medium {
-  background-color: #ffc107 !important; 
-  color: #212529 !important;             
-}
-
-.badge-difficulty-hard {
-  background-color: #dc3545 !important;  
-  color: white !important;
-}
-
-.badge-difficulty-other {
-  background-color: #6c757d !important;  
-  color: white !important;
+.difficulty-hard {
+  background-color: var(--accent-pink);
+  color: #fff;
+  border: 2px solid var(--border);
+  padding: 4px 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.85rem;
 }

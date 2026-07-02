@@ -5,24 +5,24 @@
 {% block title %}{{ contest.title }} - Problems{% endblock %}
 
 {% block content %}
-<div class="card-section">
+<div class="card-section mb-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2 class="card-title mb-0">{{ contest.title }}</h2>
+            <h2 class="card-title mb-0" style="font-family: var(--font-heading); text-transform: uppercase;">{{ contest.title }}</h2>
             <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{% url 'contest_list' %}">Contests</a></li>
-                    <li class="breadcrumb-item"><a href="{% url 'contest_detail' contest.uuid %}">{{ contest.title }}</a></li>
-                    <li class="breadcrumb-item active">Problems</li>
+                <ol class="breadcrumb" style="font-family: var(--font-heading); text-transform: uppercase; font-size: 0.85rem; margin-top: 0.5rem; background: transparent; padding: 0;">
+                    <li class="breadcrumb-item"><a href="{% url 'contest_list' %}" style="color: var(--primary); font-weight: 700; text-decoration: none;">Contests</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'contest_detail' contest.uuid %}" style="color: var(--primary); font-weight: 700; text-decoration: none;">{{ contest.title }}</a></li>
+                    <li class="breadcrumb-item active" style="font-weight: 700;">Problems</li>
                 </ol>
             </nav>
         </div>
         
         <div class="d-flex gap-2">
             {% if contest.is_running %}
-                <span class="badge bg-success">Contest Running</span>
+                <span style="background: var(--success); color: #000; border: 2px solid var(--border); padding: 4px 10px; font-weight: 700; text-transform: uppercase; font-size: 0.85rem;">Contest Running</span>
             {% else %}
-                <span class="badge bg-secondary">Contest Ended</span>
+                <span style="background: var(--bg); color: var(--muted); border: 2px solid var(--border); padding: 4px 10px; font-weight: 700; text-transform: uppercase; font-size: 0.85rem;">Contest Ended</span>
             {% endif %}
         </div>
     </div>
@@ -44,236 +44,146 @@
     </ul>
 
     <!-- Problems List -->
-    <div class="table-responsive">
-        <table class="table table-hover">
-            <thead class="table-light">
-                <tr>
-                    <th style="width: 5%">#</th>
-                    <th style="width: 45%">Problem</th>
-                    <th style="width: 15%">Points</th>
-                    <th style="width: 20%">Status</th>
-                    <th style="width: 15%">Submissions</th>
+    <div class="table-responsive" style="border: 2px solid var(--border); box-shadow: var(--shadow-sm); background: var(--bg);">
+        <table class="table table-hover mb-0">
+            <thead style="background: var(--accent-yellow);">
+                <tr style="border-bottom: 2px solid var(--border);">
+                    <th style="width: 5%; font-family: var(--font-heading); text-transform: uppercase;">#</th>
+                    <th style="width: 45%; font-family: var(--font-heading); text-transform: uppercase;">Problem</th>
+                    <th style="width: 15%; font-family: var(--font-heading); text-transform: uppercase;">Points</th>
+                    <th style="width: 20%; font-family: var(--font-heading); text-transform: uppercase;">Status</th>
+                    <th style="width: 15%; font-family: var(--font-heading); text-transform: uppercase;">Submissions</th>
                 </tr>
             </thead>
             <tbody>
                 {% for contest_problem in contest_problems %}
-                <tr>
-                    <td class="text-center">
-                        <strong>{{ contest_problem.order }}</strong>
+                <tr style="border-bottom: 1px solid var(--border);">
+                    <td class="text-center" style="font-family: 'Space Mono', monospace; font-weight: 700; vertical-align: middle;">
+                        {{ contest_problem.order }}
                     </td>
-                    <td>
+                    <td style="vertical-align: middle;">
                         <a href="{% url 'contest_problem_detail' contest.uuid contest_problem.problem.uuid %}" 
-                           class="text-decoration-none">
-                            <strong>{{ contest_problem.problem.title }}</strong>
+                           class="text-decoration-none" style="color: var(--primary); font-weight: 700; font-size: 1.1rem;">
+                            {{ contest_problem.problem.title }}
                         </a>
                         
                         {% if contest_problem.problem.tags %}
-                        <div class="mt-1">
+                        <div class="mt-1 d-flex flex-wrap gap-1">
                             {% for tag in contest_problem.problem.tags|split:"," %}
-                            <span class="badge bg-light text-dark me-1">{{ tag.strip }}</span>
+                            <span style="font-size: 0.75rem; border: 1px solid var(--border); background: #fff; padding: 2px 6px;">{{ tag.strip }}</span>
                             {% endfor %}
                         </div>
                         {% endif %}
                     </td>
-                    <td>
-                        <span class="badge bg-primary">{{ contest_problem.points }} pts</span>
+                    <td style="vertical-align: middle;">
+                        <span style="background: var(--accent-yellow); color: var(--primary); border: 2px solid var(--border); padding: 4px 8px; font-weight: 700; font-family: 'Space Mono', monospace; font-size: 0.85rem;">{{ contest_problem.points }} pts</span>
                     </td>
-                    <td>
+                    <td style="vertical-align: middle;">
                         {% with user_submissions|default_if_none:''|get_item:contest_problem.problem.uuid as submissions %}
                             {% if submissions %}
                                 {% with submissions|first as latest_submission %}
                                     {% if latest_submission.verdict == 'AC' %}
-                                        <span class="badge bg-success">
-                                            <i class="bi bi-check-circle me-1"></i>Accepted
-                                        </span>
+                                        <span class="badge bg-success" style="border: 2px solid var(--border);"><i class="bi bi-check-circle me-1"></i>Accepted</span>
                                     {% elif latest_submission.verdict == 'WA' %}
-                                        <span class="badge bg-danger">
-                                            <i class="bi bi-x-circle me-1"></i>Wrong Answer
-                                        </span>
+                                        <span class="badge bg-warning text-dark" style="border: 2px solid var(--border);"><i class="bi bi-x-circle me-1"></i>Wrong Answer</span>
                                     {% elif latest_submission.verdict == 'TLE' %}
-                                        <span class="badge bg-warning">
-                                            <i class="bi bi-clock me-1"></i>Time Limit
-                                        </span>
+                                        <span class="badge bg-info text-dark" style="border: 2px solid var(--border);"><i class="bi bi-clock me-1"></i>Time Limit</span>
                                     {% elif latest_submission.verdict == 'RE' %}
-                                        <span class="badge bg-danger">
-                                            <i class="bi bi-exclamation-triangle me-1"></i>Runtime Error
-                                        </span>
+                                        <span class="badge bg-danger" style="border: 2px solid var(--border);"><i class="bi bi-exclamation-triangle me-1"></i>Runtime Error</span>
                                     {% elif latest_submission.verdict == 'CE' %}
-                                        <span class="badge bg-warning">
-                                            <i class="bi bi-gear me-1"></i>Compile Error
-                                        </span>
+                                        <span class="badge bg-warning text-dark" style="border: 2px solid var(--border);"><i class="bi bi-gear me-1"></i>Compile Error</span>
                                     {% elif latest_submission.verdict == 'MLE' %}
-                                        <span class="badge bg-warning">
-                                            <i class="bi bi-memory me-1"></i>Memory Limit
-                                        </span>
+                                        <span class="badge bg-warning text-dark" style="border: 2px solid var(--border);"><i class="bi bi-memory me-1"></i>Memory Limit</span>
                                     {% elif latest_submission.verdict == 'PE' %}
-                                        <span class="badge bg-warning">
-                                            <i class="bi bi-file-text me-1"></i>Presentation Error
-                                        </span>
+                                        <span class="badge bg-warning text-dark" style="border: 2px solid var(--border);"><i class="bi bi-file-text me-1"></i>Presentation Error</span>
                                     {% elif latest_submission.verdict == 'OLE' %}
-                                        <span class="badge bg-warning">
-                                            <i class="bi bi-file-text me-1"></i>Output Limit
-                                        </span>
+                                        <span class="badge bg-warning text-dark" style="border: 2px solid var(--border);"><i class="bi bi-file-text me-1"></i>Output Limit</span>
                                     {% elif latest_submission.verdict == 'IE' %}
-                                        <span class="badge bg-secondary">
-                                            <i class="bi bi-exclamation-triangle me-1"></i>Internal Error
-                                        </span>
+                                        <span class="badge bg-secondary" style="border: 2px solid var(--border);"><i class="bi bi-exclamation-triangle me-1"></i>Internal Error</span>
                                     {% else %}
-                                        <span class="badge bg-secondary">
-                                            {{ latest_submission.verdict }}
-                                        </span>
+                                        <span class="badge bg-secondary" style="border: 2px solid var(--border);">{{ latest_submission.verdict }}</span>
                                     {% endif %}
                                 {% endwith %}
                             {% else %}
-                                <span class="badge bg-light text-dark">
+                                <span class="badge bg-light text-dark" style="border: 2px solid var(--border);">
                                     <i class="bi bi-dash-circle me-1"></i>Not Attempted
                                 </span>
                             {% endif %}
                         {% endwith %}
                     </td>
-                    <td>
+                    <td style="vertical-align: middle;">
                         {% with user_submissions|default_if_none:''|get_item:contest_problem.problem.uuid as submissions %}
                             {% if submissions %}
-                                <span class="text-muted">{{ submissions|length }} submission{{ submissions|length|pluralize }}</span>
+                                <span class="text-muted fw-bold" style="font-family: 'Space Mono', monospace;">{{ submissions|length }}</span> <span class="text-muted" style="font-size: 0.85rem;">submission{{ submissions|length|pluralize }}</span>
                             {% else %}
-                                <span class="text-muted">0 submissions</span>
+                                <span class="text-muted fw-bold" style="font-family: 'Space Mono', monospace;">0</span> <span class="text-muted" style="font-size: 0.85rem;">submissions</span>
                             {% endif %}
                         {% endwith %}
                     </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="5" class="text-center py-4">
-                        <i class="bi bi-inbox text-muted" style="font-size: 2rem;"></i>
-                        <p class="text-muted mt-2">No problems in this contest yet.</p>
+                    <td colspan="5" class="text-center py-5" style="background: var(--bg);">
+                        <i class="bi bi-inbox" style="font-size: 3rem; color: var(--muted);"></i>
+                        <p style="color: var(--muted); margin-top: 1rem; font-family: var(--font-heading); text-transform: uppercase;">No problems in this contest yet.</p>
                     </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
+</div>
 
-    <!-- Contest Status Info -->
-    <div class="row mt-4">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Contest Information</h5>
-                    <div class="row">
-                        <div class="col-6">
-                            <strong>Start Time:</strong><br>
-                            <small>{{ contest.start_time|date:"M d, Y H:i" }}</small>
-                        </div>
-                        <div class="col-6">
-                            <strong>End Time:</strong><br>
-                            <small>{{ contest.end_time|date:"M d, Y H:i" }}</small>
-                        </div>
-                    </div>
+<!-- Contest Status Info -->
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card-section h-100">
+            <h5 style="font-family: var(--font-heading); text-transform: uppercase; margin-bottom: 1rem; border-bottom: 2px solid var(--border); padding-bottom: 8px;">Contest Information</h5>
+            <div class="row">
+                <div class="col-6">
+                    <strong style="text-transform: uppercase; font-size: 0.85rem;">Start Time:</strong><br>
+                    <span style="font-family: 'Space Mono', monospace; font-size: 0.9rem;">{{ contest.start_time|date:"M d, Y H:i" }}</span>
                 </div>
-            </div>
-        </div>
-        
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Your Progress</h5>
-                    <div class="row">
-                        <div class="col-6">
-                            <strong>Problems Solved:</strong><br>
-                            <span class="text-success">
-                                {{ progress_stats.accepted_problems }} / {{ progress_stats.total_problems }}
-                            </span>
-                        </div>
-                        <div class="col-6">
-                            <strong>Total Submissions:</strong><br>
-                            <span class="text-primary">{{ progress_stats.total_submissions }}</span>
-                        </div>
-                    </div>
-                    
-                    <!-- Progress bar -->
-                    {% if progress_stats.total_problems > 0 %}
-                    <div class="mt-3">
-                        <div class="d-flex justify-content-between small mb-1">
-                            <span>Progress</span>
-                            <span>{{ progress_stats.accepted_problems }}/{{ progress_stats.total_problems }}</span>
-                        </div>
-                        <div class="progress" style="height: 8px;">
-                            {% widthratio progress_stats.accepted_problems progress_stats.total_problems 100 as progress_percentage %}
-                            <div class="progress-bar bg-success progress-bar-dynamic" 
-                                 role="progressbar"
-                                 data-width="{{ progress_percentage }}"
-                                 aria-valuenow="{{ progress_stats.accepted_problems }}" 
-                                 aria-valuemin="0" 
-                                 aria-valuemax="{{ progress_stats.total_problems }}">
-                            </div>
-                        </div>
-                    </div>
-                    {% endif %}
+                <div class="col-6">
+                    <strong style="text-transform: uppercase; font-size: 0.85rem;">End Time:</strong><br>
+                    <span style="font-family: 'Space Mono', monospace; font-size: 0.9rem;">{{ contest.end_time|date:"M d, Y H:i" }}</span>
                 </div>
             </div>
         </div>
     </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="card-section h-100">
+            <h5 style="font-family: var(--font-heading); text-transform: uppercase; margin-bottom: 1rem; border-bottom: 2px solid var(--border); padding-bottom: 8px;">Your Progress</h5>
+            <div class="row mb-3">
+                <div class="col-6">
+                    <strong style="text-transform: uppercase; font-size: 0.85rem;">Problems Solved:</strong><br>
+                    <span style="font-family: 'Space Mono', monospace; font-size: 1.1rem; font-weight: 700; color: var(--success);">
+                        {{ progress_stats.accepted_problems }} / {{ progress_stats.total_problems }}
+                    </span>
+                </div>
+                <div class="col-6">
+                    <strong style="text-transform: uppercase; font-size: 0.85rem;">Total Submissions:</strong><br>
+                    <span style="font-family: 'Space Mono', monospace; font-size: 1.1rem; font-weight: 700; color: var(--accent-blue);">
+                        {{ progress_stats.total_submissions }}
+                    </span>
+                </div>
+            </div>
+            
+            <!-- Progress bar -->
+            {% if progress_stats.total_problems > 0 %}
+            <div>
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span style="text-transform: uppercase; font-size: 0.75rem; font-weight: 700;">Progress</span>
+                    <span style="font-family: 'Space Mono', monospace; font-size: 0.75rem; font-weight: 700;">{{ progress_stats.accepted_problems }}/{{ progress_stats.total_problems }}</span>
+                </div>
+                <div style="height: 16px; background: #fff; border: 2px solid var(--border); box-shadow: 2px 2px 0px #000;">
+                    {% widthratio progress_stats.accepted_problems progress_stats.total_problems 100 as progress_percentage %}
+                    <div style="height: 100%; background: var(--success); width: {{ progress_percentage }}%; transition: width 0.6s ease; border-right: 2px solid var(--border);"></div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
 </div>
-
-<style>
-/* Additional styles for better problem status display */
-.badge {
-    font-size: 0.75em;
-    padding: 0.375em 0.75em;
-}
-
-.table-hover tbody tr:hover {
-    background-color: rgba(0, 0, 0, 0.02);
-}
-
-.breadcrumb {
-    margin-bottom: 0;
-    background-color: transparent;
-    padding: 0;
-}
-
-.nav-tabs .nav-link.active {
-    font-weight: 600;
-}
-
-.card {
-    border: none;
-    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-}
-
-.table th {
-    border-top: none;
-    font-weight: 600;
-    color: #495057;
-}
-
-.bi {
-    vertical-align: -0.125em;
-}
-
-.progress {
-    background-color: #e9ecef;
-    border-radius: 0.25rem;
-}
-
-.progress-bar {
-    transition: width 0.6s ease;
-}
-
-/* Dynamic progress bar styling */
-.progress-bar-dynamic {
-    width: 0%;
-}
-</style>
-
-<script>
-// Set progress bar width dynamically to avoid CSS parsing issues
-document.addEventListener('DOMContentLoaded', function() {
-    const progressBar = document.querySelector('.progress-bar-dynamic');
-    if (progressBar) {
-        const width = progressBar.getAttribute('data-width');
-        progressBar.style.width = width + '%';
-    }
-});
-</script>
 {% endblock %}

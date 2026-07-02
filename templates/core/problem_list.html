@@ -1,27 +1,27 @@
 {% extends 'core/base.html' %}
-{% block title %}Problems - MyOJ{% endblock %}
+{% block title %}Problems — MyOJ{% endblock %}
 {% block content %}
-<div class="container mt-5">
-  <h1 class="mb-4 fw-semibold">All Problems</h1>
+<div class="container mt-4">
+  <h1 style="font-family: var(--font-heading); text-transform: uppercase; font-size: 2rem; margin-bottom: 1.5rem; border-bottom: var(--border-w) solid var(--border); padding-bottom: 0.75rem;">All Problems</h1>
   {% if problem_data %}
-    <div class="list-group">
+    <div>
       {% for item in problem_data %}
         {% with problem=item.problem tags=item.tags %}
-        <div class="list-group-item d-flex justify-content-between align-items-center py-4 px-4 border-bottom">
+        <div style="border: var(--border-w) solid var(--border); background: var(--surface); padding: 1.25rem 1.5rem; margin-bottom: -3px; display: flex; justify-content: space-between; align-items: center; box-shadow: {% cycle '3px 3px 0px #000' '3px 3px 0px var(--accent-yellow)' %}; transition: transform 0.1s ease, box-shadow 0.1s ease;" onmouseover="this.style.transform='translate(-2px,-2px)'; this.style.boxShadow='5px 5px 0px #000';" onmouseout="this.style.transform='none'; this.style.boxShadow='3px 3px 0px #000';">
           <!-- Left Side: Problem Title and Tags -->
           <div class="flex-grow-1">
-            <h5 class="mb-2 text-dark">{{ problem.title }}</h5>
+            <h5 style="font-family: var(--font-heading); font-weight: 700; margin-bottom: 0.5rem; font-size: 1rem;">{{ problem.title }}</h5>
             {% if tags %}
               <div>
                 {% for tag in tags %}
-                  <span class="badge bg-light text-dark border me-1">{{ tag }}</span>
+                  <span style="background: var(--bg); border: 2px solid var(--border); padding: 2px 8px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin-right: 4px; display: inline-block; margin-bottom: 4px;">{{ tag }}</span>
                 {% endfor %}
               </div>
             {% endif %}
           </div>
           <!-- Right Side: Difficulty and View Button -->
-          <div class="d-flex align-items-center">
-            <span class="difficulty-{{ problem.difficulty|lower }} me-3">
+          <div class="d-flex align-items-center" style="gap: 12px;">
+            <span class="difficulty-{{ problem.difficulty|lower }}">
               {{ problem.get_difficulty_display }}
             </span>
             {% if problem.uuid %}
@@ -29,7 +29,7 @@
                 View
               </a>
             {% else %}
-              <span class="text-muted">No UUID</span>
+              <span style="color: var(--muted);">No UUID</span>
             {% endif %}
           </div>
         </div>

@@ -106,23 +106,24 @@
 {% block extra_css %}
 <style>
   .announcement-card {
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    background: white;
-    transition: box-shadow 0.2s ease;
+    border: var(--border-w) solid var(--border);
+    background: var(--surface);
+    box-shadow: var(--shadow-sm);
+    transition: transform var(--transition), box-shadow var(--transition);
   }
   
   .announcement-card:hover {
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transform: translate(-2px, -2px);
+    box-shadow: 5px 5px 0px #000;
   }
   
   .announcement-card.border-warning {
-    border-left: 4px solid #ffc107;
+    border-left: 6px solid var(--accent-yellow);
   }
   
   .card-header {
-    background-color: rgba(var(--primary-color), 0.05);
-    border-bottom: 1px solid var(--border-color);
+    background-color: var(--bg);
+    border-bottom: 2px solid var(--border);
     padding: 1rem;
   }
   

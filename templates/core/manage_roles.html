@@ -1,46 +1,42 @@
 {% extends 'core/base.html' %}
-{% block title %}Manage User Roles - MyOJ{% endblock %}
+{% block title %}Manage User Roles — MyOJ{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-  <div class="card shadow">
-    <div class="card-header bg-primary text-white">
-      <h2 class="mb-0">User Role Management</h2>
-    </div>
-    <div class="card-body">
-      <form method="post" class="table-responsive">
-        {% csrf_token %}
-        <table class="table table-hover table-bordered align-middle">
-          <thead class="table-light">
-            <tr>
-              <th scope="col">Username</th>
-              <th scope="col">Email</th>
-              <th scope="col">Current Role</th>
-              <th scope="col">Change Role</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for user in users %}
-            <tr>
-              <td>{{ user.username }}</td>
-              <td>{{ user.email }}</td>
-              <td>{{ user.userprofile.role|capfirst }}</td>
-              <td>
-                <select name="role_{{ user.id }}" class="form-select">
-                  <option value="participant" {% if user.userprofile.role == 'participant' %}selected{% endif %}>Participant</option>
-                  <option value="setter" {% if user.userprofile.role == 'setter' %}selected{% endif %}>Problem Setter</option>
-                  <option value="admin" {% if user.userprofile.role == 'admin' %}selected{% endif %}>Admin</option>
-                </select>
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-        <div class="text-end mt-3">
-          <button type="submit" class="btn btn-primary px-4">Update Roles</button>
-        </div>
-      </form>
-    </div>
+<div class="container mt-4">
+  <div class="card-section">
+    <h2 style="font-family: var(--font-heading); text-transform: uppercase; margin-bottom: 1.5rem; border-bottom: var(--border-w) solid var(--border); padding-bottom: 0.75rem;">User Role Management</h2>
+    <form method="post" class="table-responsive">
+      {% csrf_token %}
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Current Role</th>
+            <th>Change Role</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for user in users %}
+          <tr>
+            <td style="font-weight: 700;">{{ user.username }}</td>
+            <td>{{ user.email }}</td>
+            <td>{{ user.userprofile.role|capfirst }}</td>
+            <td>
+              <select name="role_{{ user.id }}" class="form-select" style="max-width: 200px;">
+                <option value="participant" {% if user.userprofile.role == 'participant' %}selected{% endif %}>Participant</option>
+                <option value="setter" {% if user.userprofile.role == 'setter' %}selected{% endif %}>Problem Setter</option>
+                <option value="admin" {% if user.userprofile.role == 'admin' %}selected{% endif %}>Admin</option>
+              </select>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <div class="text-end mt-3">
+        <button type="submit" class="btn btn-primary px-4">Update Roles</button>
+      </div>
+    </form>
   </div>
 </div>
 {% endblock %}
