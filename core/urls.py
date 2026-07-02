@@ -17,7 +17,7 @@ urlpatterns = [
     # User Management and Profile
     path('manage-roles/', views.manage_roles, name='manage_roles'),
     path('profile/', views.profile_view, name='profile'),
-    path('submission/<int:submission_id>/', views.submission_detail, name='submission_detail'),
+    path('submission/<str:submission_id>/', views.submission_detail, name='submission_detail'),
     
     # Contest Management
     path('contests/', views.contest_list, name='contest_list'),  
@@ -28,8 +28,8 @@ urlpatterns = [
   # Contest announcements
     path('contest/<uuid:contest_uuid>/announcements/', views.contest_announcements, name='contest_announcements'),
     path('contest/<uuid:contest_uuid>/announcements/create/', views.create_announcement, name='create_announcement'),
-    path('contest/<uuid:contest_uuid>/announcements/<int:announcement_id>/edit/', views.edit_announcement, name='edit_announcement'),
-    path('contest/<uuid:contest_uuid>/announcements/<int:announcement_id>/delete/', views.delete_announcement, name='delete_announcement'),
+    path('contest/<uuid:contest_uuid>/announcements/<str:announcement_id>/edit/', views.edit_announcement, name='edit_announcement'),
+    path('contest/<uuid:contest_uuid>/announcements/<str:announcement_id>/delete/', views.delete_announcement, name='delete_announcement'),
     # Contest Administration (Staff Only)
     path('create-contest/', views.create_contest, name='create_contest'),  
     path('contest/<uuid:contest_uuid>/edit/', views.edit_contest, name='edit_contest'),  
