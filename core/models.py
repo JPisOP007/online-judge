@@ -45,7 +45,9 @@ class AdminSettings(models.Model):
     @classmethod
     def get_settings(cls):
         """Get or create admin settings"""
-        settings, created = cls.objects.get_or_create(pk=1)
+        settings = cls.objects.first()
+        if not settings:
+            settings = cls.objects.create()
         return settings
 
 class Problem(models.Model):

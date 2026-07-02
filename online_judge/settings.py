@@ -147,6 +147,7 @@ TEMPLATES = [
 
 # === DATABASE ===
 import os
+import certifi
 
 # MongoDB configuration (django-mongodb-backend >= 6.0.x)
 DATABASES = {
