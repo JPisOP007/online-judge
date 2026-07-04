@@ -21,8 +21,7 @@ def generate_code_review(code):
         }
     
     try:
-        from groq import Groq
-        client = Groq(api_key=settings.GROQ_API_KEY)
+        import requests
         
         prompt = f"""
 You are an AI code reviewer. Review the following code and provide feedback in EXACTLY this JSON format (no additional text before or after):
@@ -39,19 +38,28 @@ Code to review:
 
 Return ONLY the JSON object, no other text.
 """
-
-        response = client.chat.completions.create(
-            messages=[{"role": "user", "content": prompt}],
-            model="llama-3.3-70b-versatile",
-            temperature=0.7,
-            max_tokens=1000
-        )
         
-        if not response or not response.choices:
+        url = "https://api.groq.com/openai/v1/chat/completions"
+        headers = {
+            "Authorization": f"Bearer {settings.GROQ_API_KEY}",
+            "Content-Type": "application/json"
+        }
+        data = {
+            "model": "llama-3.3-70b-versatile",
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": 0.7,
+            "max_tokens": 1000
+        }
+        
+        response = requests.post(url, headers=headers, json=data, timeout=30)
+        response.raise_for_status()
+        
+        result_json = response.json()
+        if not result_json.get('choices'):
             raise ValueError("Empty response from AI model")
         
         # Clean the response text
-        response_text = response.choices[0].message.content.strip()
+        response_text = result_json['choices'][0]['message']['content'].strip()
         
         # Try to extract JSON from the response
         json_match = re.search(r'\{.*\}', response_text, re.DOTALL)
