@@ -1,7 +1,9 @@
 from django import forms
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
-from .models import UserProfile, Problem
+from django.utils import timezone
+from datetime import timedelta
+from .models import UserProfile, Problem, Contest, ContestAnnouncement
 from .utils.file_validators import validate_image_file
 import re
 
@@ -161,28 +163,10 @@ class UserProfileForm(forms.ModelForm):
             profile.save()
         return profile
 
+
 # -------------------------------
-# Form: Contest thingies
+# Form: Contest Forms
 # -------------------------------
-
-
-from django import forms
-from django.utils import timezone
-from .models import Contest, ContestAnnouncement, Problem
-
-from django import forms
-from django.utils import timezone
-from datetime import timedelta
-from .models import Contest, ContestAnnouncement, Problem
-
-from django import forms
-from django.utils import timezone
-from datetime import timedelta
-from .models import Contest, ContestAnnouncement, Problem
-
-from django import forms
-from django.utils import timezone
-from .models import Contest, Problem
 
 class ContestForm(forms.ModelForm):
     problems = forms.ModelMultipleChoiceField(
@@ -332,7 +316,7 @@ class ContestRegistrationForm(forms.Form):
         help_text="Enter password if required"
     )
 
-class ContestAnnouncementForm(forms.ModelForm):
+class AnnouncementForm(forms.ModelForm):
     class Meta:
         model = ContestAnnouncement
         fields = ['title', 'content', 'is_important']
@@ -342,33 +326,3 @@ class ContestAnnouncementForm(forms.ModelForm):
             'is_important': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
 
-
-
-from django import forms
-from .models import ContestAnnouncement
-
-class AnnouncementForm(forms.ModelForm):
-    class Meta:
-        model = ContestAnnouncement
-        fields = ['title', 'content', 'is_important']
-        widgets = {
-            'title': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Enter announcement title...',
-                'maxlength': 200
-            }),
-            'content': forms.Textarea(attrs={
-                'class': 'form-control',
-                'placeholder': 'Enter announcement content...',
-                'rows': 5
-            }),
-            'is_important': forms.CheckboxInput(attrs={
-                'class': 'form-check-input'
-            })
-        }
-        
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['title'].help_text = 'Brief title for the announcement'
-        self.fields['content'].help_text = 'Detailed announcement content (supports basic HTML)'
-        self.fields['is_important'].help_text = 'Mark as important to highlight this announcement'

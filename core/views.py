@@ -871,7 +871,7 @@ def contest_problem_detail(request, contest_uuid, problem_uuid):
                 
                 if sample_input and sample_output:
                     try:
-                        result = execute_code(language, code, sample_input, sample_output)
+                        result = secure_execute_code(language, code, sample_input, sample_output)
                         context.update({
                             'output': result.get('output', '') or result.get('error', 'No output'),
                             'verdict': result.get('verdict', 'IE'),
@@ -1170,45 +1170,6 @@ def contest_timer_api(request, contest_uuid):
         time_data['time_until_start'] = int(contest.time_until_start.total_seconds())
     
     return JsonResponse(time_data)
-from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib.auth.decorators import login_required
-from django.contrib.admin.views.decorators import staff_member_required
-from django.contrib import messages
-from django.utils import timezone
-from django.http import JsonResponse
-from django.conf import settings
-
-from .forms import AnnouncementForm
-from .models import ContestAnnouncement, Contest
-
-
-def get_feedback_message(verdict):
-    feedback_messages = {
-        'AC': '🎉 Accepted! Your solution is correct.',
-        'WA': '❌ Wrong Answer. Your output doesn\'t match the expected output.',
-        'TLE': '⏱️ Time Limit Exceeded. Your solution took too long to execute.',
-        'MLE': '💾 Memory Limit Exceeded. Your solution used too much memory.',
-        'CE': '🔧 Compilation Error. There are syntax errors in your code.',
-        'RE': '💥 Runtime Error. Your program crashed during execution.',
-        'PE': '📝 Presentation Error. Your output format is incorrect.',
-        'OLE': '📤 Output Limit Exceeded. Your program produced too much output.',
-        'IE': '🔧 Internal Error. Please try again later.',
-        'SE': '🚨 System Error. Please contact support.',
-    }
-    return feedback_messages.get(verdict, f'Unknown verdict: {verdict}')
-
-
-def get_default_context(contest, problem, contest_problem, form, user_submissions=None):
-    return {
-        'contest': contest,
-        'problem': problem,
-        'contest_problem': contest_problem,
-        'form': form,
-        'output': '',
-        'verdict': '',
-        'feedback_message': '',
-        'user_submissions': user_submissions or [],
-    }
 
 
 @staff_member_required
@@ -1269,17 +1230,4 @@ def delete_announcement(request, contest_uuid, announcement_id):
     return render(request, 'core/delete_announcement.html', {
         'contest': contest,
         'announcement': announcement,
-    })
-
-
-@login_required
-def contest_announcements(request, contest_uuid):
-    contest = get_object_or_404(Contest, uuid=contest_uuid)
-    announcements = contest.announcements.all().order_by('-created_at')
-    can_manage = request.user.is_staff or (hasattr(contest, 'created_by') and contest.created_by == request.user)
-
-    return render(request, 'core/contest_announcements.html', {
-        'contest': contest,
-        'announcements': announcements,
-        'can_manage': can_manage,
     })

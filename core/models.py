@@ -2,6 +2,7 @@ from django.contrib.auth.models import User
 from django.db import models
 import uuid
 from django.utils import timezone
+from django.core.exceptions import ValidationError
 from .utils.file_validators import validate_image_file, get_upload_path
 
 
@@ -106,13 +107,6 @@ class Solution(models.Model):
 
 
 
-import uuid
-from django.db import models
-from django.contrib.auth.models import User
-from django.utils import timezone
-from django.core.exceptions import ValidationError
-from django.utils import timezone
-
 
 
 class Contest(models.Model):
@@ -166,6 +160,7 @@ class Contest(models.Model):
     
     @property
     def status(self):
+        """Get current contest status with proper timezone handling"""
         now = timezone.now()
         if now < self.start_time:
             return 'upcoming'
@@ -185,33 +180,6 @@ class Contest(models.Model):
     @property
     def is_upcoming(self):
         return self.status == 'upcoming'
-    
-    @property
-    def time_remaining(self):
-        if self.is_running:
-            return self.end_time - timezone.now()
-        return None
-    
-    @property
-    def time_until_start(self):
-        if self.is_upcoming:
-            return self.start_time - timezone.now()
-        return None
-    
-    @property
-    def status(self):
-        """Get current contest status with proper timezone handling"""
-        now = timezone.now()
-        print(f"[DEBUG] Current time: {now}")
-        print(f"[DEBUG] Contest start: {self.start_time}")
-        print(f"[DEBUG] Contest end: {self.end_time}")
-        
-        if now < self.start_time:
-            return 'upcoming'
-        elif now <= self.end_time:
-            return 'running'
-        else:
-            return 'ended'
     
     @property
     def time_remaining(self):
