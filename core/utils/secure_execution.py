@@ -148,6 +148,16 @@ def validate_code_security(code, language):
         is_safe, violations = analyze_python_code_security(code)
         if not is_safe:
             return False, "Security violations detected: " + "; ".join(violations)
+    else:
+        # Basic check for other languages
+        suspicious_patterns = [
+            'system(', 'popen(', 'exec(', 'ProcessBuilder', 'Runtime.getRuntime',
+            'fork(', 'execvp(', 'execve(', 'syscall('
+        ]
+        code_lower = code.lower()
+        for pattern in suspicious_patterns:
+            if pattern.lower() in code_lower:
+                return False, f"Suspicious pattern detected: {pattern}"
     
     return True, "Code validation passed"
 
@@ -171,26 +181,27 @@ def set_resource_limits():
 
 def find_compiler(compiler_name):
     """Find the full path of a compiler/interpreter"""
+    if compiler_name in ['python', 'python3']:
+        import sys
+        return sys.executable
+        
+    path = shutil.which(compiler_name)
+    if path:
+        return path
+    
     if IS_WINDOWS:
-        allowed_compilers = {
-            'python3': ['python', 'python3'],
-            'python': ['python', 'python3'],
-        }
-    else:
-        allowed_compilers = {
-            'python3': ['/usr/bin/python3'],
-            'python': ['/usr/bin/python3', '/usr/bin/python'],
-        }
-    
-    if compiler_name not in allowed_compilers:
         return None
+        
+    common_paths = [
+        f'/usr/bin/{compiler_name}',
+        f'/bin/{compiler_name}',
+        f'/usr/local/bin/{compiler_name}',
+        f'/opt/bin/{compiler_name}'
+    ]
     
-    for path in allowed_compilers[compiler_name]:
-        if IS_WINDOWS:
+    for path in common_paths:
+        if os.path.isfile(path) and os.access(path, os.X_OK):
             return path
-        else:
-            if os.path.isfile(path) and os.access(path, os.X_OK):
-                return path
     
     return None
 
@@ -267,7 +278,7 @@ except Exception as e:
 
 def execute_python_secure(code, input_data, expected_output, temp_dir):
     """Securely execute Python code"""
-    python_path = find_compiler('python3')
+    python_path = find_compiler('python3') or find_compiler('python')
     if not python_path:
         return {'verdict': 'CE', 'error': 'Python interpreter not found'}
     
@@ -279,6 +290,59 @@ def execute_python_secure(code, input_data, expected_output, temp_dir):
         f.write(restricted_code)
     
     return run_with_limits([python_path, filepath], input_data, expected_output, temp_dir)
+
+def execute_cpp_secure(code, input_data, expected_output, temp_dir):
+    gpp_path = find_compiler('g++')
+    if not gpp_path:
+        return {'verdict': 'CE', 'error': 'g++ compiler not found'}
+    
+    filepath = os.path.join(temp_dir, 'main.cpp')
+    with open(filepath, 'w', encoding='utf-8') as f:
+        f.write(code)
+    
+    exe_path = os.path.join(temp_dir, 'main.exe' if IS_WINDOWS else 'main.out')
+    compile_cmd = [gpp_path, filepath, '-o', exe_path]
+    
+    try:
+        compile_proc = subprocess.run(compile_cmd, capture_output=True, text=True, timeout=10)
+        if compile_proc.returncode != 0:
+            return {'verdict': 'CE', 'error': compile_proc.stderr or "Compilation failed"}
+    except subprocess.TimeoutExpired:
+        return {'verdict': 'CE', 'error': 'Compilation timed out'}
+    
+    return run_with_limits([exe_path], input_data, expected_output, temp_dir)
+
+def execute_java_secure(code, input_data, expected_output, temp_dir):
+    javac_path = find_compiler('javac')
+    java_path = find_compiler('java')
+    if not javac_path or not java_path:
+        return {'verdict': 'CE', 'error': 'Java JDK not found'}
+    
+    filepath = os.path.join(temp_dir, 'Main.java')
+    with open(filepath, 'w', encoding='utf-8') as f:
+        f.write(code)
+    
+    compile_cmd = [javac_path, filepath]
+    
+    try:
+        compile_proc = subprocess.run(compile_cmd, cwd=temp_dir, capture_output=True, text=True, timeout=10)
+        if compile_proc.returncode != 0:
+            return {'verdict': 'CE', 'error': compile_proc.stderr or "Compilation failed"}
+    except subprocess.TimeoutExpired:
+        return {'verdict': 'CE', 'error': 'Compilation timed out'}
+    
+    return run_with_limits([java_path, '-cp', temp_dir, 'Main'], input_data, expected_output, temp_dir)
+
+def execute_javascript_secure(code, input_data, expected_output, temp_dir):
+    node_path = find_compiler('node') or find_compiler('nodejs')
+    if not node_path:
+        return {'verdict': 'CE', 'error': 'Node.js not found'}
+    
+    filepath = os.path.join(temp_dir, 'main.js')
+    with open(filepath, 'w', encoding='utf-8') as f:
+        f.write(code)
+    
+    return run_with_limits([node_path, filepath], input_data, expected_output, temp_dir)
 
 def run_with_limits(cmd, input_data, expected_output, temp_dir):
     """Run command with limits"""
@@ -361,6 +425,12 @@ def secure_execute_code(language, code, input_data, expected_output):
         try:
             if language == 'python':
                 return execute_python_secure(code, input_data, expected_output, temp_dir)
+            elif language == 'cpp':
+                return execute_cpp_secure(code, input_data, expected_output, temp_dir)
+            elif language == 'java':
+                return execute_java_secure(code, input_data, expected_output, temp_dir)
+            elif language == 'javascript':
+                return execute_javascript_secure(code, input_data, expected_output, temp_dir)
             else:
                 return {'verdict': 'CE', 'error': f'Unsupported language: {language}'}
         finally:
