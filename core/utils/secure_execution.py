@@ -162,10 +162,25 @@ def validate_code_security(code, language):
     return True, "Code validation passed"
 
 def create_secure_temp_directory():
-    """Create a secure temporary directory"""
-    temp_dir = tempfile.mkdtemp(prefix='secure_exec_')
-    os.chmod(temp_dir, 0o700)
+    """Create a secure temporary directory for execution"""
+    # Use /sandbox if it exists (Docker environment), otherwise use system temp
+    base_dir = '/sandbox' if os.path.exists('/sandbox') else None
+    temp_dir = tempfile.mkdtemp(prefix='secure_exec_', dir=base_dir)
+    
+    # Allow sandboxuser to read/execute from this directory
+    os.chmod(temp_dir, 0o777)
     return temp_dir
+
+def has_sandbox_user():
+    """Check if sandboxuser exists on the system"""
+    if IS_WINDOWS:
+        return False
+    try:
+        import pwd
+        pwd.getpwnam('sandboxuser')
+        return True
+    except (ImportError, KeyError):
+        return False
 
 def set_resource_limits():
     """Set resource limits (Unix only)"""
@@ -348,6 +363,17 @@ def run_with_limits(cmd, input_data, expected_output, temp_dir):
     """Run command with limits"""
     start_time = time.time()
     
+    # OS-level user isolation for true security
+    if has_sandbox_user():
+        # Make files readable/executable for sandboxuser
+        for root, dirs, files in os.walk(temp_dir):
+            for d in dirs:
+                os.chmod(os.path.join(root, d), 0o777)
+            for f in files:
+                os.chmod(os.path.join(root, f), 0o777)
+        # Prefix the command with sudo to run as the isolated user
+        cmd = ['sudo', '-n', '-u', 'sandboxuser'] + cmd
+
     try:
         # Create subprocess
         if IS_WINDOWS:

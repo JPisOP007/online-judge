@@ -1,8 +1,5 @@
 FROM python:3.13-slim
 
-# Create non-root user for security
-RUN groupadd -r appuser && useradd -r -g appuser -m appuser
-
 # Install system packages with security updates
 RUN apt-get update && apt-get install -y \
     g++ \
@@ -12,9 +9,19 @@ RUN apt-get update && apt-get install -y \
     gcc \
     libmagic1 \
     libmagic-dev \
+    sudo \
     && apt-get upgrade -y \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
+
+# Create non-root user for security
+RUN groupadd -r appuser && useradd -r -g appuser -m appuser
+
+# Create isolated sandbox user
+RUN groupadd -r sandboxuser && useradd -r -g sandboxuser -m sandboxuser
+
+# Allow appuser to run commands as sandboxuser without password
+RUN echo "appuser ALL=(sandboxuser) NOPASSWD: ALL" >> /etc/sudoers
 
 # Security environment variables
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -36,10 +43,13 @@ COPY . .
 # Create necessary directories with proper permissions
 RUN mkdir -p /app/media/profile_photos \
     && mkdir -p /app/staticfiles \
-    && mkdir -p /app/tmp \
     && chown -R appuser:appuser /app \
-    && chmod -R 755 /app \
-    && chmod 700 /app/tmp
+    && chmod -R 700 /app
+
+# Create completely isolated sandbox directory
+RUN mkdir -p /sandbox \
+    && chown -R sandboxuser:sandboxuser /sandbox \
+    && chmod -R 777 /sandbox
 
 # Collect static files
 RUN python manage.py collectstatic --noinput

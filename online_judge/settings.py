@@ -27,8 +27,15 @@ else:
     AI_FEATURES_ENABLED = False
 
 # === SECURITY ===
-SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-unsafe-default-key')
 DEBUG = os.getenv('DEBUG', 'True').lower() in ('true', '1', 'yes')  # Default to True for local development
+
+if DEBUG:
+    SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-unsafe-default-key')
+else:
+    SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
+    if not SECRET_KEY:
+        from django.core.exceptions import ImproperlyConfigured
+        raise ImproperlyConfigured("DJANGO_SECRET_KEY environment variable is required in production (DEBUG=False).")
 ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', 'myoj.work.gd,localhost,127.0.0.1,testserver').split(',')
 
 # Auto-add Render hostname
