@@ -4,6 +4,6 @@ __pycache__/
 *.pyd
 *.sqlite3
 .env
-static/
+/staticfiles/
 media/
 /credentials/gemini-service-key.json
