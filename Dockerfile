@@ -54,11 +54,17 @@ RUN mkdir -p /sandbox \
 # Collect static files
 RUN python manage.py collectstatic --noinput
 
-# Set security limits in the container
+# Enforce OS-level resource limits (PAM limits) to prevent fork bombs
 RUN echo "appuser soft nproc 100" >> /etc/security/limits.conf \
     && echo "appuser hard nproc 200" >> /etc/security/limits.conf \
     && echo "appuser soft nofile 1024" >> /etc/security/limits.conf \
-    && echo "appuser hard nofile 2048" >> /etc/security/limits.conf
+    && echo "appuser hard nofile 2048" >> /etc/security/limits.conf \
+    && echo "sandboxuser soft nproc 30" >> /etc/security/limits.conf \
+    && echo "sandboxuser hard nproc 50" >> /etc/security/limits.conf \
+    && echo "sandboxuser soft nofile 512" >> /etc/security/limits.conf \
+    && echo "sandboxuser hard nofile 1024" >> /etc/security/limits.conf
+
+# Use gunicorn with security settings
 
 # Switch to non-root user
 USER appuser

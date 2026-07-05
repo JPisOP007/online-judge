@@ -190,7 +190,7 @@ def set_resource_limits():
             resource.setrlimit(resource.RLIMIT_AS, (memory_limit, memory_limit))
             resource.setrlimit(resource.RLIMIT_CPU, (MAX_EXECUTION_TIME, MAX_EXECUTION_TIME))
             resource.setrlimit(resource.RLIMIT_FSIZE, (MAX_FILE_SIZE, MAX_FILE_SIZE))
-            resource.setrlimit(resource.RLIMIT_NPROC, (1, 1))
+            resource.setrlimit(resource.RLIMIT_NPROC, (15, 15))
         except (OSError, ValueError):
             pass
 
