@@ -1,134 +1,37 @@
-# Enhancements Summary
+# 🛠️ API & Architecture Enhancements
 
-## What was added
+This document highlights the recent architectural enhancements made to the Online Judge backend to ensure it is production-ready, well-documented, and easily integrable with external frontend clients.
 
-### 1. **Environment Variable Management (.env)**
-- Created `.env` (git-ignored) for local development secrets
-- Created `.env.example` as template for team/deployment
-- Updated `docker-compose.yml` to use `${GROQ_API_KEY}` and `${DJANGO_SECRET_KEY}` from environment
+## 1. Environment Configuration & Secrets Management
 
-**Usage:**
-```bash
-# Set variables before running:
-$env:GROQ_API_KEY="your-groq-key"
-$env:DJANGO_SECRET_KEY="your-secret"
-docker-compose up -d
-```
+To adhere to Twelve-Factor App principles, all configuration and secrets have been decoupled from the codebase:
+- **`.env` Integration:** The application utilizes `python-dotenv` to load secrets from a local `.env` file (which is `git-ignored`).
+- **Dynamic Configuration:** Variables such as `DJANGO_SECRET_KEY`, `MONGODB_URI`, `GROQ_API_KEY`, and `CORS_ALLOWED_ORIGINS` are dynamically loaded at runtime.
+- **Docker Integration:** The `docker-compose.yml` file is configured to pass through environment variables to the containers, ensuring that secrets are never baked into Docker images.
 
-### 2. **Swagger/OpenAPI Documentation**
-- Installed `drf-spectacular>=0.27.1`
-- Auto-generates OpenAPI 3.0 schema from your API
-- Added interactive Swagger UI and ReDoc documentation
+## 2. Interactive API Documentation (OpenAPI/Swagger)
 
-**Access:**
-- Schema: `http://localhost:8000/api/schema/`
-- Swagger UI: `http://localhost:8000/api/schema/swagger-ui/`
-- ReDoc: `http://localhost:8000/api/schema/redoc/`
+To facilitate frontend integration and third-party API usage, we have integrated `drf-spectacular` to automatically generate OpenAPI 3.0 schemas.
 
-**Benefits:**
-- Auto-sync documentation with code (no manual updates)
-- Interactive API explorer
-- Automatic request/response examples
-- Export as OpenAPI JSON for client generators
+- **Auto-Syncing:** The documentation is generated directly from the Django REST Framework serializers and views, ensuring it never goes out of date.
+- **Interactive UI:** Available at `/api/schema/swagger-ui/`, developers can authenticate via JWT and test endpoints directly from the browser.
+- **ReDoc Support:** An alternative, clean reading view is available at `/api/schema/redoc/`.
 
-### 3. **CORS Support**
-- Installed `django-cors-headers>=4.4.0`
-- Configured for local frontend development
-- Supports environment-based origins configuration
+## 3. Cross-Origin Resource Sharing (CORS)
 
-**Configuration:**
-```python
-CORS_ALLOWED_ORIGINS = [
-    'http://localhost:3000',      # React/Vue frontend
-    'http://myapp.local:3000',    # Custom hostname
-]
-CORS_ALLOW_CREDENTIALS = True     # For session auth
-```
+To support decoupled frontend architectures (e.g., React, Vue, or Next.js applications hosted on different domains), we have implemented strict but flexible CORS policies.
 
-**Benefits:**
-- Frontend on different port/domain can call API
-- Browser no longer blocks cross-origin requests
-- Ready for React, Vue, Angular, etc.
+- **`django-cors-headers` Integration:** Configured to intercept and validate preflight requests.
+- **Environment-Based Origins:** Allowed origins are not hardcoded. They are read from the `CORS_ALLOWED_ORIGINS` environment variable, allowing different rules for development, staging, and production environments.
+- **Credential Support:** `CORS_ALLOW_CREDENTIALS` is enabled to support cookie-based sessions if JWT is not used.
 
-## Files Changed
+## 4. Scalable Media & Static File Serving
 
-1. **[requirements.txt](requirements.txt)**
-   - Added `drf-spectacular>=0.27.1`
-   - Added `django-cors-headers>=4.4.0`
+- **WhiteNoise Integration:** Static files (CSS, JS, Admin UI assets) are collected and served directly by the Gunicorn application using WhiteNoise, complete with compression and far-future caching headers.
+- **Cloudinary Storage:** Media files (like User Profile Photos) can be automatically uploaded to and served from Cloudinary CDN by setting the `CLOUDINARY_URL` variable, bypassing the need for shared persistent volumes across container replicas.
 
-2. **[online_judge/settings.py](online_judge/settings.py)**
-   - Added `corsheaders` and `drf_spectacular` to `INSTALLED_APPS`
-   - Added `CorsMiddleware` after WhiteNoise middleware
-   - Configured `DEFAULT_SCHEMA_CLASS` for DRF
-   - Added `CORS_ALLOWED_ORIGINS` and `CORS_ALLOW_CREDENTIALS`
-
-3. **[online_judge/urls.py](online_judge/urls.py)**
-   - Added `/api/schema/` endpoint (OpenAPI schema JSON)
-   - Added `/api/schema/swagger-ui/` endpoint (interactive docs)
-   - Added `/api/schema/redoc/` endpoint (alternative docs)
-
-4. **[docker-compose.yml](docker-compose.yml)**
-   - Changed hardcoded `GROQ_API_KEY` to `${GROQ_API_KEY}`
-   - Changed hardcoded `DJANGO_SECRET_KEY` to `${DJANGO_SECRET_KEY}`
-   - Removed obsolete `version: '3.9'` key
-
-5. **[.env](.env)** (new)
-   ```
-   DJANGO_SECRET_KEY=dev-secret-change-me
-   DEBUG=1
-   GROQ_API_KEY=
-   CORS_ALLOWED_ORIGINS=http://localhost:3000,http://myapp.local:3000
-   ```
-
-6. **[.env.example](.env.example)** (new)
-   - Template for setting up environment on new machine
-
-## Quick Start
-
-### Local Development
-```bash
-# Copy env example
-cp .env.example .env
-
-# Edit .env with your values
-# GROQ_API_KEY=your-key-here
-# DJANGO_SECRET_KEY=your-secret
-
-# Or set in shell:
-$env:GROQ_API_KEY="your-key"
-$env:DJANGO_SECRET_KEY="your-secret"
-docker-compose up -d
-```
-
-### Test API with Swagger
-1. Open browser: `http://localhost:8000/api/schema/swagger-ui/`
-2. Click "Authorize" and login or get JWT token
-3. Try endpoints interactively
-
-### Connect Frontend
-```javascript
-// React/Vue frontend on localhost:3000
-const API = 'http://localhost:8000/api';
-fetch(`${API}/problems/`)
-  .then(r => r.json())
-  .then(data => console.log(data));
-```
-
-## Verification
-
-✅ **Environment warnings gone** - No more hardcoded secret messages  
-✅ **Docker builds cleanly** - 144.7s clean rebuild  
-✅ **API starts successfully** - System checks pass, 0 issues  
-✅ **Swagger docs ready** - Auto-generated OpenAPI schema active  
-✅ **CORS configured** - Frontend can now call API  
-
-## Next Steps (Optional)
-
-1. **Push to production:** Set environment variables in deployment
-2. **Frontend integration:** Connect React/Vue app to `http://api.yourdomain.com`
-3. **Generate SDK:** Use OpenAPI spec to auto-generate JavaScript/Python/TypeScript client
-4. **Add Rate Limit Headers:** Already in place (100/hr anon, 1000/hr auth)
-
----
-
-*All changes complete. API ready for frontend integration!*
+## Next Steps for Frontend Integrators
+If you are building a frontend for this platform:
+1. Check the interactive Swagger UI at `/api/schema/swagger-ui/` for request/response payloads.
+2. Ensure your frontend domain is added to the `CORS_ALLOWED_ORIGINS` environment variable on the server.
+3. Authenticate using the `/api/auth/token/` endpoint and pass the resulting token in the `Authorization: Bearer <token>` header for subsequent requests.

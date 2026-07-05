@@ -1,174 +1,53 @@
-# Security Fixes Applied
+# 🛡️ Security Architecture & Validation
 
-## 🔒 Security Vulnerabilities Fixed
+This document details the security architecture of the Online Judge platform and the measures taken to safely execute untrusted code in a production environment.
 
-### 1. **Code Execution Security**
-- ✅ **Sandboxed Execution**: Created `secure_execution.py` with proper sandboxing
-- ✅ **Resource Limits**: Added CPU, memory, and time limits for code execution
-- ✅ **Input Validation**: Comprehensive code pattern validation to prevent injection
-- ✅ **Restricted Imports**: Blocked dangerous Python imports (os, subprocess, sys, etc.)
-- ✅ **File System Isolation**: Code runs in isolated temporary directories
-- ✅ **Process Limits**: Limited number of processes and file operations
+## 1. Code Execution Sandboxing
 
-### 2. **Container Security**
-- ✅ **Non-root User**: Docker container now runs as `appuser` instead of root
-- ✅ **Resource Limits**: Added container-level resource constraints
-- ✅ **Security Updates**: Updated base image and installed security patches
-- ✅ **File Permissions**: Proper file permissions for application directories
+Executing arbitrary user code requires extreme caution. Our sandbox utilizes a multi-layered defense strategy:
 
-### 3. **File Upload Security**
-- ✅ **File Type Validation**: Strict validation using python-magic for MIME type checking
-- ✅ **File Size Limits**: Maximum 5MB for profile photos
-- ✅ **Image Validation**: PIL-based image validation to prevent malicious files
-- ✅ **Secure File Paths**: User-specific directories with sanitized filenames
-- ✅ **Extension Validation**: Only allow specific image extensions
+### A. Python Static Analysis (AST Parsing)
+Before any Python code is executed, it is parsed into an Abstract Syntax Tree (AST). We employ a custom `SecurityVisitor` to statically block:
+- **Dangerous Imports:** Completely forbids importing modules like `os`, `subprocess`, `sys`, `socket`, `urllib`, etc.
+- **Dangerous Functions:** Blocks execution of functions like `eval()`, `exec()`, `compile()`, and `__import__()`.
+- **System Calls:** Prevents unauthorized file system or network access originating from user code.
 
-### 4. **Web Application Security**
-- ✅ **Security Headers**: Added comprehensive security headers
-- ✅ **Rate Limiting**: Implemented request rate limiting middleware
-- ✅ **CSRF Protection**: Enhanced CSRF token security
-- ✅ **XSS Prevention**: Content type and XSS filtering headers
-- ✅ **HTTPS Enforcement**: Proper SSL/TLS configuration
-- ✅ **Input Sanitization**: Form validation and input cleaning
+### B. OS-Level Resource Limitations
+To protect the host container from resource exhaustion (Denial of Service):
+- **Address Space (Memory):** Subprocesses are bounded using `resource.setrlimit(resource.RLIMIT_AS)`.
+- **Process Count (Fork Bombs):** Capped using `RLIMIT_NPROC` to prevent fork bombing.
+- **CPU Time:** Bound by strict execution timeouts (`RLIMIT_CPU`).
+- **File Output:** Maximum file output sizes are enforced to prevent disk-fill attacks.
 
-### 5. **Database Security**
-- ✅ **SQL Injection Prevention**: Using Django ORM with parameterized queries
-- ✅ **User Input Validation**: Comprehensive form validation
-- ✅ **Authentication Security**: Secure session management
+### C. Environment Scrubbing
+Before launching a subprocess for any language (Python, C++, Java, Node.js), the environment variables are explicitly wiped. The subprocess receives a clean, minimal environment (e.g., `{'PATH': '/usr/bin:/bin'}`). This ensures that application secrets (like `MONGODB_URI` and `DJANGO_SECRET_KEY`) injected into the container are never leaked to user-submitted code.
 
-## 🖼️ Profile Photo Issue Fixed
+## 2. Container Security
 
-### Problem
-- Profile photos were uploaded but not visible on the hosted site
-- Media files were not properly served by nginx
+The application runs in a hardened Docker environment:
+- **Non-Root Execution:** The Dockerfile explicitly creates and utilizes an `appuser` (UID 1000). The web server and code execution engines do not run as root.
+- **PAM Limits:** OS-level limits are hardcoded via `/etc/security/limits.conf` inside the container.
+- **Read-Only Considerations:** While the code needs to write to a temporary sandbox directory, access to the rest of the application filesystem is restricted by standard UNIX file permissions.
 
-### Solution
-- ✅ **Media Volume Mounting**: Proper Docker volume configuration
-- ✅ **Nginx Configuration**: Updated nginx to serve media files correctly
-- ✅ **File Permissions**: Fixed file and directory permissions
-- ✅ **Path Organization**: User-specific photo directories
-- ✅ **Management Command**: Created command to fix existing photos
+## 3. Web Application & API Security
 
-## 📁 Files Created/Modified
+- **Rate Limiting:** IP-based throttling is enforced via Django REST Framework (100 requests/hour for anonymous, 1000/hour for authenticated users) to prevent API abuse.
+- **JWT Authentication:** Secure access token generation with short lifespans (1 hour) and rotating refresh tokens (7 days).
+- **CORS Policies:** Cross-Origin Resource Sharing is strictly limited to allowed frontend domains specified in the environment variables.
+- **Security Headers:** The application enforces XSS filtering, content-type sniffing protection, and strict X-Frame-Options (`DENY`).
 
-### New Security Files
-1. `core/utils/secure_execution.py` - Sandboxed code execution
-2. `core/utils/file_validators.py` - File upload validation
-3. `core/middleware/security.py` - Security middleware
-4. `core/management/commands/fix_media_permissions.py` - Media fix command
+## 4. File Upload Validation
 
-### Modified Files
-1. `core/models.py` - Added secure file upload
-2. `core/forms.py` - Enhanced form validation
-3. `core/views.py` - Updated to use secure execution
-4. `online_judge/settings.py` - Security configurations
-5. `Dockerfile` - Security improvements
-6. `docker-compose.yml` - Volume and permission fixes
-7. `nginx/nginx.conf` - Media serving configuration
-8. `requirements.txt` - Added security dependencies
+To protect against malicious payloads disguised as profile photos:
+- **MIME Validation:** We use `python-magic` to inspect the actual file signature (magic bytes) rather than trusting the file extension.
+- **Image Integrity Checks:** Uploaded images are passed through the `Pillow` (PIL) library to verify they are structurally valid images.
+- **Size Restrictions:** Strict limits (max 5MB) on all media uploads.
 
-## 🚀 Deployment Instructions
+## 5. Known Threat Model Exclusions
 
-1. **Update Dependencies**:
-   ```bash
-   pip install python-magic Pillow
-   ```
+While the application is heavily fortified, it is important to acknowledge the limitations of a user-level sandbox in a PaaS environment:
+- **Container Escapes:** We rely on standard Docker isolation. We do not currently use hypervisor-level microVMs (like Firecracker).
+- **Network Exfiltration:** Because we run in unprivileged containers (lacking `CAP_NET_ADMIN`), we cannot create isolated network namespaces for subprocesses. Malicious C++/Java code could theoretically make outbound network requests.
+- **Side-Channel Attacks:** CPU-level vulnerabilities (e.g., Spectre) are not mitigated by this sandbox.
 
-2. **Run Migrations**:
-   ```bash
-   python manage.py makemigrations
-   python manage.py migrate
-   ```
-
-3. **Fix Media Permissions**:
-   ```bash
-   python manage.py fix_media_permissions
-   ```
-
-4. **Rebuild Docker Containers**:
-   ```bash
-   docker-compose down
-   docker-compose build
-   docker-compose up -d
-   ```
-
-5. **Or Use Deploy Script**:
-   ```bash
-   chmod +x deploy.sh
-   ./deploy.sh
-   ```
-
-## 🔍 Security Features Implemented
-
-### Code Execution Protection
-- **Pattern Blacklisting**: Blocks dangerous code patterns
-- **Resource Monitoring**: CPU, memory, and time limits
-- **Filesystem Isolation**: Temporary directories with restricted access
-- **Import Restrictions**: Prevents access to system modules
-- **Output Limiting**: Prevents output bombing attacks
-
-### File Upload Protection
-- **MIME Type Validation**: Real file type checking
-- **Image Processing**: PIL validation for image integrity
-- **Size Restrictions**: File size limits
-- **Path Sanitization**: Prevents directory traversal
-- **User Isolation**: Separate directories per user
-
-### Web Security
-- **Rate Limiting**: 100 requests per minute per IP
-- **Security Headers**: XSS, CSRF, clickjacking protection
-- **HTTPS Enforcement**: SSL/TLS security
-- **Input Validation**: Comprehensive form validation
-- **Session Security**: Secure cookie configuration
-
-## 🛡️ Security Monitoring
-
-### Logging
-- Security events are logged to `security.log`
-- Code execution attempts are monitored
-- Suspicious patterns are flagged
-
-### Rate Limiting
-- IP-based rate limiting
-- Configurable limits per endpoint
-- Automatic blocking of excessive requests
-
-### File Monitoring
-- Upload attempts are logged
-- File type mismatches are detected
-- Large file uploads are blocked
-
-## ⚠️ Important Notes
-
-1. **Profile Photos**: Existing photos will be reorganized into user-specific directories
-2. **Code Execution**: Some previously working code might be blocked due to security restrictions
-3. **Performance**: Security checks may add slight overhead to requests
-4. **Monitoring**: Check `security.log` for security-related events
-
-## 🔧 Configuration
-
-### Environment Variables
-- `DEBUG=False` for production
-- `ALLOWED_HOSTS` properly configured
-- `DJANGO_SECRET_KEY` set securely
-
-### File Permissions
-- Media directory: 755
-- Profile photos: 644
-- Application files: 755
-
-### Resource Limits
-- Code execution: 5 seconds, 128MB RAM
-- File uploads: 5MB maximum
-- Request size: 10MB maximum
-
-## 📞 Support
-
-If you encounter any issues after applying these security fixes:
-
-1. Check the `security.log` file for error details
-2. Verify file permissions in the media directory
-3. Ensure Docker volumes are properly mounted
-4. Check nginx configuration for media serving
-
-The security fixes provide comprehensive protection while maintaining functionality. Profile photos should now be visible and the application is significantly more secure against various attack vectors.
+*For any security reports or vulnerabilities, please contact the repository maintainer directly rather than opening a public issue.*

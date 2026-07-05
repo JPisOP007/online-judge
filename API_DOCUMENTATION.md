@@ -595,6 +595,6 @@ Import the OpenAPI/Swagger documentation or create requests manually.
 ## Versioning & Changes
 
 API version: **v1**
-Last updated: 2026-01-15
+Last updated: 2026-07-05
 
 For breaking changes or new features, check release notes.
