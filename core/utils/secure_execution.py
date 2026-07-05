@@ -166,21 +166,8 @@ def create_secure_temp_directory():
     # Use /sandbox if it exists (Docker environment), otherwise use system temp
     base_dir = '/sandbox' if os.path.exists('/sandbox') else None
     temp_dir = tempfile.mkdtemp(prefix='secure_exec_', dir=base_dir)
-    
-    # Allow sandboxuser to read/execute from this directory
-    os.chmod(temp_dir, 0o777)
+    os.chmod(temp_dir, 0o700)
     return temp_dir
-
-def has_sandbox_user():
-    """Check if sandboxuser exists on the system"""
-    if IS_WINDOWS:
-        return False
-    try:
-        import pwd
-        pwd.getpwnam('sandboxuser')
-        return True
-    except (ImportError, KeyError):
-        return False
 
 def set_resource_limits():
     """Set resource limits (Unix only)"""
@@ -363,16 +350,11 @@ def run_with_limits(cmd, input_data, expected_output, temp_dir):
     """Run command with limits"""
     start_time = time.time()
     
-    # OS-level user isolation for true security
-    if has_sandbox_user():
-        # Make files readable/executable for sandboxuser
-        for root, dirs, files in os.walk(temp_dir):
-            for d in dirs:
-                os.chmod(os.path.join(root, d), 0o777)
-            for f in files:
-                os.chmod(os.path.join(root, f), 0o777)
-        # Prefix the command with sudo to run as the isolated user
-        cmd = ['sudo', '-n', '-u', 'sandboxuser'] + cmd
+    # Environment scrubbing: we explicitly pass a highly restricted environment
+    # so the untrusted process does not inherit secrets (like MONGODB_URI)
+    secure_env = {
+        'PATH': os.environ.get('PATH', '/usr/local/bin:/usr/bin:/bin')
+    }
 
     try:
         # Create subprocess
@@ -383,7 +365,8 @@ def run_with_limits(cmd, input_data, expected_output, temp_dir):
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
-                cwd=temp_dir
+                cwd=temp_dir,
+                env=secure_env
             )
         else:
             process = subprocess.Popen(
@@ -393,6 +376,7 @@ def run_with_limits(cmd, input_data, expected_output, temp_dir):
                 stderr=subprocess.PIPE,
                 text=True,
                 cwd=temp_dir,
+                env=secure_env,
                 preexec_fn=set_resource_limits
             )
         
