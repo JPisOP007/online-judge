@@ -41,7 +41,7 @@ Return ONLY the JSON object, no other text.
         
         url = "https://api.groq.com/openai/v1/chat/completions"
         headers = {
-            "Authorization": f"Bearer {settings.GROQ_API_KEY}",
+            "Authorization": f"Bearer {str(settings.GROQ_API_KEY).strip()}",
             "Content-Type": "application/json"
         }
         data = {
