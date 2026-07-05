@@ -121,6 +121,8 @@ def analyze_python_code_security(code):
                 self.generic_visit(node)
             
             def visit_Attribute(self, node):
+                if node.attr.startswith('__') and node.attr.endswith('__'):
+                    self.violations.append(f"Access to dunder attributes is not allowed: {node.attr}")
                 if isinstance(node.value, ast.Name):
                     if node.value.id == '__builtins__' or node.value.id == 'builtins':
                         self.violations.append("Direct access to builtins is not allowed")
@@ -166,7 +168,8 @@ def create_secure_temp_directory():
     # Use /sandbox if it exists (Docker environment), otherwise use system temp
     base_dir = '/sandbox' if os.path.exists('/sandbox') else None
     temp_dir = tempfile.mkdtemp(prefix='secure_exec_', dir=base_dir)
-    os.chmod(temp_dir, 0o700)
+    # Give full permissions so sandboxuser can write to it
+    os.chmod(temp_dir, 0o777)
     return temp_dir
 
 def set_resource_limits():
@@ -369,8 +372,9 @@ def run_with_limits(cmd, input_data, expected_output, temp_dir):
                 env=secure_env
             )
         else:
+            sudo_cmd = ['sudo', '-n', '-u', 'sandboxuser'] + cmd
             process = subprocess.Popen(
-                cmd,
+                sudo_cmd,
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,

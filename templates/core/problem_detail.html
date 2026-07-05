@@ -253,8 +253,8 @@
 
   .submission-result-section {
     background: var(--surface) !important;
-    border: var(--border-w) solid var(--success) !important;
-    border-left: 6px solid var(--success) !important;
+    border: var(--border-w) solid var(--border) !important;
+    border-left: 6px solid var(--border) !important;
     padding: 1.5rem !important;
     margin-top: 2rem !important;
     box-shadow: var(--shadow-sm) !important;
@@ -265,14 +265,27 @@
     display: block !important;
   }
 
+  .submission-result-section.verdict-AC {
+    border-color: var(--success) !important;
+  }
+  .submission-result-section.verdict-AC h5 {
+    color: var(--success) !important;
+  }
+
+  .submission-result-section.verdict-WA, .submission-result-section.verdict-RE, .submission-result-section.verdict-TLE, .submission-result-section.verdict-CE {
+    border-color: var(--accent-red) !important;
+  }
+  .submission-result-section.verdict-WA h5, .submission-result-section.verdict-RE h5, .submission-result-section.verdict-TLE h5, .submission-result-section.verdict-CE h5 {
+    color: var(--accent-red) !important;
+  }
+
   .submission-result-section h5 {
     font-family: var(--font-heading) !important;
-    color: var(--success) !important;
     font-weight: 700 !important;
     margin-bottom: 1rem !important;
     display: flex !important;
     align-items: center !important;
-    gap: 8px !important;
+    gap: 12px !important;
     text-transform: uppercase !important;
   }
 
@@ -892,7 +905,6 @@ function showSuccess(message) {
 }
 
 // Run Code Function (test with sample input only - NO VERDICT)
-// Run Code Function (test with sample input only - NO VERDICT)
 async function runCode() {
   const runBtn = document.getElementById('run-btn');
   const runSection = document.getElementById('run-output-section');
@@ -935,17 +947,20 @@ async function runCode() {
       // Show output
       runContent.textContent = data.output || data.stdout || 'No output';
       
-      // Show status (EXECUTION STATUS ONLY - NOT VERDICT)
-      if (data.error || data.stderr) {
-        runStatus.className = 'run-status error';
-        runStatus.innerHTML = '<i class="bi bi-exclamation-triangle-fill"></i> Execution Error';
-        if (data.stderr) {
-          runContent.textContent = data.stderr;
-        }
-      } else {
-        runStatus.className = 'run-status success';
-        runStatus.innerHTML = '<i class="bi bi-check-circle-fill"></i> Code Executed Successfully';
-      }
+      // Show status (EXECUTION STATUS & VERDICT)
+        if (data.error || data.stderr) {
+          runStatus.className = 'run-status error';
+          runStatus.innerHTML = '<i class="bi bi-exclamation-triangle-fill"></i> Execution Error';
+          if (data.stderr) {
+            runContent.textContent = data.stderr;
+          }
+        } else if (data.verdict && data.verdict !== 'AC') {
+          runStatus.className = 'run-status error';
+          runStatus.innerHTML = `<i class="bi bi-x-circle-fill"></i> ${data.feedback_message || 'Wrong Answer'}`;
+        } else {
+          runStatus.className = 'run-status success';
+          runStatus.innerHTML = '<i class="bi bi-check-circle-fill"></i> Sample Test Passed';
+        };
       
       // Show the run section
       runSection.classList.add('show');
@@ -1008,77 +1023,21 @@ async function submitSolution() {
     if (response.ok) {
       const data = await response.json();
       
-      // Show detailed output/feedback
-      let outputText = '';
-      if (data.output) {
-        outputText = data.output;
-      } else if (data.feedback_message) {
-        outputText = data.feedback_message;
-      } else if (data.feedback) {
-        outputText = data.feedback;
-      } else if (data.error) {
-        outputText = data.error;
-      } else {
-        outputText = 'Submission processed';
+      // Handle Asynchronous submission
+      if (data.status === 'Pending') {
+        submissionContent.textContent = data.feedback_message || 'Submission queued for evaluation...';
+        verdictBadge.className = 'verdict-badge';
+        verdictBadge.innerHTML = '<i class="bi bi-arrow-repeat" style="animation: spin 2s linear infinite;"></i> EVALUATING...';
+        submissionSection.classList.add('show');
+        submissionSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        
+        // Start polling
+        pollSubmissionStatus(data.solution_id);
+        return; // Do not hide loading state yet
       }
       
-      submissionContent.textContent = outputText;
-      
-      // Show verdict badge with proper styling
-      const verdict = data.verdict || 'Unknown';
-      verdictBadge.className = `verdict-badge verdict-${verdict}`;
-      
-      let verdictIcon = '';
-      let verdictText = verdict.toUpperCase();
-      
-      switch (verdict.toUpperCase()) {
-        case 'AC':
-        case 'ACCEPTED':
-          verdictIcon = '<i class="bi bi-check-circle-fill"></i>';
-          verdictText = 'ACCEPTED';
-          verdictBadge.className = 'verdict-badge verdict-AC';
-          break;
-        case 'WA':
-        case 'WRONG_ANSWER':
-          verdictIcon = '<i class="bi bi-x-circle-fill"></i>';
-          verdictText = 'WRONG ANSWER';
-          verdictBadge.className = 'verdict-badge verdict-WA';
-          break;
-        case 'TLE':
-        case 'TIME_LIMIT_EXCEEDED':
-          verdictIcon = '<i class="bi bi-clock-fill"></i>';
-          verdictText = 'TIME LIMIT EXCEEDED';
-          verdictBadge.className = 'verdict-badge verdict-TLE';
-          break;
-        case 'RE':
-        case 'RUNTIME_ERROR':
-          verdictIcon = '<i class="bi bi-exclamation-triangle-fill"></i>';
-          verdictText = 'RUNTIME ERROR';
-          verdictBadge.className = 'verdict-badge verdict-RE';
-          break;
-        case 'CE':
-        case 'COMPILATION_ERROR':
-          verdictIcon = '<i class="bi bi-bug-fill"></i>';
-          verdictText = 'COMPILATION ERROR';
-          verdictBadge.className = 'verdict-badge verdict-CE';
-          break;
-        default:
-          verdictIcon = '<i class="bi bi-question-circle-fill"></i>';
-          verdictText = verdict.toUpperCase();
-      }
-      
-      verdictBadge.innerHTML = `${verdictIcon} ${verdictText}`;
-      
-      // Show the submission section
-      submissionSection.classList.add('show');
-      submissionSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      
-      // Show success/error message
-      if (verdict.toUpperCase() === 'AC' || verdict.toUpperCase() === 'ACCEPTED') {
-        showSuccess('Solution accepted! Great job!');
-      } else {
-        showError(`Submission failed: ${verdictText}`);
-      }
+      // Fallback for synchronous results (if any)
+      displaySubmissionResult(data);
       
     } else {
       const errorData = await response.json();
@@ -1092,10 +1051,151 @@ async function submitSolution() {
     } else {
       showError(`Failed to submit solution: ${error.message}`);
     }
-  } finally {
     hideLoadingState();
   }
 }
+
+// Helper to display submission result
+function displaySubmissionResult(data) {
+  const submissionSection = document.getElementById('submission-result-section');
+  const submissionContent = document.getElementById('submission-output-content');
+  const verdictBadge = document.getElementById('verdict-badge');
+  const aiSection = document.getElementById('ai-review-section');
+  const aiContent = document.getElementById('ai-review-content');
+  
+  // Show detailed output/feedback
+  let outputText = '';
+  if (data.output) {
+    outputText = data.output;
+  } else if (data.feedback_message) {
+    outputText = data.feedback_message;
+  } else if (data.error) {
+    outputText = data.error;
+  } else {
+    outputText = 'Submission processed';
+  }
+  
+  submissionContent.textContent = outputText;
+  
+  // Show verdict badge with proper styling
+  const verdict = data.verdict || 'Unknown';
+  verdictBadge.className = `verdict-badge verdict-${verdict}`;
+  
+  let verdictIcon = '';
+  let verdictText = verdict.toUpperCase();
+  
+  switch (verdict.toUpperCase()) {
+    case 'AC':
+    case 'ACCEPTED':
+      verdictIcon = '<i class="bi bi-check-circle-fill"></i>';
+      verdictText = 'ACCEPTED';
+      verdictBadge.className = 'verdict-badge verdict-AC';
+      break;
+    case 'WA':
+    case 'WRONG_ANSWER':
+      verdictIcon = '<i class="bi bi-x-circle-fill"></i>';
+      verdictText = 'WRONG ANSWER';
+      verdictBadge.className = 'verdict-badge verdict-WA';
+      break;
+    case 'TLE':
+    case 'TIME_LIMIT_EXCEEDED':
+      verdictIcon = '<i class="bi bi-clock-fill"></i>';
+      verdictText = 'TIME LIMIT EXCEEDED';
+      verdictBadge.className = 'verdict-badge verdict-TLE';
+      break;
+    case 'RE':
+    case 'RUNTIME_ERROR':
+      verdictIcon = '<i class="bi bi-exclamation-triangle-fill"></i>';
+      verdictText = 'RUNTIME ERROR';
+      verdictBadge.className = 'verdict-badge verdict-RE';
+      break;
+    case 'CE':
+    case 'COMPILATION_ERROR':
+      verdictIcon = '<i class="bi bi-bug-fill"></i>';
+      verdictText = 'COMPILATION ERROR';
+      verdictBadge.className = 'verdict-badge verdict-CE';
+      break;
+    default:
+      verdictIcon = '<i class="bi bi-question-circle-fill"></i>';
+      verdictText = verdict.toUpperCase();
+  }
+  
+  verdictBadge.innerHTML = `${verdictIcon} ${verdictText}`;
+  
+  // Show the submission section and update border color based on verdict
+  submissionSection.className = `submission-result-section show verdict-${verdict}`;
+  
+  const sectionTitleIcon = submissionSection.querySelector('h5 i');
+  if (verdict.toUpperCase() === 'AC' || verdict.toUpperCase() === 'ACCEPTED') {
+    sectionTitleIcon.className = 'bi bi-check-circle';
+  } else {
+    sectionTitleIcon.className = 'bi bi-x-circle';
+  }
+  
+  // Show success/error message
+  if (verdict.toUpperCase() === 'AC' || verdict.toUpperCase() === 'ACCEPTED') {
+    showSuccess('Solution accepted! Great job!');
+  } else {
+    showError(`Submission failed: ${verdictText}`);
+  }
+  
+  // Display AI feedback if provided
+  // Display AI feedback if provided
+  if (data.ai_feedback) {
+      if (typeof data.ai_feedback === 'object') {
+        const review = data.ai_feedback;
+        aiContent.innerHTML = `
+          <div class="ai-review-structured">
+            <div class="review-section">
+              <h6><i class="bi bi-gear-fill text-primary"></i> Logic & Correctness</h6>
+              <p>${review.logic || 'No feedback available'}</p>
+            </div>
+            <div class="review-section">
+              <h6><i class="bi bi-speedometer2 text-success"></i> Efficiency & Performance</h6>
+              <p>${review.efficiency || 'No feedback available'}</p>
+            </div>
+            <div class="review-section">
+              <h6><i class="bi bi-eye-fill text-info"></i> Code Clarity & Readability</h6>
+              <p>${review.clarity || 'No feedback available'}</p>
+            </div>
+            <div class="review-section">
+              <h6><i class="bi bi-award-fill text-warning"></i> Best Practices</h6>
+              <p>${review.best_practices || 'No feedback available'}</p>
+            </div>
+          </div>
+        `;
+      } else {
+        aiContent.textContent = data.ai_feedback;
+      }
+      aiSection.classList.add('show');
+  }
+
+  hideLoadingState();
+}
+
+async function pollSubmissionStatus(solutionId) {
+  try {
+    const response = await fetch(`/api/submission/${solutionId}/status/`);
+    if (response.ok) {
+      const data = await response.json();
+      
+      if (data.status === 'Pending') {
+        // Continue polling every 2 seconds
+        setTimeout(() => pollSubmissionStatus(solutionId), 2000);
+      } else if (data.status === 'Evaluated') {
+        displaySubmissionResult(data);
+      } else {
+        showError('Unexpected status received from server.');
+        hideLoadingState();
+      }
+    } else {
+      showError('Failed to check submission status.');
+      hideLoadingState();
+    }
+  } catch (error) {
+    showError('Error connecting to server for status check.');
+    hideLoadingState();
+  }}
 
 // AI Review Function
 async function getAIReview() {

@@ -26,3 +26,6 @@ pymongo[srv]>=4.7.0
 requests
 cloudinary
 django-cloudinary-storage
+
+celery>=5.3.6
+redis>=5.0.1
