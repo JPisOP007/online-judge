@@ -57,7 +57,39 @@ def role_required(allowed_roles):
     return decorator
 
 def home(request):
-    return render(request, 'core/home.html')
+    now = timezone.now()
+    total_problems = Problem.objects.count()
+    active_contests = Contest.objects.filter(start_time__lte=now, end_time__gte=now).count()
+    total_users = User.objects.count()
+    total_contests = Contest.objects.count()
+    total_submissions = Solution.objects.count()
+    
+    # Leaderboard: top 4 users by distinct problems solved
+    top_users = User.objects.annotate(
+        solved=Count('solution__problem', filter=Q(solution__verdict='AC'), distinct=True)
+    ).filter(solved__gt=0).order_by('-solved')[:4]
+    
+    leaderboard = [{'username': u.username, 'solved': u.solved} for u in top_users]
+    
+    # Recent activity: top 5 recent AC submissions
+    recent_sols = Solution.objects.filter(verdict='AC').select_related('user', 'problem').order_by('-submitted_at')[:5]
+    recent_activity = [{'username': s.user.username, 'problem': s.problem.title, 'when': s.submitted_at} for s in recent_sols]
+        
+    context = {
+        'total_problems': total_problems,
+        'active_contests': active_contests,
+        'total_users': total_users,
+        'total_contests': total_contests,
+        'total_submissions': total_submissions,
+        'leaderboard': leaderboard,
+        'recent_activity': recent_activity,
+    }
+    
+    if request.user.is_authenticated:
+        user_solved = Solution.objects.filter(user=request.user, verdict='AC').values('problem').distinct().count()
+        context['user_solved'] = user_solved
+        
+    return render(request, 'core/home.html', context)
 
 def register(request):
     if request.method == 'POST':

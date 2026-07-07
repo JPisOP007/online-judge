@@ -7,7 +7,7 @@
     <div>
       {% for item in problem_data %}
         {% with problem=item.problem tags=item.tags %}
-        <div style="border: var(--border-w) solid var(--border); background: var(--surface); padding: 1.25rem 1.5rem; margin-bottom: -3px; display: flex; justify-content: space-between; align-items: center; box-shadow: {% cycle '3px 3px 0px #000' '3px 3px 0px var(--accent-yellow)' %}; transition: transform 0.1s ease, box-shadow 0.1s ease;" onmouseover="this.style.transform='translate(-2px,-2px)'; this.style.boxShadow='5px 5px 0px #000';" onmouseout="this.style.transform='none'; this.style.boxShadow='3px 3px 0px #000';">
+        <div style="border: var(--border-w) solid var(--border); border-radius: var(--radius-sm); background: var(--surface); padding: 1.25rem 1.5rem; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; box-shadow: {% cycle '3px 3px 0px #000' '3px 3px 0px var(--accent-yellow)' %}; transition: transform 0.1s ease, box-shadow 0.1s ease;" onmouseover="this.style.transform='translate(-2px,-2px)'; this.style.boxShadow='5px 5px 0px #000';" onmouseout="this.style.transform='none'; this.style.boxShadow='3px 3px 0px #000';">
           <!-- Left Side: Problem Title and Tags -->
           <div class="flex-grow-1">
             <h5 style="font-family: var(--font-heading); font-weight: 700; margin-bottom: 0.5rem; font-size: 1rem;">{{ problem.title }}</h5>

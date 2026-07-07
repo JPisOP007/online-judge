@@ -67,7 +67,7 @@
     background: transparent;
     color: #fff;
     border: var(--border-w) solid #fff;
-    box-shadow: 3px 3px 0px rgba(255,255,255,0.3);
+    box-shadow: 3px 3px 0px rgba(255, 255, 255, 0.3);
     padding: 14px 28px;
     font-weight: 700;
     font-size: 1rem;
@@ -83,7 +83,7 @@
     background: #fff;
     color: #000;
     transform: translate(2px, 2px);
-    box-shadow: 1px 1px 0px rgba(255,255,255,0.3);
+    box-shadow: 1px 1px 0px rgba(255, 255, 255, 0.3);
   }
 
   /* ---- WELCOME (logged in) ---- */
@@ -209,10 +209,23 @@
     flex-shrink: 0;
   }
 
-  .icon-problems { background: var(--accent-blue); color: #fff; }
-  .icon-contests { background: var(--accent-yellow); }
-  .icon-progress { background: var(--success); }
-  .icon-community { background: var(--accent-pink); color: #fff; }
+  .icon-problems {
+    background: var(--accent-blue);
+    color: #fff;
+  }
+
+  .icon-contests {
+    background: var(--accent-yellow);
+  }
+
+  .icon-progress {
+    background: var(--success);
+  }
+
+  .icon-community {
+    background: var(--accent-pink);
+    color: #fff;
+  }
 
   /* ---- STATS ---- */
   .stats-section {
@@ -315,7 +328,7 @@
 
   .leaderboard-item {
     background: rgba(255, 255, 255, 0.05);
-    border: 2px solid rgba(255,255,255,0.15);
+    border: 2px solid rgba(255, 255, 255, 0.15);
     padding: 1.25rem;
     margin-bottom: 0.75rem;
     display: flex;
@@ -341,14 +354,30 @@
     font-size: 0.9rem;
   }
 
-  .rank-1 { background: var(--accent-yellow); color: #000; }
-  .rank-2 { background: #C0C0C0; color: #000; }
-  .rank-3 { background: #CD7F32; color: #fff; }
-  .rank-other { background: #374151; color: white; border-color: #555; }
+  .rank-1 {
+    background: var(--accent-yellow);
+    color: #000;
+  }
+
+  .rank-2 {
+    background: #C0C0C0;
+    color: #000;
+  }
+
+  .rank-3 {
+    background: #CD7F32;
+    color: #fff;
+  }
+
+  .rank-other {
+    background: #374151;
+    color: white;
+    border-color: #555;
+  }
 
   .activity-card {
     background: rgba(255, 255, 255, 0.05);
-    border: 2px solid rgba(255,255,255,0.15);
+    border: 2px solid rgba(255, 255, 255, 0.15);
     border-left: 4px solid var(--accent-yellow);
     padding: 1.25rem;
     margin-bottom: 0.75rem;
@@ -385,7 +414,7 @@
     .hero-title {
       font-size: 2.5rem;
     }
-    
+
     .welcome-title {
       font-size: 1.5rem;
     }
@@ -394,16 +423,18 @@
       font-size: 1rem;
     }
 
-    .hero-cta, .cta-buttons {
+    .hero-cta,
+    .cta-buttons {
       flex-direction: column;
       align-items: stretch;
     }
-    
+
     .stats-number {
       font-size: 2rem;
     }
 
-    .dashboard-card, .feature-card {
+    .dashboard-card,
+    .feature-card {
       margin-bottom: 1.5rem;
     }
   }
@@ -420,7 +451,7 @@
       <div class="role-badge">
         <i class="bi bi-person-badge me-2"></i>{{ user.userprofile.role|title }}
       </div>
-      
+
       <div class="cta-buttons mt-4">
         <a href="{% url 'problem_list' %}" class="btn btn-hero btn-welcome-primary">
           <i class="bi bi-code-slash me-2"></i>Solve Problems
@@ -442,53 +473,53 @@
         <p style="color: var(--muted); font-weight: 500;">Track your progress and explore new challenges</p>
       </div>
     </div>
-    
+
     <div class="row g-4">
       <div class="col-lg-3 col-md-6">
         <div class="dashboard-card">
           <h3><span class="icon icon-problems"><i class="bi bi-puzzle"></i></span> Practice</h3>
           <p style="color: var(--muted);" class="mb-3">Solve algorithmic problems and improve your coding skills</p>
           <div class="d-flex justify-content-between align-items-center">
-            <span style="font-weight: 700; font-family: var(--font-heading);">{{ total_problems|default:"150+" }} Problems</span>
+            <span style="font-weight: 700; font-family: var(--font-heading);">{{ total_problems }} Problems</span>
             <a href="{% url 'problem_list' %}" class="btn btn-outline-primary btn-sm">
               <i class="bi bi-arrow-right"></i>
             </a>
           </div>
         </div>
       </div>
-      
+
       <div class="col-lg-3 col-md-6">
         <div class="dashboard-card">
           <h3><span class="icon icon-contests"><i class="bi bi-trophy"></i></span> Contests</h3>
           <p style="color: var(--muted);" class="mb-3">Participate in competitive programming contests</p>
           <div class="d-flex justify-content-between align-items-center">
-            <span style="font-weight: 700; font-family: var(--font-heading);">{{ active_contests|default:"View" }} Active</span>
+            <span style="font-weight: 700; font-family: var(--font-heading);">{{ active_contests }} Active</span>
             <a href="{% url 'contest_list' %}" class="btn btn-outline-warning btn-sm">
               <i class="bi bi-arrow-right"></i>
             </a>
           </div>
         </div>
       </div>
-      
+
       <div class="col-lg-3 col-md-6">
         <div class="dashboard-card">
           <h3><span class="icon icon-progress"><i class="bi bi-graph-up"></i></span> Progress</h3>
           <p style="color: var(--muted);" class="mb-3">View your submission history and statistics</p>
           <div class="d-flex justify-content-between align-items-center">
-            <span style="font-weight: 700; font-family: var(--font-heading);">{{ solve_rate|default:"View" }} Stats</span>
+            <span style="font-weight: 700; font-family: var(--font-heading);">{{ user_solved }} Solved</span>
             <a href="{% url 'profile' %}" class="btn btn-outline-success btn-sm">
               <i class="bi bi-arrow-right"></i>
             </a>
           </div>
         </div>
       </div>
-      
+
       <div class="col-lg-3 col-md-6">
         <div class="dashboard-card">
           <h3><span class="icon icon-community"><i class="bi bi-people"></i></span> Community</h3>
           <p style="color: var(--muted);" class="mb-3">Connect with other programmers and discuss solutions</p>
           <div class="d-flex justify-content-between align-items-center">
-            <span style="font-weight: 700; font-family: var(--font-heading);">{{ community_rank|default:"Top 20%" }}</span>
+            <span style="font-weight: 700; font-family: var(--font-heading);">{{ total_users }} Coders</span>
             <a href="#" class="btn btn-outline-primary btn-sm">
               <i class="bi bi-arrow-right"></i>
             </a>
@@ -504,8 +535,9 @@
 <section class="hero-section">
   <div class="container">
     <h1 class="hero-title">Master<br>Competitive<br><span class="highlight">Programming.</span></h1>
-    <p class="hero-subtitle">Practice algorithms, compete in contests, and level up your coding skills. No fluff, just code.</p>
-    
+    <p class="hero-subtitle">Practice algorithms, compete in contests, and level up your coding skills. No fluff, just
+      code.</p>
+
     <div class="hero-cta">
       <a href="{% url 'register' %}" class="btn-hero-primary">
         <i class="bi bi-person-plus me-2"></i>Get Started Free
@@ -523,26 +555,26 @@
     <div class="row g-4">
       <div class="col-md-3 col-sm-6">
         <div class="stats-card">
-          <div class="stats-number">150+</div>
+          <div class="stats-number">{{ total_problems }}</div>
           <div class="stats-label">Problems</div>
         </div>
       </div>
       <div class="col-md-3 col-sm-6">
         <div class="stats-card">
-          <div class="stats-number">500+</div>
+          <div class="stats-number">{{ total_users }}</div>
           <div class="stats-label">Users</div>
         </div>
       </div>
       <div class="col-md-3 col-sm-6">
         <div class="stats-card">
-          <div class="stats-number">50+</div>
+          <div class="stats-number">{{ total_contests }}</div>
           <div class="stats-label">Contests</div>
         </div>
       </div>
       <div class="col-md-3 col-sm-6">
         <div class="stats-card">
-          <div class="stats-number">99.9%</div>
-          <div class="stats-label">Uptime</div>
+          <div class="stats-number">{{ total_submissions }}</div>
+          <div class="stats-label">Submissions</div>
         </div>
       </div>
     </div>
@@ -554,11 +586,14 @@
   <div class="container">
     <div class="row mb-4">
       <div class="col-12">
-        <h2 style="font-family: var(--font-heading); font-size: 2.5rem; text-transform: uppercase; margin-bottom: 0.5rem;">Built for Coders</h2>
-        <p style="color: var(--muted); font-weight: 500; font-size: 1.1rem;">Tools that get out of your way and let you write code.</p>
+        <h2
+          style="font-family: var(--font-heading); font-size: 2.5rem; text-transform: uppercase; margin-bottom: 0.5rem;">
+          Built for Coders</h2>
+        <p style="color: var(--muted); font-weight: 500; font-size: 1.1rem;">Tools that get out of your way and let you
+          write code.</p>
       </div>
     </div>
-    
+
     <div class="row g-4">
       <div class="col-lg-4 col-md-6">
         <div class="feature-card">
@@ -571,7 +606,7 @@
           </p>
         </div>
       </div>
-      
+
       <div class="col-lg-4 col-md-6">
         <div class="feature-card">
           <div class="feature-icon">
@@ -583,7 +618,7 @@
           </p>
         </div>
       </div>
-      
+
       <div class="col-lg-4 col-md-6">
         <div class="feature-card">
           <div class="feature-icon">
@@ -595,7 +630,7 @@
           </p>
         </div>
       </div>
-      
+
       <div class="col-lg-4 col-md-6">
         <div class="feature-card">
           <div class="feature-icon">
@@ -607,7 +642,7 @@
           </p>
         </div>
       </div>
-      
+
       <div class="col-lg-4 col-md-6">
         <div class="feature-card">
           <div class="feature-icon">
@@ -619,7 +654,7 @@
           </p>
         </div>
       </div>
-      
+
       <div class="col-lg-4 col-md-6">
         <div class="feature-card">
           <div class="feature-icon">
@@ -637,123 +672,72 @@
 {% endif %}
 
 <!-- Leaderboard Section - Show for non-authenticated users -->
- {% if not user.is_authenticated %}
+{% if not user.is_authenticated %}
 <section class="leaderboard-section">
   <div class="container">
     <div class="row">
       <div class="col-lg-6">
-        <h2 style="font-family: var(--font-heading); font-size: 2rem; text-transform: uppercase; margin-bottom: 1rem;">Top Performers</h2>
+        <h2 style="font-family: var(--font-heading); font-size: 2rem; text-transform: uppercase; margin-bottom: 1rem;">
+          Top Performers</h2>
         <p style="opacity: 0.6; margin-bottom: 1.5rem;">Who's dominating the arena right now.</p>
-        
+
         <div>
+          {% for entry in leaderboard %}
           <div class="leaderboard-item">
-            <div class="rank-badge rank-1">1</div>
+            <div
+              class="rank-badge {% if forloop.counter == 1 %}rank-1{% elif forloop.counter == 2 %}rank-2{% elif forloop.counter == 3 %}rank-3{% else %}rank-other{% endif %}">
+              {{ forloop.counter }}</div>
             <div class="flex-grow-1">
-              <div class="fw-bold">CodeMaster2024</div>
-              <div style="opacity: 0.5; font-size: 0.85rem;">2,847 problems solved</div>
+              <div class="fw-bold">{{ entry.username }}</div>
+              <div style="opacity: 0.5; font-size: 0.85rem;">{{ entry.solved }} problem{{ entry.solved|pluralize }}
+                solved</div>
             </div>
             <div style="color: var(--accent-yellow); font-family: var(--font-heading); font-weight: 700;">
-              3,250 pts
+              {{ entry.solved }}
             </div>
           </div>
-          
+          {% empty %}
           <div class="leaderboard-item">
-            <div class="rank-badge rank-2">2</div>
             <div class="flex-grow-1">
-              <div class="fw-bold">AlgoNinja</div>
-              <div style="opacity: 0.5; font-size: 0.85rem;">2,634 problems solved</div>
-            </div>
-            <div style="color: var(--accent-yellow); font-family: var(--font-heading); font-weight: 700;">
-              3,100 pts
+              <div class="fw-bold">No solvers yet</div>
+              <div style="opacity: 0.5; font-size: 0.85rem;">Be the first to get an accepted solution.</div>
             </div>
           </div>
-          
-          <div class="leaderboard-item">
-            <div class="rank-badge rank-3">3</div>
-            <div class="flex-grow-1">
-              <div class="fw-bold">ByteWarrior</div>
-              <div style="opacity: 0.5; font-size: 0.85rem;">2,421 problems solved</div>
-            </div>
-            <div style="color: var(--accent-yellow); font-family: var(--font-heading); font-weight: 700;">
-              2,950 pts
-            </div>
-          </div>
-          
-          <div class="leaderboard-item">
-            <div class="rank-badge rank-other">4</div>
-            <div class="flex-grow-1">
-              <div class="fw-bold">DevProdigy</div>
-              <div style="opacity: 0.5; font-size: 0.85rem;">2,187 problems solved</div>
-            </div>
-            <div style="color: var(--accent-yellow); font-family: var(--font-heading); font-weight: 700;">
-              2,800 pts
-            </div>
-          </div>
+          {% endfor %}
         </div>
-        
+
         <div class="mt-3">
           <a href="{% url 'problem_list' %}" class="btn btn-outline-light btn-lg">
             <i class="bi bi-arrow-right me-2"></i>Full Leaderboard
           </a>
         </div>
       </div>
-      
+
       <div class="col-lg-6 mt-5 mt-lg-0">
-        <h2 style="font-family: var(--font-heading); font-size: 2rem; text-transform: uppercase; margin-bottom: 1rem;">Recent Activity</h2>
+        <h2 style="font-family: var(--font-heading); font-size: 2rem; text-transform: uppercase; margin-bottom: 1rem;">
+          Recent Activity</h2>
         <p style="opacity: 0.6; margin-bottom: 1.5rem;">Latest submissions and achievements.</p>
-        
+
         <div>
+          {% for a in recent_activity %}
           <div class="activity-card">
             <div class="d-flex justify-content-between align-items-start">
               <div>
-                <span class="activity-user">CodeMaster2024</span> solved 
-                <strong>"Two Sum Problem"</strong>
+                <span class="activity-user">{{ a.username }}</span> solved
+                <strong>"{{ a.problem }}"</strong>
               </div>
-              <span class="activity-time">2 min ago</span>
+              <span class="activity-time">{{ a.when|timesince }} ago</span>
             </div>
           </div>
-          
+          {% empty %}
           <div class="activity-card">
             <div class="d-flex justify-content-between align-items-start">
-              <div>
-                <span class="activity-user">AlgoNinja</span> achieved 
-                <strong>100 day streak!</strong>
-              </div>
-              <span class="activity-time">5 min ago</span>
+              <div>No submissions yet. The feed lights up as people start solving.</div>
             </div>
           </div>
-          
-          <div class="activity-card">
-            <div class="d-flex justify-content-between align-items-start">
-              <div>
-                <span class="activity-user">ByteWarrior</span> won 
-                <strong>"Weekly Contest #47"</strong>
-              </div>
-              <span class="activity-time">15 min ago</span>
-            </div>
-          </div>
-          
-          <div class="activity-card">
-            <div class="d-flex justify-content-between align-items-start">
-              <div>
-                <span class="activity-user">DevProdigy</span> solved 
-                <strong>"Dynamic Programming Challenge"</strong>
-              </div>
-              <span class="activity-time">23 min ago</span>
-            </div>
-          </div>
-          
-          <div class="activity-card">
-            <div class="d-flex justify-content-between align-items-start">
-              <div>
-                <span class="activity-user">PythonPro</span> reached 
-                <strong>Expert level!</strong>
-              </div>
-              <span class="activity-time">1 hr ago</span>
-            </div>
-          </div>
+          {% endfor %}
         </div>
-        
+
         <div class="mt-3">
           <a href="#" class="btn btn-outline-light btn-lg">
             <i class="bi bi-activity me-2"></i>All Activity
@@ -770,11 +754,15 @@
   <div class="container">
     <div class="row justify-content-center">
       <div class="col-lg-8 text-center">
-        <h2 style="font-family: var(--font-heading); font-size: 2.5rem; text-transform: uppercase; margin-bottom: 1rem;">Ready to Start?</h2>
-        <p style="font-size: 1.15rem; margin-bottom: 2rem; font-weight: 500;">Join thousands of programmers who are already improving their skills with MyOJ.</p>
-        
+        <h2
+          style="font-family: var(--font-heading); font-size: 2.5rem; text-transform: uppercase; margin-bottom: 1rem;">
+          Ready to Start?</h2>
+        <p style="font-size: 1.15rem; margin-bottom: 2rem; font-weight: 500;">Join thousands of programmers who are
+          already improving their skills with MyOJ.</p>
+
         <div class="d-flex gap-3 justify-content-center flex-wrap">
-          <a href="{% url 'register' %}" class="btn btn-hero btn-hero-primary" style="background: var(--primary); color: var(--accent-yellow); border-color: var(--primary);">
+          <a href="{% url 'register' %}" class="btn btn-hero btn-hero-primary"
+            style="background: var(--primary); color: var(--accent-yellow); border-color: var(--primary);">
             <i class="bi bi-rocket-takeoff me-2"></i>Start Coding Now
           </a>
           <a href="{% url 'login' %}" class="btn btn-hero btn-hero-secondary">
@@ -787,11 +775,13 @@
 </section>
 
 <!-- Footer -->
-<footer style="background: var(--primary); color: white; padding: 40px 0 20px; border-top: 6px solid var(--accent-yellow);">
+<footer
+  style="background: var(--primary); color: white; padding: 40px 0 20px; border-top: 6px solid var(--accent-yellow);">
   <div class="container">
     <div class="row g-4">
       <div class="col-lg-4 col-md-6">
-        <h5 style="font-family: var(--font-heading); font-weight: 700; margin-bottom: 1rem; text-transform: uppercase;">MyOJ Platform</h5>
+        <h5 style="font-family: var(--font-heading); font-weight: 700; margin-bottom: 1rem; text-transform: uppercase;">
+          MyOJ Platform</h5>
         <p style="opacity: 0.6; margin-bottom: 1rem;">
           The competitive programming platform. Solve problems. Win contests. Get better.
         </p>
@@ -807,27 +797,35 @@
           </a>
         </div>
       </div>
-      
+
       <div class="col-lg-2 col-md-6">
-        <h6 style="font-family: var(--font-heading); font-weight: 700; margin-bottom: 1rem; text-transform: uppercase; color: var(--accent-yellow);">Platform</h6>
+        <h6
+          style="font-family: var(--font-heading); font-weight: 700; margin-bottom: 1rem; text-transform: uppercase; color: var(--accent-yellow);">
+          Platform</h6>
         <ul class="list-unstyled" style="font-size: 0.9rem;">
-          <li class="mb-2"><a href="{% url 'problem_list' %}" style="color: rgba(255,255,255,0.6); text-decoration: none;">Problems</a></li>
-          <li class="mb-2"><a href="{% url 'contest_list' %}" style="color: rgba(255,255,255,0.6); text-decoration: none;">Contests</a></li>
+          <li class="mb-2"><a href="{% url 'problem_list' %}"
+              style="color: rgba(255,255,255,0.6); text-decoration: none;">Problems</a></li>
+          <li class="mb-2"><a href="{% url 'contest_list' %}"
+              style="color: rgba(255,255,255,0.6); text-decoration: none;">Contests</a></li>
           <li class="mb-2"><a href="#" style="color: rgba(255,255,255,0.6); text-decoration: none;">Leaderboard</a></li>
         </ul>
       </div>
-      
+
       <div class="col-lg-2 col-md-6">
-        <h6 style="font-family: var(--font-heading); font-weight: 700; margin-bottom: 1rem; text-transform: uppercase; color: var(--accent-yellow);">Community</h6>
+        <h6
+          style="font-family: var(--font-heading); font-weight: 700; margin-bottom: 1rem; text-transform: uppercase; color: var(--accent-yellow);">
+          Community</h6>
         <ul class="list-unstyled" style="font-size: 0.9rem;">
           <li class="mb-2"><a href="#" style="color: rgba(255,255,255,0.6); text-decoration: none;">Discord</a></li>
           <li class="mb-2"><a href="#" style="color: rgba(255,255,255,0.6); text-decoration: none;">Blog</a></li>
           <li class="mb-2"><a href="#" style="color: rgba(255,255,255,0.6); text-decoration: none;">Events</a></li>
         </ul>
       </div>
-      
+
       <div class="col-lg-2 col-md-6">
-        <h6 style="font-family: var(--font-heading); font-weight: 700; margin-bottom: 1rem; text-transform: uppercase; color: var(--accent-yellow);">Support</h6>
+        <h6
+          style="font-family: var(--font-heading); font-weight: 700; margin-bottom: 1rem; text-transform: uppercase; color: var(--accent-yellow);">
+          Support</h6>
         <ul class="list-unstyled" style="font-size: 0.9rem;">
           <li class="mb-2"><a href="#" style="color: rgba(255,255,255,0.6); text-decoration: none;">Help</a></li>
           <li class="mb-2"><a href="#" style="color: rgba(255,255,255,0.6); text-decoration: none;">Contact</a></li>
@@ -836,24 +834,27 @@
       </div>
 
       <div class="col-lg-2 col-md-6">
-        <h6 style="font-family: var(--font-heading); font-weight: 700; margin-bottom: 1rem; text-transform: uppercase; color: var(--accent-yellow);">Legal</h6>
+        <h6
+          style="font-family: var(--font-heading); font-weight: 700; margin-bottom: 1rem; text-transform: uppercase; color: var(--accent-yellow);">
+          Legal</h6>
         <ul class="list-unstyled" style="font-size: 0.9rem;">
           <li class="mb-2"><a href="#" style="color: rgba(255,255,255,0.6); text-decoration: none;">Privacy</a></li>
           <li class="mb-2"><a href="#" style="color: rgba(255,255,255,0.6); text-decoration: none;">Terms</a></li>
         </ul>
       </div>
     </div>
-    
+
     <hr style="border-color: rgba(255,255,255,0.15); margin: 2rem 0 1rem;">
-    
+
     <div class="row align-items-center">
       <div class="col-md-8">
         <p class="mb-0" style="opacity: 0.5; font-size: 0.85rem;">
-          &copy; 2024 MyOJ Platform. All rights reserved.
+          &copy; 2026 MyOJ Platform. All rights reserved.
         </p>
       </div>
       <div class="col-md-4 text-md-end mt-2 mt-md-0">
-        <span style="background: var(--success); color: #000; border: 2px solid var(--border); padding: 4px 10px; font-size: 0.75rem; font-weight: 700; font-family: var(--font-heading); text-transform: uppercase;">
+        <span
+          style="background: var(--success); color: #000; border: 2px solid var(--border); padding: 4px 10px; font-size: 0.75rem; font-weight: 700; font-family: var(--font-heading); text-transform: uppercase;">
           <i class="bi bi-circle-fill me-1" style="font-size: 0.4rem;"></i>
           Online
         </span>
@@ -863,41 +864,42 @@
 </footer>
 {% endif %}
 <!-- Back to Top Button -->
-<button id="backToTop" class="btn btn-primary position-fixed bottom-0 end-0 m-4 d-none" style="z-index: 1000; width: 50px; height: 50px;">
+<button id="backToTop" class="btn btn-primary position-fixed bottom-0 end-0 m-4 d-none"
+  style="z-index: 1000; width: 50px; height: 50px;">
   <i class="bi bi-arrow-up"></i>
 </button>
 
 <script>
-// Back to top functionality
-window.addEventListener('scroll', function() {
-  const backToTopBtn = document.getElementById('backToTop');
-  if (window.pageYOffset > 300) {
-    backToTopBtn.classList.remove('d-none');
-  } else {
-    backToTopBtn.classList.add('d-none');
-  }
-});
-
-document.getElementById('backToTop').addEventListener('click', function() {
-  window.scrollTo({
-    top: 0,
-    behavior: 'smooth'
-  });
-});
-
-// Add smooth scrolling to all anchor links
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-  anchor.addEventListener('click', function (e) {
-    e.preventDefault();
-    const target = document.querySelector(this.getAttribute('href'));
-    if (target) {
-      target.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start'
-      });
+  // Back to top functionality
+  window.addEventListener('scroll', function () {
+    const backToTopBtn = document.getElementById('backToTop');
+    if (window.pageYOffset > 300) {
+      backToTopBtn.classList.remove('d-none');
+    } else {
+      backToTopBtn.classList.add('d-none');
     }
   });
-});
+
+  document.getElementById('backToTop').addEventListener('click', function () {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  });
+
+  // Add smooth scrolling to all anchor links
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+      e.preventDefault();
+      const target = document.querySelector(this.getAttribute('href'));
+      if (target) {
+        target.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        });
+      }
+    });
+  });
 </script>
 
 
