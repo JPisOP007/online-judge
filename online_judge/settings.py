@@ -36,7 +36,7 @@ else:
     if not SECRET_KEY:
         from django.core.exceptions import ImproperlyConfigured
         raise ImproperlyConfigured("DJANGO_SECRET_KEY environment variable is required in production (DEBUG=False).")
-ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', 'myoj.work.gd,localhost,127.0.0.1,testserver').split(',')
+ALLOWED_HOSTS = ["thiran.me", "www.thiran.me", "online-judge-11ld.onrender.com"]
 
 # Auto-add Render hostname
 _render_url = os.getenv('RENDER_EXTERNAL_URL', '')
@@ -46,10 +46,7 @@ if _render_url:
     if _render_host and _render_host not in ALLOWED_HOSTS:
         ALLOWED_HOSTS.append(_render_host)
 
-CSRF_TRUSTED_ORIGINS = [
-    'https://myoj.work.gd',
-    'http://myoj.work.gd',
-]
+CSRF_TRUSTED_ORIGINS = ["https://thiran.me", "https://www.thiran.me"]
 # Dynamically add Render deployment URL if set
 _render_url = os.getenv('RENDER_EXTERNAL_URL', '')
 if _render_url:
