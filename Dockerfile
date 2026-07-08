@@ -40,6 +40,9 @@ RUN pip install --no-cache-dir --upgrade pip \
 # Copy application code
 COPY . .
 
+# Ensure start script is executable
+RUN chmod +x /app/start.sh
+
 # Create necessary directories with proper permissions
 RUN mkdir -p /app/media/profile_photos \
     && mkdir -p /app/staticfiles \
@@ -64,18 +67,10 @@ RUN echo "appuser soft nproc 100" >> /etc/security/limits.conf \
     && echo "sandboxuser soft nofile 512" >> /etc/security/limits.conf \
     && echo "sandboxuser hard nofile 1024" >> /etc/security/limits.conf
 
-# Use gunicorn with security settings
-
 # Switch to non-root user
 USER appuser
 
 EXPOSE 8000
 
-# Use gunicorn with security settings
-CMD ["gunicorn", "online_judge.wsgi:application", \
-     "--bind", "0.0.0.0:8000", \
-     "--workers", "2", \
-     "--max-requests", "1000", \
-     "--max-requests-jitter", "100", \
-     "--timeout", "120", \
-     "--keep-alive", "2"]
+# Run our start script to start both Celery and Gunicorn
+CMD ["/app/start.sh"]
