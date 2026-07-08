@@ -295,21 +295,13 @@ def problem_detail(request, problem_id):
                 
                 messages.success(request, f"Solution submitted and queued!")
 
-                # Generate AI feedback for submitted solutions
-                try:
-                    from core.utils.ai_review import generate_code_review
-                    ai_feedback = generate_code_review(code)
-                except Exception as e:
-                    ai_feedback = f"⚠️ AI review failed: {e}"
-
                 if is_ajax:
                     return JsonResponse({
                         'success': True,
                         'verdict': verdict,
                         'output': output,
                         'feedback_message': feedback_message,
-                        'debug': debug,
-                        'ai_feedback': ai_feedback
+                        'debug': debug
                     })
                 
                 messages.success(request, f"Solution submitted! {feedback_message}")
@@ -384,22 +376,12 @@ def submission_status_api(request, submission_id):
     try:
         solution = Solution.objects.get(id=submission_id)
         
-        # Generate AI feedback if it's newly evaluated
-        ai_feedback = None
-        if solution.status == 'Evaluated' and solution.verdict == 'AC':
-            try:
-                from core.utils.ai_review import generate_code_review
-                ai_feedback = generate_code_review(solution.code)
-            except Exception:
-                pass
-
         return JsonResponse({
             'status': solution.status,
             'verdict': solution.verdict,
             'output': solution.output,
             'error': solution.error,
-            'feedback_message': get_feedback_message(solution.verdict) if solution.verdict else 'Evaluation in progress...',
-            'ai_feedback': ai_feedback
+            'feedback_message': get_feedback_message(solution.verdict) if solution.verdict else 'Evaluation in progress...'
         })
     except Solution.DoesNotExist:
         return JsonResponse({'error': 'Solution not found'}, status=404)
