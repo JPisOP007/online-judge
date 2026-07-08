@@ -372,9 +372,13 @@ def run_with_limits(cmd, input_data, expected_output, temp_dir):
                 env=secure_env
             )
         else:
-            sudo_cmd = ['sudo', '-n', '-u', 'sandboxuser'] + cmd
+            if os.environ.get('RENDER'):
+                exec_cmd = cmd
+            else:
+                exec_cmd = ['sudo', '-n', '-u', 'sandboxuser'] + cmd
+                
             process = subprocess.Popen(
-                sudo_cmd,
+                exec_cmd,
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
