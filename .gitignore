@@ -29,3 +29,6 @@ encoded_key.txt
 
 # Root-level test scripts
 /test_*.py
+
+# Interview QA
+INTERVIEW_QA.md
