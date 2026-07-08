@@ -1143,7 +1143,7 @@ function displaySubmissionResult(data) {
   // Display AI feedback if provided
   if (data.ai_feedback) {
       if (typeof data.ai_feedback === 'object') {
-        const review = data.ai_feedback;
+        const review = data.ai_feedback.review || data.ai_feedback;
         aiContent.innerHTML = `
           <div class="ai-review-structured">
             <div class="review-section">
