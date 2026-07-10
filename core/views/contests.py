@@ -20,6 +20,8 @@ from core.forms import (
     ContestRegistrationForm, AnnouncementForm
 )
 from core.utils.secure_execution import secure_execute_code, secure_evaluate_submission
+from core.views.auth import role_required
+from core.views.problems import get_feedback_message
 import json
 
 def contest_list(request):
@@ -67,10 +69,11 @@ def contest_list(request):
     }
     return render(request, 'core/contest_list.html', context)
 
+@login_required
 def contest_detail(request, contest_uuid):
     contest = get_object_or_404(Contest, uuid=contest_uuid)
     is_registered = contest.participants.filter(id=request.user.id).exists()
-    can_register = not is_registered and contest.is_upcoming and contest.registration_required
+    can_register = not is_registered and not contest.is_ended and contest.registration_required
     
     if request.method == 'POST' and can_register:
         form = ContestRegistrationForm(request.POST)
@@ -124,6 +127,7 @@ def contest_detail(request, contest_uuid):
     }
     return render(request, 'core/contest_detail.html', context)
 
+@login_required
 def contest_problems(request, contest_uuid):
     contest = get_object_or_404(Contest, uuid=contest_uuid)
     
@@ -181,6 +185,7 @@ def contest_problems(request, contest_uuid):
     }
     return render(request, 'core/contest_problems.html', context)
 
+@login_required
 def contest_problem_detail(request, contest_uuid, problem_uuid):
     contest = get_object_or_404(Contest, uuid=contest_uuid)
     problem = get_object_or_404(Problem, uuid=problem_uuid)
@@ -407,6 +412,8 @@ def contest_standings(request, contest_uuid):
     }
     return render(request, 'core/contest_standings.html', context)
 
+@login_required
+@role_required(['setter', 'admin'])
 def create_contest(request):
     if request.method == 'POST':
         form = ContestForm(request.POST)
@@ -421,6 +428,10 @@ def create_contest(request):
                 
                 contest.full_clean()
                 contest.save()
+                
+                # Auto-register the creator
+                if contest.registration_required:
+                    ContestParticipant.objects.create(contest=contest, user=request.user)
                 
                 problems = form.cleaned_data.get('problems', [])
                 
@@ -446,6 +457,8 @@ def create_contest(request):
     
     return render(request, 'core/create_contest.html', {'form': form})
 
+@login_required
+@role_required(['setter', 'admin'])
 def edit_contest(request, contest_uuid):
     contest = get_object_or_404(Contest, uuid=contest_uuid)
     
@@ -478,11 +491,16 @@ def edit_contest(request, contest_uuid):
     
     return render(request, 'core/edit_contest.html', {'form': form, 'contest': contest})
 
+@login_required
 def contest_announcements(request, contest_uuid):
     contest = get_object_or_404(Contest, uuid=contest_uuid)
     announcements = contest.announcements.all().order_by('-created_at')
     
-    can_manage = request.user.is_staff or (hasattr(contest, 'created_by') and contest.created_by == request.user)
+    try:
+        user_role = request.user.userprofile.role
+    except UserProfile.DoesNotExist:
+        user_role = 'participant'
+    can_manage = user_role in ('setter', 'admin') or contest.created_by == request.user
     
     context = {
         'contest': contest,
@@ -507,6 +525,8 @@ def contest_timer_api(request, contest_uuid):
     
     return JsonResponse(time_data)
 
+@login_required
+@role_required(['setter', 'admin'])
 def create_announcement(request, contest_uuid):
     contest = get_object_or_404(Contest, uuid=contest_uuid)
     
@@ -528,6 +548,8 @@ def create_announcement(request, contest_uuid):
         'form': form,
     })
 
+@login_required
+@role_required(['setter', 'admin'])
 def edit_announcement(request, contest_uuid, announcement_id):
     contest = get_object_or_404(Contest, uuid=contest_uuid)
     announcement = get_object_or_404(ContestAnnouncement, id=announcement_id, contest=contest)
@@ -548,6 +570,8 @@ def edit_announcement(request, contest_uuid, announcement_id):
         'form': form,
     })
 
+@login_required
+@role_required(['setter', 'admin'])
 def delete_announcement(request, contest_uuid, announcement_id):
     contest = get_object_or_404(Contest, uuid=contest_uuid)
     announcement = get_object_or_404(ContestAnnouncement, id=announcement_id, contest=contest)

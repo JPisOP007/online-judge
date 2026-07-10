@@ -117,7 +117,7 @@
         <label for="{{ form.problems.id_for_label }}" class="form-label">Select Problems</label>
         {{ form.problems }}
         <div style="color: var(--muted); font-size: 0.85rem; margin-top: 4px;">
-          <i class="bi bi-mouse me-1"></i>Hold Ctrl/Cmd to select multiple problems
+          <i class="bi bi-check2-square me-1"></i>Select problems to include in the contest
         </div>
         {% if form.problems.errors %}
           <div style="color: var(--danger); font-size: 0.85rem; margin-top: 4px;">{{ form.problems.errors.0 }}</div>

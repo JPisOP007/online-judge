@@ -20,8 +20,10 @@ from core.forms import (
     ContestRegistrationForm, AnnouncementForm
 )
 from core.utils.secure_execution import secure_execute_code, secure_evaluate_submission
+from core.views.auth import role_required
 import json
 
+@login_required
 def profile_view(request):
     user_profile, _ = UserProfile.objects.get_or_create(
         user=request.user,
@@ -139,6 +141,8 @@ def profile_view(request):
         'admin_settings': admin_settings,
     })
 
+@login_required
+@role_required(['admin'])
 def manage_roles(request):
     users = User.objects.all()
     

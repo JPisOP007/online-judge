@@ -155,7 +155,7 @@
         </div>
         
         <div class="text-end">
-            {% if user.is_staff %}
+            {% if user.is_authenticated and user.userprofile.role == 'setter' or user.is_authenticated and user.userprofile.role == 'admin' %}
                 <a href="{% url 'edit_contest' contest.uuid %}" class="btn btn-sm btn-outline-secondary">
                     <i class="bi bi-pencil me-1"></i>Edit
                 </a>
@@ -229,7 +229,7 @@
                     
                     <div class="mb-3">
                         <strong style="text-transform: uppercase; font-size: 0.8rem;">Duration:</strong><br>
-                        <small>{{ contest.duration_display }}</small>
+                        <small>{{ contest.duration|default:"—" }}</small>
                     </div>
                     
                     <div class="mb-3">
@@ -349,7 +349,7 @@
             <div class="col-md-3">
                 <div class="card text-center">
                     <div class="card-body">
-                        <h5 class="card-title" style="font-family: var(--font-heading);">{{ contest.duration_display }}</h5>
+                        <h5 class="card-title" style="font-family: var(--font-heading);">{{ contest.duration|default:"—" }}</h5>
                         <p class="card-text" style="font-size: 0.85rem; text-transform: uppercase;">Duration</p>
                     </div>
                 </div>

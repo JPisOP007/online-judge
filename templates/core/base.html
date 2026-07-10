@@ -734,7 +734,7 @@
 
 <body>
 
-  <nav class="navbar navbar-expand-lg navbar-custom">
+  <nav class="navbar navbar-expand-lg navbar-custom sticky-top">
     <div class="container">
       <a class="navbar-brand d-flex align-items-center" href="{% url 'home' %}">
         <img src="{% static 'images/logo.png' %}" alt="Thiran Logo" height="45" class="me-2 rounded"
@@ -751,7 +751,7 @@
               <i class="bi bi-list-task me-1"></i>Problems
             </a>
           </li>
-          {% if user.userprofile.role == 'setter' or user.is_staff %}
+          {% if user.userprofile.role == 'setter' or user.userprofile.role == 'admin' %}
           <li class="nav-item">
             <a class="nav-link btn d-flex align-items-center" href="{% url 'add_problem' %}">
               <i class="bi bi-plus-circle me-1"></i>Add Problem
@@ -763,12 +763,14 @@
               <i class="bi bi-trophy me-1"></i>Contests
             </a>
           </li>
-          {% if user.is_staff %}
+          {% if user.userprofile.role == 'setter' or user.userprofile.role == 'admin' %}
           <li class="nav-item">
             <a class="nav-link btn d-flex align-items-center" href="{% url 'create_contest' %}">
               <i class="bi bi-calendar-plus me-1"></i>Create Contest
             </a>
           </li>
+          {% endif %}
+          {% if user.userprofile.role == 'admin' %}
           <li class="nav-item">
             <a class="nav-link btn d-flex align-items-center" href="{% url 'manage_roles' %}">
               <i class="bi bi-people me-1"></i>Manage Roles
@@ -830,7 +832,7 @@
     </div>
   </footer>
 
-  {% if user.is_authenticated and user.userprofile.role == 'setter' or user.is_staff %}
+  {% if user.is_authenticated and user.userprofile.role == 'setter' or user.is_authenticated and user.userprofile.role == 'admin' %}
   <a href="{% url 'add_problem' %}" class="floating-add-btn">
     <i class="bi bi-plus-lg"></i>
     <span class="d-none d-sm-inline">Add Problem</span>

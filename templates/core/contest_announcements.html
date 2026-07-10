@@ -40,13 +40,9 @@
                     {{ announcement.title }}
                   </h5>
                   <small class="text-muted">
-                    <i class="bi bi-person me-1"></i>{{ announcement.author.username }}
+                    <i class="bi bi-person me-1"></i>{{ announcement.created_by.username }}
                     <span class="mx-2">•</span>
                     <i class="bi bi-clock me-1"></i>{{ announcement.created_at|date:"M d, Y H:i" }}
-                    {% if announcement.updated_at and announcement.updated_at != announcement.created_at %}
-                      <span class="mx-2">•</span>
-                      <i class="bi bi-pencil me-1"></i>Updated {{ announcement.updated_at|date:"M d, Y H:i" }}
-                    {% endif %}
                   </small>
                 </div>
                 

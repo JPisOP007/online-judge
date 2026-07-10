@@ -21,8 +21,11 @@ from core.forms import (
 )
 from core.utils.secure_execution import secure_execute_code, secure_evaluate_submission
 from core.tasks import evaluate_submission_task
+from core.views.auth import role_required
 import json
 
+@login_required
+@role_required(['setter', 'admin'])
 def add_problem(request):
     if request.method == 'POST':
         form = ProblemForm(request.POST)
@@ -93,6 +96,7 @@ def problem_list(request):
     }
     return render(request, "core/problem_list.html", context)
 
+@login_required
 def problem_detail(request, problem_id):
     problem = get_object_or_404(Problem, uuid=problem_id)
     form = SubmitSolutionForm(initial={'problem_id': str(problem.uuid)})
@@ -350,6 +354,7 @@ def problem_detail(request, problem_id):
         'ai_review_enabled': admin_settings.ai_review_enabled,
     })
 
+@login_required
 def submit_solution(request, problem_id):
     problem = get_object_or_404(Problem, uuid=problem_id)
     if request.method == 'POST':
@@ -367,11 +372,13 @@ def submit_solution(request, problem_id):
         form = SubmitSolutionForm(initial={'problem_id': str(problem.uuid)})
     return render(request, 'core/submit_solution.html', {'problem': problem, 'form': form})
 
+@login_required
 def submission_detail(request, submission_id):
     submission = get_object_or_404(Solution, pk=submission_id)
     return render(request, 'core/submission_detail.html', {'submission': submission})
 
 
+@login_required
 def submission_status_api(request, submission_id):
     try:
         solution = Solution.objects.get(id=submission_id)
