@@ -531,7 +531,6 @@ def run_with_limits(cmd, input_data, expected_output, temp_dir):
                 return {
                     'verdict': 'WA',
                     'output': actual_output,
-                    'error': 'Wrong Answer',
                     'execution_time': execution_time
                 }
         
