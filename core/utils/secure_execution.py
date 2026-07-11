@@ -38,10 +38,12 @@ ALLOWED_IMPORTS = {
     'heapq': ['*'],  # Essential for algorithms
     'bisect': ['*'],  # Binary search utilities
     're': ['compile', 'match', 'search', 'findall', 'finditer', 'sub', 'subn', 'split', 'escape'],
-    'functools': ['lru_cache', 'reduce', 'partial', 'wraps', 'singledispatch'],
+    'functools': ['lru_cache', 'reduce', 'partial', 'wraps', 'singledispatch',
+                  'cache', 'cmp_to_key', 'total_ordering'],
     'operator': ['*'],  # Safe operator functions
     'string': ['*'],  # String constants and utilities
-    'random': ['randint', 'choice', 'shuffle', 'sample', 'random', 'uniform', 'seed'],
+    'random': ['randint', 'choice', 'shuffle', 'sample', 'random', 'uniform', 'seed',
+               'randrange', 'choices', 'gauss'],
     'decimal': ['*'],  # For precise decimal arithmetic
     'fractions': ['*'],  # For rational number arithmetic
     'copy': ['copy', 'deepcopy'],  # Safe copying utilities
@@ -52,6 +54,19 @@ ALLOWED_IMPORTS = {
     'json': ['loads', 'dumps'],  # Safe JSON operations
     'keyword': ['*'],  # Python keywords (safe, used internally by collections)
     'reprlib': ['*'],  # Representation library (safe, used internally by collections)
+    # Competitive programming essentials
+    'sys': ['stdin', 'stdout', 'stderr', 'setrecursionlimit', 'maxsize', 'version_info'],
+    'io': ['StringIO', 'BytesIO'],
+    'queue': ['Queue', 'PriorityQueue', 'LifoQueue', 'SimpleQueue'],
+    'statistics': ['*'],
+    'cmath': ['*'],
+    'abc': ['ABC', 'abstractmethod'],
+    'array': ['array'],
+    'struct': ['pack', 'unpack', 'calcsize'],
+    'pprint': ['pprint', 'pformat'],
+    'textwrap': ['*'],
+    'collections.abc': ['*'],
+    'numbers': ['*'],
 }
 
 # Absolutely forbidden modules
@@ -69,7 +84,6 @@ ABSOLUTELY_FORBIDDEN = [
 
 # Modules that are allowed but with restrictions
 RESTRICTED_MODULES = {
-    'sys': ['version', 'version_info', 'maxsize', 'platform', 'byteorder'],  # Only safe read-only attributes
     'builtins': ['*'],  # Allow all builtins access (we control the dangerous ones in our wrapper)
 }
 
@@ -77,6 +91,9 @@ RESTRICTED_MODULES = {
 FORBIDDEN_FUNCTIONS = [
     'eval', 'exec', 'compile', '__import__',
     'open', 'file', 'raw_input',
+    'getattr', 'setattr', 'delattr',        # reflection — blocks scripted class-hierarchy walks
+    'vars', 'dir', 'globals', 'locals',      # introspection
+    'breakpoint',                             # debugger
     'exit', 'quit', 'help', 'copyright', 'credits', 'license',
 ]
 
@@ -118,6 +135,12 @@ def analyze_python_code_security(code):
                 elif isinstance(node.func, ast.Attribute):
                     if node.func.attr in ['system', 'popen', 'exec', 'eval']:
                         self.violations.append(f"Forbidden method call: {node.func.attr}")
+                    # Detect format-string dunder exploits: "{0.__class__}".format(...)
+                    if node.func.attr == 'format':
+                        if isinstance(node.func.value, ast.Constant) and isinstance(node.func.value.value, str):
+                            fmt_str = node.func.value.value
+                            if '__' in fmt_str:
+                                self.violations.append(f"Format string contains dunder access")
                 self.generic_visit(node)
             
             def visit_Attribute(self, node):
@@ -223,6 +246,7 @@ def create_simple_secure_environment(code):
     
     restricted_code = f"""import sys
 import builtins
+import types
 
 # Store original import function
 original_import = builtins.__import__
@@ -241,7 +265,7 @@ def safe_import(name, globals=None, locals=None, fromlist=(), level=0):
     if name in ABSOLUTELY_FORBIDDEN:
         raise ImportError(f"Module '{{name}}' is not allowed for security reasons")
     
-    # Handle restricted modules (like sys)
+    # Handle restricted modules
     if name in RESTRICTED_MODULES:
         module = original_import(name, globals, locals, fromlist, level)
         if fromlist:
@@ -271,12 +295,50 @@ def safe_import(name, globals=None, locals=None, fromlist=(), level=0):
 # Replace import function
 builtins.__import__ = safe_import
 
+# Cap sys.setrecursionlimit to prevent C-stack overflow
+_orig_sys = sys
+_orig_setrecursionlimit = _orig_sys.setrecursionlimit
+def _safe_setrecursionlimit(n):
+    if n > 1000000:
+        n = 1000000
+    _orig_setrecursionlimit(n)
+
+# Create a safe sys proxy for user code
+_user_sys = types.ModuleType('sys')
+_SYS_ALLOWED = ['stdin', 'stdout', 'stderr', 'maxsize', 'version_info', 
+                'version', 'platform', 'byteorder', 'exit', 'hexversion',
+                'float_info', 'int_info', 'hash_info']
+for attr in _SYS_ALLOWED:
+    if hasattr(_orig_sys, attr):
+        setattr(_user_sys, attr, getattr(_orig_sys, attr))
+_user_sys.setrecursionlimit = _safe_setrecursionlimit
+
+# Patch __import__ to enforce security ONLY for user script imports.
+# Standard library modules (like collections) must be able to import their own internal dependencies.
+def _user_aware_safe_import(name, globals=None, locals=None, fromlist=(), level=0):
+    is_user_script = globals is not None and globals.get('__name__') == '__main__'
+    
+    if not is_user_script:
+        # Let internal standard library modules import whatever they need
+        return original_import(name, globals, locals, fromlist, level)
+        
+    # For user script, enforce security checks
+    module = safe_import(name, globals, locals, fromlist, level)
+    
+    # Return proxy for sys
+    if name == 'sys':
+        return _user_sys
+        
+    return module
+
+builtins.__import__ = _user_aware_safe_import
+
 # Execute user code
 try:
 {indented_code}
 except Exception as e:
-    print(f"Runtime Error: {{e}}", file=sys.stderr)
-    sys.exit(1)
+    print(f"Runtime Error: {{e}}", file=_orig_sys.stderr)
+    _orig_sys.exit(1)
 """
     
     return restricted_code
@@ -349,6 +411,55 @@ def execute_javascript_secure(code, input_data, expected_output, temp_dir):
     
     return run_with_limits([node_path, filepath], input_data, expected_output, temp_dir)
 
+def build_execution_command(cmd, temp_dir):
+    """Wrap command with appropriate isolation for the environment.
+    
+    Priority:
+    1. nsjail (Docker with SYS_ADMIN capability) - true mount/PID/net namespace isolation
+    2. sudo -u sandboxuser (Docker without nsjail) - user-level isolation
+    3. bare command (Render / Windows) - no OS-level isolation
+    """
+    if IS_WINDOWS:
+        return cmd
+    
+    # Check if nsjail is available (Docker environment)
+    nsjail_path = shutil.which('nsjail')
+    if nsjail_path:
+        return [
+            nsjail_path, '--quiet', '--mode', 'o',
+            '--time_limit', str(MAX_EXECUTION_TIME + 2),
+            '--rlimit_as', str(MAX_MEMORY_MB),
+            '--rlimit_cpu', str(MAX_EXECUTION_TIME),
+            '--rlimit_fsize', '1',
+            '--disable_clone_newnet',
+            '--iface_no_lo',
+            '--cwd', temp_dir,
+            '--chroot', '/',
+            '-m', 'none:/tmp:tmpfs:size=16777216',
+            '-m', 'none:/etc:tmpfs:size=1048576',
+            '-m', 'none:/var:tmpfs:size=1048576',
+            '-m', 'none:/home:tmpfs:size=1048576',
+            '-m', 'none:/root:tmpfs:size=1048576',
+            '--bindmount_ro', '/usr:/usr',
+            '--bindmount_ro', '/lib:/lib',
+            '--bindmount_ro', '/lib64:/lib64',
+            '--bindmount_ro', '/bin:/bin',
+            '--bindmount_ro', '/sbin:/sbin',
+            '--bindmount_ro', '/etc/alternatives:/etc/alternatives',
+            '--bindmount', f'{temp_dir}:{temp_dir}',
+            '--user', '65534',
+            '--group', '65534',
+            '--',
+        ] + cmd
+    
+    # Fallback: sandboxuser isolation (Docker without nsjail)
+    if not os.environ.get('RENDER'):
+        return ['sudo', '-n', '-u', 'sandboxuser'] + cmd
+    
+    # Render: bare execution (limited isolation — see security docs)
+    return cmd
+
+
 def run_with_limits(cmd, input_data, expected_output, temp_dir):
     """Run command with limits"""
     start_time = time.time()
@@ -372,10 +483,7 @@ def run_with_limits(cmd, input_data, expected_output, temp_dir):
                 env=secure_env
             )
         else:
-            if os.environ.get('RENDER'):
-                exec_cmd = cmd
-            else:
-                exec_cmd = ['sudo', '-n', '-u', 'sandboxuser'] + cmd
+            exec_cmd = build_execution_command(cmd, temp_dir)
                 
             process = subprocess.Popen(
                 exec_cmd,
@@ -400,8 +508,12 @@ def run_with_limits(cmd, input_data, expected_output, temp_dir):
                 return {'verdict': 'RE', 'error': 'Output too large'}
             
             # Check for errors
-            if process.returncode != 0 or err.strip():
-                error_msg = err.strip() or f"Process exited with code {process.returncode}"
+            # Filter out nsjail internal log lines
+            clean_err_lines = [line for line in err.splitlines() if not line.startswith('[W]') and not line.startswith('[E]') and not line.startswith('[I]') and not line.startswith('[F]')]
+            clean_err = '\n'.join(clean_err_lines).strip()
+            
+            if process.returncode != 0 or clean_err:
+                error_msg = clean_err or f"Process exited with code {process.returncode}"
                 return {'verdict': 'RE', 'error': error_msg, 'output': out.strip()}
             
             # Compare output
@@ -418,7 +530,7 @@ def run_with_limits(cmd, input_data, expected_output, temp_dir):
                 return {
                     'verdict': 'WA',
                     'output': actual_output,
-                    'error': f"Expected: '{expected_clean}', Got: '{actual_output}'",
+                    'error': 'Wrong Answer',
                     'execution_time': execution_time
                 }
         

@@ -14,6 +14,19 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
+# Install nsjail for OS-level sandbox isolation
+# Build from source, then clean up build-only dependencies
+RUN apt-get update && apt-get install -y \
+    autoconf bison flex git libprotobuf-dev libnl-3-dev \
+    libnl-route-3-dev protobuf-compiler pkg-config make \
+    && git clone --depth 1 https://github.com/google/nsjail.git /tmp/nsjail \
+    && cd /tmp/nsjail && make -j$(nproc) \
+    && cp /tmp/nsjail/nsjail /usr/local/bin/ \
+    && rm -rf /tmp/nsjail \
+    && apt-get purge -y autoconf bison flex git \
+    && apt-get autoremove -y \
+    && rm -rf /var/lib/apt/lists/*
+
 # Create non-root user for security
 RUN groupadd -r appuser && useradd -r -g appuser -m appuser
 

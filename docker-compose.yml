@@ -1,6 +1,7 @@
 services:
   web:
     build: .
+    privileged: true  # Required for nsjail namespace isolation and pivot_root
     ports:
       - "8000:8000"
     volumes:
@@ -26,6 +27,7 @@ services:
 
   celery:
     build: .
+    privileged: true  # Required for nsjail namespace isolation and pivot_root
     volumes:
       - .:/app
     environment:
