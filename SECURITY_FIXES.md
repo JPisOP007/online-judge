@@ -6,28 +6,29 @@ This document details the security architecture of the Online Judge platform and
 
 Executing arbitrary user code requires extreme caution. Our sandbox utilizes a multi-layered defense strategy:
 
-### A. Python Static Analysis (AST Parsing)
+### A. Python Static Analysis (AST Parsing) & Import Proxy
 Before any Python code is executed, it is parsed into an Abstract Syntax Tree (AST). We employ a custom `SecurityVisitor` to statically block:
-- **Dangerous Imports:** Completely forbids importing modules like `os`, `subprocess`, `sys`, `socket`, `urllib`, etc.
+- **Dangerous Imports:** Forbids importing modules like `os`, `subprocess`, `socket`, `urllib`, etc.
 - **Dangerous Functions:** Blocks execution of functions like `eval()`, `exec()`, `compile()`, and `__import__()`.
-- **System Calls:** Prevents unauthorized file system or network access originating from user code.
+- **Reflection & Introspection:** Blocks attributes like `getattr`, `setattr`, `vars`, `globals`, `locals`, and format-string dunder exploits to prevent sandbox escapes.
+- **Restricted `sys` Proxy:** We supply a safe proxy of the `sys` module to user scripts (allowing `stdin/stdout` and `setrecursionlimit`) while completely blocking access to `sys.modules` or `sys._getframe` which could be used to bypass AST filters. Standard library imports remain unhindered.
 
-### B. OS-Level Resource Limitations
-To protect the host container from resource exhaustion (Denial of Service):
-- **Address Space (Memory):** Subprocesses are bounded using `resource.setrlimit(resource.RLIMIT_AS)`.
-- **Process Count (Fork Bombs):** Capped using `RLIMIT_NPROC` to prevent fork bombing.
-- **CPU Time:** Bound by strict execution timeouts (`RLIMIT_CPU`).
-- **File Output:** Maximum file output sizes are enforced to prevent disk-fill attacks.
+### B. OS-Level Isolation (`nsjail`)
+For true robust containment of C++, Java, Node.js, and Python, we utilize Google's `nsjail` leveraging Linux namespaces (PID, mount, network, user, IPC) and `cgroups`:
+- **Network Isolation:** The sandbox runs without `CLONE_NEWNET` disabled for outbound egress. Untrusted code has absolutely no network access (`--disable_clone_newnet`, `--iface_no_lo`).
+- **Filesystem Isolation:** The sandbox is executed in a chroot with empty `tmpfs` overlays mounted over `/tmp`, `/etc`, `/var`, `/home`, and `/root`. This ensures world-readable host files (like `/etc/hostname`) or application canaries are invisible and inaccessible.
+- **Resource Constraints:** `nsjail` rigorously enforces limits on Memory (`RLIMIT_AS`), CPU time (`RLIMIT_CPU`), and File output size (`RLIMIT_FSIZE`).
+- **Identity Masking:** Code runs under the unprivileged `sandboxuser` (`UID/GID 65534`).
 
 ### C. Environment Scrubbing
-Before launching a subprocess for any language (Python, C++, Java, Node.js), the environment variables are explicitly wiped. The subprocess receives a clean, minimal environment (e.g., `{'PATH': '/usr/bin:/bin'}`). This ensures that application secrets (like `MONGODB_URI` and `DJANGO_SECRET_KEY`) injected into the container are never leaked to user-submitted code.
+Before launching a subprocess for any language, the environment variables are explicitly wiped. The subprocess receives a clean, minimal environment (e.g., `{'PATH': '/usr/bin:/bin'}`). This ensures that application secrets (like `MONGODB_URI` and `DJANGO_SECRET_KEY`) injected into the container are never leaked to user-submitted code.
 
 ## 2. Container Security
 
 The application runs in a hardened Docker environment:
-- **Non-Root Execution:** The Dockerfile explicitly creates and utilizes an `appuser` (UID 1000). The web server and code execution engines do not run as root.
-- **PAM Limits:** OS-level limits are hardcoded via `/etc/security/limits.conf` inside the container.
-- **Read-Only Considerations:** While the code needs to write to a temporary sandbox directory, access to the rest of the application filesystem is restricted by standard UNIX file permissions.
+- **Non-Root Execution:** The web server and celery workers run as `appuser` (UID 1000). The untrusted execution happens within `nsjail`, which drops privileges to `sandboxuser` (UID 65534).
+- **Privileged Engine:** To enable `nsjail` to create new namespaces and pivot_root, the Docker container itself runs with privileges, but untrusted code is securely jailed inside it.
+- **Read-Only Considerations:** While the code needs to write to a temporary sandbox directory, access to the rest of the application filesystem is restricted by standard UNIX file permissions and `nsjail`'s read-only bind mounts.
 
 ## 3. Web Application & API Security
 
@@ -45,9 +46,8 @@ To protect against malicious payloads disguised as profile photos:
 
 ## 5. Known Threat Model Exclusions
 
-While the application is heavily fortified, it is important to acknowledge the limitations of a user-level sandbox in a PaaS environment:
-- **Container Escapes:** We rely on standard Docker isolation. We do not currently use hypervisor-level microVMs (like Firecracker).
-- **Network Exfiltration:** Because we run in unprivileged containers (lacking `CAP_NET_ADMIN`), we cannot create isolated network namespaces for subprocesses. Malicious C++/Java code could theoretically make outbound network requests.
+While the application is heavily fortified, it is important to acknowledge the limitations of a software-level sandbox:
+- **Container Escapes:** We rely on Linux namespaces and standard Docker isolation. We do not currently use hypervisor-level microVMs (like Firecracker).
 - **Side-Channel Attacks:** CPU-level vulnerabilities (e.g., Spectre) are not mitigated by this sandbox.
 
 *For any security reports or vulnerabilities, please contact the repository maintainer directly rather than opening a public issue.*
