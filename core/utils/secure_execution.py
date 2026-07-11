@@ -421,6 +421,11 @@ def build_execution_command(cmd, temp_dir):
     """
     if IS_WINDOWS:
         return cmd
+        
+    # Render: bare execution (limited isolation — see security docs)
+    # Render runs unprivileged containers where nsjail and sudo fail
+    if os.environ.get('RENDER'):
+        return cmd
     
     # Check if nsjail is available (Docker environment)
     nsjail_path = shutil.which('nsjail')
@@ -453,11 +458,7 @@ def build_execution_command(cmd, temp_dir):
         ] + cmd
     
     # Fallback: sandboxuser isolation (Docker without nsjail)
-    if not os.environ.get('RENDER'):
-        return ['sudo', '-n', '-u', 'sandboxuser'] + cmd
-    
-    # Render: bare execution (limited isolation — see security docs)
-    return cmd
+    return ['sudo', '-n', '-u', 'sandboxuser'] + cmd
 
 
 def run_with_limits(cmd, input_data, expected_output, temp_dir):
