@@ -90,7 +90,7 @@
   .welcome-section {
     background: var(--accent-yellow);
     color: #000;
-    padding: 60px 0;
+    padding: 20px 0;
     border-bottom: 6px solid var(--primary);
   }
 
@@ -100,7 +100,7 @@
     box-shadow: var(--shadow);
     padding: 2.5rem;
     text-align: center;
-    margin-bottom: 2rem;
+    margin-bottom: 0;
   }
 
   .welcome-title {
@@ -534,17 +534,36 @@
 <!-- Hero Section for Non-Authenticated Users -->
 <section class="hero-section">
   <div class="container">
-    <h1 class="hero-title">Master<br>Competitive<br><span class="highlight">Programming.</span></h1>
-    <p class="hero-subtitle">Practice algorithms, compete in contests, and level up your coding skills. No fluff, just
-      code.</p>
+    <div class="row align-items-center">
+      <div class="col-lg-6">
+        <h1 class="hero-title">Master<br>Competitive<br><span class="highlight">Programming.</span></h1>
+        <p class="hero-subtitle">Practice algorithms, compete in contests, and level up your coding skills. No fluff, just code.</p>
 
-    <div class="hero-cta">
-      <a href="{% url 'register' %}" class="btn-hero-primary">
-        <i class="bi bi-person-plus me-2"></i>Get Started Free
-      </a>
-      <a href="{% url 'problem_list' %}" class="btn-hero-secondary">
-        <i class="bi bi-code-slash me-2"></i>Browse Problems
-      </a>
+        <div class="hero-cta">
+          <a href="{% url 'register' %}" class="btn-hero-primary">
+            <i class="bi bi-person-plus me-2"></i>Get Started Free
+          </a>
+          <a href="{% url 'problem_list' %}" class="btn-hero-secondary">
+            <i class="bi bi-code-slash me-2"></i>Browse Problems
+          </a>
+        </div>
+      </div>
+      <div class="col-lg-6 d-none d-lg-block">
+        <div class="hero-terminal" style="background: var(--surface); border: var(--border-w) solid var(--border); box-shadow: var(--shadow); padding: 1.5rem; position: relative;">
+          <div style="display: flex; gap: 8px; margin-bottom: 1rem; border-bottom: 2px solid var(--border); padding-bottom: 1rem;">
+            <div style="width: 16px; height: 16px; border: 2px solid var(--border); background: var(--danger);"></div>
+            <div style="width: 16px; height: 16px; border: 2px solid var(--border); background: var(--accent-yellow);"></div>
+            <div style="width: 16px; height: 16px; border: 2px solid var(--border); background: var(--success);"></div>
+          </div>
+          <pre style="margin: 0; color: #000; font-family: var(--font-heading); font-size: 0.95rem; font-weight: 700; white-space: pre-wrap;"><code><span style="color: var(--accent-blue);">def</span> solve(n):
+    <span style="color: var(--muted);"># The naive way is O(N)</span>
+    <span style="color: var(--muted);"># But we can do better.</span>
+    <span style="color: var(--accent-pink);">return</span> (n * (n + 1)) // 2
+
+<span style="color: var(--success);">> </span><span style="color: var(--success);">Accepted! Time: 0.01s</span>
+<span style="color: var(--accent-blue);">> </span><span style="color: var(--accent-blue);">Rank: 1</span></code></pre>
+        </div>
+      </div>
     </div>
   </div>
 </section>

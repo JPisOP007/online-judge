@@ -55,6 +55,49 @@
     align-items: center;
   }
 
+    .section-title i {
+      color: var(--accent-blue);
+      margin-right: 8px;
+    }
+
+    /* ---- MARKDOWN STYLES ---- */
+    .markdown-content {
+      font-family: var(--font-body);
+      line-height: 1.6;
+    }
+    .markdown-content code {
+      background: var(--bg);
+      color: var(--accent-pink);
+      padding: 0.15rem 0.3rem;
+      border: 1px solid var(--border);
+      font-family: var(--font-heading);
+      font-size: 0.9em;
+      font-weight: 700;
+    }
+    .markdown-content pre {
+      background: var(--surface);
+      border: 2px solid var(--border);
+      box-shadow: var(--shadow-sm);
+      padding: 1rem;
+      overflow-x: auto;
+      margin-bottom: 1rem;
+    }
+    .markdown-content pre code {
+      background: transparent;
+      color: inherit;
+      padding: 0;
+      border: none;
+      font-weight: normal;
+    }
+    .markdown-content p:last-child {
+      margin-bottom: 0;
+    }
+    .markdown-content ul, .markdown-content ol {
+      margin-bottom: 1rem;
+    }
+
+    /* ---- EDITOR ---- */
+
   .btn-run {
     background: var(--accent-blue);
     color: white;
@@ -565,7 +608,8 @@
         <i class="bi bi-file-text"></i>
         Description
       </div>
-      <div class="fs-6 lh-lg">{{ problem.description|safe }}</div>
+      {{ problem.description|json_script:"desc-data" }}
+      <div class="fs-6 lh-lg markdown-content" data-source-id="desc-data"></div>
     </div>
 
     <div class="mb-4">
@@ -573,7 +617,8 @@
         <i class="bi bi-exclamation-triangle"></i>
         Constraints
       </div>
-      <div class="fs-6">{{ problem.constraints|linebreaksbr }}</div>
+      {{ problem.constraints|json_script:"constraints-data" }}
+      <div class="fs-6 markdown-content" data-source-id="constraints-data"></div>
     </div>
 
     <div class="row mb-4">
@@ -582,14 +627,16 @@
           <i class="bi bi-download"></i>
           Input Format
         </div>
-        <div class="fs-6">{{ problem.input_format|linebreaksbr }}</div>
+        {{ problem.input_format|json_script:"input-data" }}
+        <div class="fs-6 markdown-content" data-source-id="input-data"></div>
       </div>
       <div class="col-md-6">
         <div class="section-title">
           <i class="bi bi-upload"></i>
           Output Format
         </div>
-        <div class="fs-6">{{ problem.output_format|linebreaksbr }}</div>
+        {{ problem.output_format|json_script:"output-data" }}
+        <div class="fs-6 markdown-content" data-source-id="output-data"></div>
       </div>
     </div>
 
@@ -725,6 +772,10 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/comment/comment.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/selection/active-line.min.js"></script>
+
+<!-- Marked JS for Markdown parsing -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
 <script>
 let editor;
 let currentLanguage = 'python';
@@ -1292,6 +1343,25 @@ async function getAIReview() {
 
 // Event Listeners
 document.addEventListener('DOMContentLoaded', function() {
+  // Parse and render markdown contents
+  document.querySelectorAll('.markdown-content').forEach(el => {
+    const sourceId = el.getAttribute('data-source-id');
+    if (sourceId) {
+      const scriptEl = document.getElementById(sourceId);
+      if (scriptEl) {
+        let raw = JSON.parse(scriptEl.textContent);
+        if (raw) {
+          // Pre-process standard CP exponents: 10^5, O(N^2), 10^{5} -> 10<sup>5</sup>
+          raw = raw.replace(/([a-zA-Z0-9_]+)\^([a-zA-Z0-9\{\}\-]+)/g, (match, base, exp) => {
+            exp = exp.replace(/[\{\}]/g, ''); // strip braces if present
+            return `${base}<sup>${exp}</sup>`;
+          });
+          el.innerHTML = marked.parse(raw);
+        }
+      }
+    }
+  });
+
   // Initialize CodeMirror
   initializeCodeMirror();
   
