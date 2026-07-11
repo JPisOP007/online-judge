@@ -71,18 +71,17 @@
 
                             <div class="mb-3">
                                 <div class="row" style="font-size: 0.85rem;">
-                                    <div class="col-6">
+                                    <div class="col-5">
                                         <i class="bi bi-calendar3 me-1"></i>
                                         {{ contest.start_time|date:"M d, Y" }}
                                     </div>
-                                    <div class="col-6">
+                                    <div class="col-3">
                                         <i class="bi bi-clock me-1"></i>
                                         {{ contest.start_time|date:"H:i" }}
                                     </div>
-                                </div>
-                                    <div class="col-6">
+                                    <div class="col-4">
                                         <i class="bi bi-people me-1"></i>
-                                        {{ contest.participant_count }} participants
+                                        {{ contest.participant_count }} users
                                     </div>
                                 </div>
                             </div>

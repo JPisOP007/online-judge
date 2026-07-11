@@ -1351,12 +1351,15 @@ document.addEventListener('DOMContentLoaded', function() {
       if (scriptEl) {
         let raw = JSON.parse(scriptEl.textContent);
         if (raw) {
-          // Pre-process standard CP exponents: 10^5, O(N^2), 10^{5} -> 10<sup>5</sup>
-          raw = raw.replace(/([a-zA-Z0-9_]+)\^([a-zA-Z0-9\{\}\-]+)/g, (match, base, exp) => {
+          // Parse the markdown first
+          let html = marked.parse(raw);
+          // Then post-process standard CP exponents: 10^5, O(N^2), 10^{5} -> 10<sup>5</sup>
+          // By running this on the HTML, it will correctly replace text even if it's inside a <code> block
+          html = html.replace(/([a-zA-Z0-9_]+)\^([a-zA-Z0-9\{\}\-]+)/g, (match, base, exp) => {
             exp = exp.replace(/[\{\}]/g, ''); // strip braces if present
             return `${base}<sup>${exp}</sup>`;
           });
-          el.innerHTML = marked.parse(raw);
+          el.innerHTML = html;
         }
       }
     }
