@@ -43,20 +43,6 @@ class SubmitSolutionForm(forms.Form):
         if not code or not code.strip():
             raise ValidationError("Source code cannot be empty")
         
-        # Basic security checks
-        dangerous_patterns = [
-            r'import\s+os',
-            r'import\s+subprocess',
-            r'import\s+sys',
-            r'__import__',
-            r'eval\s*\(',
-            r'exec\s*\(',
-        ]
-        
-        for pattern in dangerous_patterns:
-            if re.search(pattern, code, re.IGNORECASE):
-                raise ValidationError(f"Potentially dangerous code detected. Please remove: {pattern}")
-        
         return code
 
 

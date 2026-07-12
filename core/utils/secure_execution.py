@@ -97,6 +97,19 @@ FORBIDDEN_FUNCTIONS = [
     'exit', 'quit', 'help', 'copyright', 'credits', 'license',
 ]
 
+# Helpful suggestions for common blocked imports in competitive programming
+IMPORT_SUGGESTIONS = {
+    'os': "Use 'sys' (e.g., sys.stdin, sys.stdout) for fast I/O.",
+    'numpy': "Third-party libraries are not available. Use standard 'math' and lists.",
+    'pandas': "Third-party libraries are not available.",
+    'threading': "Concurrency is disabled. Write single-threaded code.",
+    'multiprocessing': "Concurrency is disabled.",
+    'subprocess': "System calls are blocked.",
+    'requests': "Network access is blocked.",
+    'urllib': "Network access is blocked.",
+    'socket': "Network access is blocked.",
+}
+
 def analyze_python_code_security(code):
     """Use AST to detect dangerous operations"""
     try:
@@ -108,23 +121,25 @@ def analyze_python_code_security(code):
             
             def visit_Import(self, node):
                 for alias in node.names:
+                    suggestion = IMPORT_SUGGESTIONS.get(alias.name, "Use standard competitive programming modules like 'math', 'collections', 'itertools', or 'sys'.")
                     if alias.name in ABSOLUTELY_FORBIDDEN:
-                        self.violations.append(f"Forbidden import: {alias.name}")
+                        self.violations.append(f"Blocked import '{alias.name}'. Hint: {suggestion}")
                     elif alias.name not in ALLOWED_IMPORTS:
-                        self.violations.append(f"Import not in whitelist: {alias.name}")
+                        self.violations.append(f"Import '{alias.name}' not in whitelist. Hint: {suggestion}")
                 self.generic_visit(node)
             
             def visit_ImportFrom(self, node):
+                suggestion = IMPORT_SUGGESTIONS.get(node.module, "Use standard competitive programming modules like 'math', 'collections', 'itertools', or 'sys'.")
                 if node.module in ABSOLUTELY_FORBIDDEN:
-                    self.violations.append(f"Forbidden import from: {node.module}")
+                    self.violations.append(f"Blocked import from '{node.module}'. Hint: {suggestion}")
                 elif node.module and node.module not in ALLOWED_IMPORTS:
-                    self.violations.append(f"Import from module not in whitelist: {node.module}")
+                    self.violations.append(f"Import from module '{node.module}' not in whitelist. Hint: {suggestion}")
                 elif node.module in ALLOWED_IMPORTS:
                     allowed_items = ALLOWED_IMPORTS[node.module]
                     if allowed_items != ['*']:
                         for alias in node.names:
                             if alias.name != '*' and alias.name not in allowed_items:
-                                self.violations.append(f"Function '{alias.name}' not allowed from module '{node.module}'")
+                                self.violations.append(f"Function '{alias.name}' not allowed from module '{node.module}'. Allowed functions: {', '.join(allowed_items)}")
                 self.generic_visit(node)
             
             def visit_Call(self, node):
@@ -240,6 +255,7 @@ def create_simple_secure_environment(code):
     allowed_imports_str = str(ALLOWED_IMPORTS)  # Don't replace '*', keep it as is
     absolutely_forbidden_str = str(ABSOLUTELY_FORBIDDEN)
     restricted_modules_str = str(RESTRICTED_MODULES)
+    import_suggestions_str = str(IMPORT_SUGGESTIONS)
     
     # Indent the user code
     indented_code = '\n'.join('    ' + line for line in code.split('\n'))
@@ -255,6 +271,7 @@ original_import = builtins.__import__
 ALLOWED_IMPORTS = {allowed_imports_str}
 ABSOLUTELY_FORBIDDEN = {absolutely_forbidden_str}
 RESTRICTED_MODULES = {restricted_modules_str}
+IMPORT_SUGGESTIONS = {import_suggestions_str}
 
 def safe_import(name, globals=None, locals=None, fromlist=(), level=0):
     # Allow internal Python modules
@@ -263,7 +280,8 @@ def safe_import(name, globals=None, locals=None, fromlist=(), level=0):
     
     # Check forbidden modules
     if name in ABSOLUTELY_FORBIDDEN:
-        raise ImportError(f"Module '{{name}}' is not allowed for security reasons")
+        suggestion = IMPORT_SUGGESTIONS.get(name, "Use standard competitive programming modules like 'math', 'collections', 'itertools', or 'sys'.")
+        raise ImportError(f"Blocked import '{{name}}'. Hint: {{suggestion}}")
     
     # Handle restricted modules
     if name in RESTRICTED_MODULES:
@@ -273,12 +291,13 @@ def safe_import(name, globals=None, locals=None, fromlist=(), level=0):
             if allowed_items != ['*']:  # Only check if not allowing all
                 for item in fromlist:
                     if item not in allowed_items:
-                        raise ImportError(f"Attribute '{{item}}' from module '{{name}}' is not allowed")
+                        raise ImportError(f"Function '{{item}}' not allowed from module '{{name}}'. Allowed functions: {{', '.join(allowed_items)}}")
         return module
     
     # Check whitelist
     if name not in ALLOWED_IMPORTS:
-        raise ImportError(f"Module '{{name}}' is not in the allowed imports list")
+        suggestion = IMPORT_SUGGESTIONS.get(name, "Use standard competitive programming modules like 'math', 'collections', 'itertools', or 'sys'.")
+        raise ImportError(f"Import '{{name}}' not in whitelist. Hint: {{suggestion}}")
     
     # Import the module
     module = original_import(name, globals, locals, fromlist, level)
@@ -288,7 +307,7 @@ def safe_import(name, globals=None, locals=None, fromlist=(), level=0):
     if allowed_items != ['*'] and fromlist:
         for item in fromlist:
             if item not in allowed_items:
-                raise ImportError(f"Function '{{item}}' from module '{{name}}' is not allowed")
+                raise ImportError(f"Function '{{item}}' not allowed from module '{{name}}'. Allowed functions: {{', '.join(allowed_items)}}")
     
     return module
 

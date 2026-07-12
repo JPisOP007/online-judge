@@ -324,9 +324,15 @@ def problem_detail(request, problem_id):
             debug = f"Form errors: {form.errors}"
             
             if is_ajax:
+                error_msgs = []
+                for field, errors in form.errors.items():
+                    for error in errors:
+                        error_msgs.append(f"{field}: {error}")
+                
                 return JsonResponse({
                     'success': False,
                     'error': 'Form validation failed',
+                    'output': '\n'.join(error_msgs),
                     'form_errors': form.errors,
                     'debug': debug
                 })
