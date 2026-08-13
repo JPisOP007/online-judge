@@ -18,8 +18,9 @@ This platform allows users to solve programming challenges, participate in compe
 Executing untrusted user code in a production environment is inherently dangerous. This application implements strict, multi-layered security measures to run submissions safely:
 
 ### What is Protected
-- **AST-Based Static Analysis (Python):** Python submissions are parsed using the `ast` module to statically analyze and block malicious imports (e.g., `os`, `subprocess`) and built-in functions before execution.
-- **Environment Scrubbing (Secrets Protection):** Untrusted code is executed in a highly sanitized environment. We explicitly wipe the entire OS environment variables before the subprocess runs, ensuring that application secrets (like database credentials or API Keys) cannot be leaked.
+- **AST-Based Static Analysis (Python):** Python submissions are parsed using the `ast` module to statically analyze and block malicious imports (e.g., `os`, `subprocess`) and built-in functions before execution. A runtime `__import__` hook and a restricted `sys` proxy enforce the same whitelist during execution.
+- **Per-Language Static Analysis (C++ / Java / JavaScript):** These languages have no equivalent runtime hook, so submissions are matched against per-language denylists covering process creation, file I/O, sockets, reflection, inline assembly and environment access. Matching is done on word boundaries against source with comments and string literals removed, so a payload cannot hide in a comment and ordinary output strings do not trigger false positives. JavaScript submissions additionally run inside a harness that pre-reads stdin (exposing `readline()` / `readAll()`) and shadows `require`, `process`, `module` and `globalThis`, since `require('child_process')` would otherwise be a one-line escape.
+- **Environment Scrubbing (Secrets Protection):** Untrusted code is executed with a minimal environment — only `PATH` is passed through — so application secrets such as database credentials and API keys are not inherited by the subprocess. Note the limit of this control: where the sandbox runs as the same OS user as the application (see exclusions below), a process that escapes the language-level checks can still read the parent's environment via `/proc/<pid>/environ`. Scrubbing raises the bar; it is not a boundary.
 - **Resource Exhaustion (Defense-in-Depth):**
   - **Process Limits:** Subprocesses are wrapped with Python's `resource.setrlimit` to cap maximum memory address space (`RLIMIT_AS`) and maximum child processes (`RLIMIT_NPROC`).
   - **Time Limits:** Strict CPU time limits to prevent infinite loop DoS attacks.
@@ -28,6 +29,8 @@ Executing untrusted user code in a production environment is inherently dangerou
 - **File Upload Security:** Strict MIME-type validation (using `python-magic`) and image integrity checks (via `Pillow`) to prevent malicious file uploads.
 
 ### Known Threat Model Exclusions
+- **Denylists Are Not Sandboxes:** For C++, Java and JavaScript the application-level control is static pattern matching, which is inherently incomplete — it rejects known-dangerous constructs rather than permitting only known-safe ones. It raises the cost of an attack and catches opportunistic attempts; it does not stop a determined attacker who finds a construct the list does not name. OS-level isolation is what actually contains untrusted code, which is why its absence on PaaS (below) matters.
+- **Reduced Isolation on PaaS:** On Render, containers run unprivileged, so neither `nsjail` nor `sudo -u sandboxuser` is available and submissions execute as the application user with only `setrlimit` caps. The full isolation described above applies to the Docker deployment, not to that environment.
 - **Filesystem Traversal:** The code executes as the primary application user within the container. A malicious program can read the unencrypted source code, but because all secrets are injected via environment variables (which are scrubbed at execution time), this yields no sensitive data.
 - **Container Escapes (Kernel Exploits):** This sandbox relies on standard kernel boundaries within an unprivileged Docker container. It does *not* defend against kernel-level 0-day privilege escalation exploits (which would require microVMs like AWS Firecracker or strict `seccomp` profiles).
 - **Network Access Restriction:** Without `CAP_NET_ADMIN` in our PaaS environment, we cannot create isolated network namespaces. Malicious code could theoretically make outbound network requests.
@@ -57,7 +60,7 @@ For more detailed deployment instructions, please refer to the [DEPLOYMENT_GUIDE
 For a deeper dive into the architecture, API, and engineering decisions:
 - [API Documentation](API_DOCUMENTATION.md)
 - [Security Fixes & Architecture](SECURITY_FIXES.md)
-- [System Design & Interview Q&A](INTERVIEW_QA.md)
+- [Deployment Guide](DEPLOYMENT_GUIDE.md)
 
 ---
 *Built with Django & Docker.*
