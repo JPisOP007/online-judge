@@ -3,7 +3,7 @@ Security middleware for additional protection
 """
 import logging
 import time
-from django.http import HttpResponseForbidden
+from django.http import HttpResponse, JsonResponse
 from django.core.cache import cache
 from django.conf import settings
 from django.utils.deprecation import MiddlewareMixin
@@ -14,8 +14,18 @@ logger = logging.getLogger('core.security')
 # middleware runs before WhiteNoise, so every asset on a page was consuming
 # one of the 100 allowed requests - a handful of page loads could lock a
 # legitimate visitor out.
-RATE_LIMIT_EXEMPT_PREFIXES = ('/static/', '/media/')
-RATE_LIMIT_REQUESTS = 100
+RATE_LIMIT_EXEMPT_PREFIXES = (
+    '/static/',
+    '/media/',
+    # The problem page polls this roughly once a second while a submission is
+    # being judged, so a handful of submissions can spend the entire per-minute
+    # budget on status checks alone. It is login-scoped and only ever returns
+    # the caller's own submission, so it is a poor abuse target.
+    '/api/submission/',
+)
+# One page view plus a judged submission costs on the order of 30-60 requests
+# once polling is counted; 100/min throttled ordinary use.
+RATE_LIMIT_REQUESTS = 400
 RATE_LIMIT_WINDOW_SECONDS = 60
 
 # Content-Security-Policy.
@@ -65,7 +75,7 @@ class SecurityMiddleware(MiddlewareMixin):
         # Rate limiting
         if not request.path.startswith(RATE_LIMIT_EXEMPT_PREFIXES) and self.is_rate_limited(request):
             logger.warning(f"Rate limit exceeded for {self.get_rate_limit_key(request)}")
-            return HttpResponseForbidden("Rate limit exceeded")
+            return self.throttled_response(request)
 
         # Request size validation
         if hasattr(request, 'META') and 'CONTENT_LENGTH' in request.META:
@@ -73,7 +83,7 @@ class SecurityMiddleware(MiddlewareMixin):
                 content_length = int(request.META['CONTENT_LENGTH'])
                 if content_length > settings.DATA_UPLOAD_MAX_MEMORY_SIZE:
                     logger.warning(f"Large request from IP: {self.get_client_ip(request)}, size: {content_length}")
-                    return HttpResponseForbidden("Request too large")
+                    return HttpResponse('Request too large', status=413, content_type='text/plain')
             except (ValueError, TypeError):
                 pass
         
@@ -101,6 +111,29 @@ class SecurityMiddleware(MiddlewareMixin):
             ip = request.META.get('REMOTE_ADDR')
         return ip
     
+    def throttled_response(self, request):
+        """Answer a throttled caller in the format it asked for.
+
+        The code editor posts with X-Requested-With and parses the reply as
+        JSON. Returning an HTML 403 made it fail at the content-type check and
+        report "Server returned invalid response format. Check Django view.",
+        which points at the wrong layer entirely.
+        """
+        wants_json = (
+            request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+            or request.path.startswith('/api/')
+            or 'application/json' in request.headers.get('Accept', '')
+        )
+        message = 'Rate limit exceeded. Please wait a moment and try again.'
+
+        if wants_json:
+            response = JsonResponse({'success': False, 'error': message}, status=429)
+        else:
+            response = HttpResponse(message, status=429, content_type='text/plain')
+
+        response['Retry-After'] = str(RATE_LIMIT_WINDOW_SECONDS)
+        return response
+
     def get_rate_limit_key(self, request):
         """Identify the caller for rate limiting.
 

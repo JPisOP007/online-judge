@@ -989,8 +989,13 @@ async function runCode() {
     const contentType = response.headers.get('content-type');
     if (!contentType || !contentType.includes('application/json')) {
       const textResponse = await response.text();
-      console.error('Server returned non-JSON response:', textResponse);
-      throw new Error('Server returned invalid response format. Check Django view.');
+      console.error('Server returned non-JSON response:', response.status, textResponse);
+      // Name the actual status. "Check Django view" sent us hunting through
+      // view code for what turned out to be a throttled request upstream.
+      if (response.status === 429) {
+        throw new Error('You are sending requests too quickly. Wait a moment and try again.');
+      }
+      throw new Error(`Server returned ${response.status} ${response.statusText} instead of JSON.`);
     }
     
     if (response.ok) {
@@ -1068,8 +1073,13 @@ async function submitSolution() {
     const contentType = response.headers.get('content-type');
     if (!contentType || !contentType.includes('application/json')) {
       const textResponse = await response.text();
-      console.error('Server returned non-JSON response:', textResponse);
-      throw new Error('Server returned invalid response format. Check Django view.');
+      console.error('Server returned non-JSON response:', response.status, textResponse);
+      // Name the actual status. "Check Django view" sent us hunting through
+      // view code for what turned out to be a throttled request upstream.
+      if (response.status === 429) {
+        throw new Error('You are sending requests too quickly. Wait a moment and try again.');
+      }
+      throw new Error(`Server returned ${response.status} ${response.statusText} instead of JSON.`);
     }
     
     if (response.ok) {
@@ -1287,8 +1297,13 @@ async function getAIReview() {
     const contentType = response.headers.get('content-type');
     if (!contentType || !contentType.includes('application/json')) {
       const textResponse = await response.text();
-      console.error('Server returned non-JSON response:', textResponse);
-      throw new Error('Server returned invalid response format. Check Django view.');
+      console.error('Server returned non-JSON response:', response.status, textResponse);
+      // Name the actual status. "Check Django view" sent us hunting through
+      // view code for what turned out to be a throttled request upstream.
+      if (response.status === 429) {
+        throw new Error('You are sending requests too quickly. Wait a moment and try again.');
+      }
+      throw new Error(`Server returned ${response.status} ${response.statusText} instead of JSON.`);
     }
     
     if (response.ok) {
