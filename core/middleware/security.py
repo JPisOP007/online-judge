@@ -18,6 +18,39 @@ RATE_LIMIT_EXEMPT_PREFIXES = ('/static/', '/media/')
 RATE_LIMIT_REQUESTS = 100
 RATE_LIMIT_WINDOW_SECONDS = 60
 
+# Content-Security-Policy.
+#
+# 'unsafe-inline' is unavoidable for now: the templates carry inline <style>
+# blocks, hundreds of style="" attributes and inline <script> blocks. Removing
+# it means nonce-ing every one of them, which is a separate piece of work.
+#
+# The policy still earns its place without it. Scripts and styles can only be
+# fetched from hosts we actually use, connect-src stops a successful injection
+# from exfiltrating anywhere, object-src and base-uri close two common
+# redirection tricks, and form-action stops a planted form posting credentials
+# off-site. Sanitising markdown with DOMPurify remains the primary XSS defence.
+#
+# Hosts, all verified against the templates:
+#   cdn.jsdelivr.net      Bootstrap, Bootstrap Icons (CSS + webfonts), marked, DOMPurify
+#   cdnjs.cloudflare.com  CodeMirror
+#   fonts.googleapis.com  Google Fonts stylesheet
+#   fonts.gstatic.com     the font files that stylesheet references
+#   res.cloudinary.com    profile photos, when CLOUDINARY_URL is configured
+CONTENT_SECURITY_POLICY = "; ".join([
+    "default-src 'self'",
+    "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com",
+    "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com "
+    "https://fonts.googleapis.com",
+    "font-src 'self' data: https://fonts.gstatic.com https://cdn.jsdelivr.net",
+    # jsdelivr also serves the Swagger UI favicon on /api/schema/swagger-ui/.
+    "img-src 'self' data: https://res.cloudinary.com https://cdn.jsdelivr.net",
+    "connect-src 'self'",
+    "frame-ancestors 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "object-src 'none'",
+])
+
 
 class SecurityMiddleware(MiddlewareMixin):
     """
@@ -52,10 +85,11 @@ class SecurityMiddleware(MiddlewareMixin):
         response['X-Frame-Options'] = 'DENY'
         response['X-XSS-Protection'] = '1; mode=block'
         response['Referrer-Policy'] = 'strict-origin-when-cross-origin'
-        
+        response.setdefault('Content-Security-Policy', CONTENT_SECURITY_POLICY)
+
         if not settings.DEBUG:
             response['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains; preload'
-        
+
         return response
     
     def get_client_ip(self, request):
