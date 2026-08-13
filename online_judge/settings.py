@@ -54,6 +54,12 @@ if _render_url:
 
 # === REST FRAMEWORK CONFIGURATION ===
 REST_FRAMEWORK = {
+    # ObjectId-aware renderer: MongoDB primary keys are not JSON-serialisable
+    # by DRF's default encoder. See core/renderers.py.
+    'DEFAULT_RENDERER_CLASSES': [
+        'core.renderers.MongoJSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',
+    ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
         'rest_framework.authentication.SessionAuthentication',
