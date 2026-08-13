@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib import messages
 from django.contrib.auth.models import User
-from django.http import JsonResponse
+from django.http import JsonResponse, Http404
 from django.utils import timezone
 from django.db.models import Sum, Count, Q
 from django.core.paginator import Paginator
@@ -23,6 +23,13 @@ from core.utils.secure_execution import secure_execute_code, secure_evaluate_sub
 from core.tasks import evaluate_submission_task
 from core.views.auth import role_required
 import json
+
+try:
+    # Raised by the MongoDB backend when a primary key string is not a valid ObjectId.
+    from bson.errors import InvalidId
+except ImportError:  # pragma: no cover - bson ships with the mongo backend
+    class InvalidId(Exception):
+        pass
 
 @login_required
 @role_required(['setter', 'admin'])
@@ -378,26 +385,43 @@ def submit_solution(request, problem_id):
         form = SubmitSolutionForm(initial={'problem_id': str(problem.uuid)})
     return render(request, 'core/submit_solution.html', {'problem': problem, 'form': form})
 
+def _get_own_submission(request, submission_id):
+    """Look up a submission, restricted to the requesting user unless they are staff.
+
+    Returns None when the id is missing, malformed, or belongs to someone else, so
+    callers cannot distinguish "not found" from "not yours".
+    """
+    queryset = Solution.objects.all()
+    if not request.user.is_staff:
+        queryset = queryset.filter(user=request.user)
+
+    try:
+        return queryset.get(pk=submission_id)
+    except (Solution.DoesNotExist, InvalidId, ValueError, TypeError):
+        return None
+
+
 @login_required
 def submission_detail(request, submission_id):
-    submission = get_object_or_404(Solution, pk=submission_id)
+    submission = _get_own_submission(request, submission_id)
+    if submission is None:
+        raise Http404("Submission not found")
     return render(request, 'core/submission_detail.html', {'submission': submission})
 
 
 @login_required
 def submission_status_api(request, submission_id):
-    try:
-        solution = Solution.objects.get(id=submission_id)
-        
-        return JsonResponse({
-            'status': solution.status,
-            'verdict': solution.verdict,
-            'output': solution.output,
-            'error': solution.error,
-            'feedback_message': get_feedback_message(solution.verdict) if solution.verdict else 'Evaluation in progress...'
-        })
-    except Solution.DoesNotExist:
+    solution = _get_own_submission(request, submission_id)
+    if solution is None:
         return JsonResponse({'error': 'Solution not found'}, status=404)
+
+    return JsonResponse({
+        'status': solution.status,
+        'verdict': solution.verdict,
+        'output': solution.output,
+        'error': solution.error,
+        'feedback_message': get_feedback_message(solution.verdict) if solution.verdict else 'Evaluation in progress...'
+    })
 
 def get_feedback_message(verdict):
     """Get user-friendly feedback message for submission verdict"""
