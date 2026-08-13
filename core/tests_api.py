@@ -19,11 +19,25 @@ class UserAPITestCase(APITestCase):
         self.user = User.objects.create_user(username='testuser', password='testpass123')
         self.user_profile = UserProfile.objects.create(user=self.user, role='participant')
     
+    def test_list_users_requires_authentication(self):
+        """Anonymous callers must not be able to enumerate users or emails"""
+        response = self.client.get('/api/users/')
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
     def test_list_users(self):
-        """Test listing users"""
+        """Test listing users as an authenticated caller"""
+        self.client.force_authenticate(user=self.user)
         response = self.client.get('/api/users/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('results', response.data)
+
+    def test_cannot_delete_another_user(self):
+        """A user must not be able to delete somebody else's account"""
+        victim = User.objects.create_user(username='victim', password='testpass123')
+        self.client.force_authenticate(user=self.user)
+        response = self.client.delete(f'/api/users/{victim.id}/')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertTrue(User.objects.filter(pk=victim.pk).exists())
     
     def test_get_current_user(self):
         """Test getting current authenticated user"""
@@ -71,6 +85,9 @@ class ProblemAPITestCase(APITestCase):
         """Create test data"""
         self.client = APIClient()
         self.user = User.objects.create_user(username='setter', password='testpass123')
+        UserProfile.objects.update_or_create(user=self.user, defaults={'role': 'setter'})
+        self.participant = User.objects.create_user(username='plain', password='testpass123')
+        UserProfile.objects.update_or_create(user=self.participant, defaults={'role': 'participant'})
         self.problem = Problem.objects.create(
             title='Test Problem',
             difficulty='easy',
@@ -107,7 +124,7 @@ class ProblemAPITestCase(APITestCase):
         self.assertIn('acceptance_rate', response.data)
     
     def test_create_problem(self):
-        """Test creating a problem"""
+        """A setter can create a problem"""
         self.client.force_authenticate(user=self.user)
         data = {
             'title': 'New Problem',
@@ -117,6 +134,40 @@ class ProblemAPITestCase(APITestCase):
         response = self.client.post('/api/problems/', data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['title'], 'New Problem')
+
+    def test_participant_cannot_create_problem(self):
+        """A plain participant must not be able to author problems"""
+        self.client.force_authenticate(user=self.participant)
+        response = self.client.post('/api/problems/', {
+            'title': 'Sneaky Problem',
+            'difficulty': 'easy',
+            'description': 'Should be rejected'
+        }, format='json')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_participant_cannot_delete_problem(self):
+        """A plain participant must not be able to delete problems"""
+        self.client.force_authenticate(user=self.participant)
+        response = self.client.delete(f'/api/problems/{self.problem.id}/')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertTrue(Problem.objects.filter(pk=self.problem.pk).exists())
+
+    def test_test_cases_hidden_from_anonymous(self):
+        """Hidden test cases must not leak through the public problem endpoint"""
+        self.problem.test_cases_json = '[{"input": "1", "output": "42"}]'
+        self.problem.save()
+        response = self.client.get(f'/api/problems/{self.problem.id}/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['test_cases'], [])
+
+    def test_test_cases_visible_to_setter(self):
+        """Setters still need to see the test cases they author"""
+        self.problem.test_cases_json = '[{"input": "1", "output": "42"}]'
+        self.problem.save()
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get(f'/api/problems/{self.problem.id}/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['test_cases']), 1)
 
 
 class SolutionAPITestCase(APITestCase):
@@ -243,7 +294,9 @@ class PaginationTestCase(APITestCase):
         self.client = APIClient()
         for i in range(25):
             User.objects.create_user(username=f'user{i}', password='testpass')
-    
+        # Listing users now requires authentication.
+        self.client.force_authenticate(user=User.objects.first())
+
     def test_pagination_default(self):
         """Test default pagination"""
         response = self.client.get('/api/users/')
@@ -272,6 +325,8 @@ class SearchFilterTestCase(APITestCase):
         self.client = APIClient()
         self.user = User.objects.create_user(username='john_doe', email='john@example.com')
         User.objects.create_user(username='jane_smith', email='jane@example.com')
+        # Listing users now requires authentication.
+        self.client.force_authenticate(user=self.user)
     
     def test_search_by_username(self):
         """Test searching by username"""

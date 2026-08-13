@@ -22,6 +22,7 @@ from core.forms import (
 from core.utils.secure_execution import secure_execute_code, secure_evaluate_submission
 from core.views.auth import role_required
 from core.views.problems import get_feedback_message
+from collections import defaultdict
 import json
 
 def contest_list(request):
@@ -190,7 +191,13 @@ def contest_problem_detail(request, contest_uuid, problem_uuid):
     contest = get_object_or_404(Contest, uuid=contest_uuid)
     problem = get_object_or_404(Problem, uuid=problem_uuid)
     participant = get_object_or_404(ContestParticipant, contest=contest, user=request.user)
-    
+
+    # Problems must not be readable before the contest opens, even by people
+    # who have already registered. contest_problems() enforces this too.
+    if contest.is_upcoming:
+        messages.error(request, 'Contest has not started yet')
+        return redirect('contest_detail', contest_uuid=contest.uuid)
+
     context = {
         'contest': contest,
         'problem': problem,
@@ -243,6 +250,22 @@ def contest_problem_detail(request, contest_uuid, problem_uuid):
                     })
             
             elif action == "submit":
+                # Scored submissions are only accepted while the contest is live.
+                # Without this, submissions after the end time were still judged
+                # and still counted towards the standings.
+                if not contest.is_running:
+                    context.update({
+                        'form': form,
+                        'verdict': 'IE',
+                        'feedback_message': 'This contest is not currently accepting submissions.',
+                        'output': 'The contest has ended.' if contest.is_ended
+                                  else 'The contest has not started yet.',
+                        'user_submissions': ContestSubmission.objects.filter(
+                            contest=contest, participant=participant, problem=problem
+                        ).select_related('solution').order_by('-submitted_at')[:10],
+                    })
+                    return render(request, 'core/contest_problem_detail.html', context)
+
                 try:
                     test_cases = json.loads(problem.test_cases_json or "[]")
                 except json.JSONDecodeError:
@@ -350,65 +373,63 @@ def contest_problem_detail(request, contest_uuid, problem_uuid):
 
 def contest_standings(request, contest_uuid):
     contest = get_object_or_404(Contest, uuid=contest_uuid)
-    
-    participants = ContestParticipant.objects.filter(contest=contest).select_related('user')
+
+    participants = list(
+        ContestParticipant.objects.filter(contest=contest).select_related('user')
+    )
+    contest_problems = list(
+        contest.contest_problems.select_related('problem').all()
+    )
+
+    # This used to run two queries per participant per problem, plus one more
+    # per participant, plus a fresh contest_problems query inside the loop:
+    # 50 participants over 5 problems was 550+ queries for one page. Pull every
+    # submission for the contest once and aggregate in memory instead.
+    tally = {}
+    submission_totals = defaultdict(int)
+    submissions = ContestSubmission.objects.filter(contest=contest).values_list(
+        'participant_id', 'problem_id', 'points_awarded'
+    )
+    for participant_id, problem_id, points in submissions:
+        entry = tally.setdefault((participant_id, problem_id), {'points': 0, 'submissions': 0})
+        entry['submissions'] += 1
+        entry['points'] = max(entry['points'], points or 0)
+        submission_totals[participant_id] += 1
+
     standings = []
-    
     for participant in participants:
         user_points = 0
         solved_problems = 0
-        submissions_count = 0
-        
         problem_scores = {}
-        for contest_problem in contest.contest_problems.all():
-            best_submission = ContestSubmission.objects.filter(
-                contest=contest,
-                participant=participant,
-                problem=contest_problem.problem
-            ).order_by('-points_awarded', 'submitted_at').first()
-            
-            problem_key = str(contest_problem.problem.uuid)
-            
-            if best_submission:
-                problem_scores[problem_key] = {
-                    'points': best_submission.points_awarded,
-                    'submissions': ContestSubmission.objects.filter(
-                        contest=contest,
-                        participant=participant,
-                        problem=contest_problem.problem
-                    ).count()
-                }
-                user_points += best_submission.points_awarded
-                if best_submission.points_awarded > 0:
-                    solved_problems += 1
-            else:
-                problem_scores[problem_key] = {
-                    'points': 0, 
-                    'submissions': 0
-                }
-        
-        submissions_count = ContestSubmission.objects.filter(
-            contest=contest,
-            participant=participant
-        ).count()
-        
+
+        for contest_problem in contest_problems:
+            entry = tally.get(
+                (participant.id, contest_problem.problem_id),
+                {'points': 0, 'submissions': 0},
+            )
+            # get_item looks these up by str(uuid); keep that key shape.
+            problem_scores[str(contest_problem.problem.uuid)] = dict(entry)
+            user_points += entry['points']
+            if entry['points'] > 0:
+                solved_problems += 1
+
         standings.append({
             'participant': participant,
             'total_points': user_points,
             'solved_problems': solved_problems,
-            'submissions_count': submissions_count,
+            'submissions_count': submission_totals.get(participant.id, 0),
             'problem_scores': problem_scores,
         })
-    
+
     standings.sort(key=lambda x: (-x['total_points'], x['submissions_count']))
-    
+
     for i, standing in enumerate(standings):
         standing['rank'] = i + 1
-    
+
     context = {
         'contest': contest,
         'standings': standings,
-        'contest_problems': contest.contest_problems.all(),
+        'contest_problems': contest_problems,
     }
     return render(request, 'core/contest_standings.html', context)
 

@@ -54,6 +54,12 @@ if _render_url:
 
 # === REST FRAMEWORK CONFIGURATION ===
 REST_FRAMEWORK = {
+    # ObjectId-aware renderer: MongoDB primary keys are not JSON-serialisable
+    # by DRF's default encoder. See core/renderers.py.
+    'DEFAULT_RENDERER_CLASSES': [
+        'core.renderers.MongoJSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',
+    ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
         'rest_framework.authentication.SessionAuthentication',
@@ -118,13 +124,16 @@ INSTALLED_APPS = [
 # === MIDDLEWARE ===
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'core.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    # Sits after AuthenticationMiddleware so the rate limiter can key on the
+    # authenticated user rather than a spoofable X-Forwarded-For header, and
+    # after WhiteNoise so static assets never reach it at all.
+    'core.middleware.security.SecurityMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'core.middleware.security.CodeExecutionSecurityMiddleware',
@@ -169,16 +178,30 @@ DATABASES = {
 }
 
 # === CACHING ===
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'unique-snowflake',
-        'TIMEOUT': 300,
-        'OPTIONS': {
-            'MAX_ENTRIES': 1000,
+# Rate limiting lives in this cache. LocMemCache is per-process and is wiped on
+# every restart, so with more than one worker each keeps its own counter and the
+# limit is effectively multiplied. Redis is already required for Celery, so use
+# it when it is configured and fall back to local memory for development.
+_cache_redis_url = os.environ.get('REDIS_URL')
+if _cache_redis_url:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+            'LOCATION': _cache_redis_url,
+            'TIMEOUT': 300,
         }
     }
-}
+else:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'unique-snowflake',
+            'TIMEOUT': 300,
+            'OPTIONS': {
+                'MAX_ENTRIES': 1000,
+            }
+        }
+    }
 
 # === PASSWORD VALIDATION ===
 AUTH_PASSWORD_VALIDATORS = [

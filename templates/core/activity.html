@@ -1,0 +1,58 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Activity — Thiran{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 900px; padding-top: 2.5rem; padding-bottom: 3rem;">
+
+  <div style="border: var(--border-w) solid var(--border); background: var(--accent-yellow); box-shadow: var(--shadow); padding: 1.75rem; margin-bottom: 2rem;">
+    <h1 style="font-family: var(--font-heading); text-transform: uppercase; margin: 0; font-size: 2rem;">Activity</h1>
+    <p style="margin: 0.5rem 0 0; font-weight: 500;">
+      Every accepted submission, newest first.
+      {% if total_accepted %}{{ total_accepted }} solve{{ total_accepted|pluralize }} so far.{% endif %}
+    </p>
+  </div>
+
+  {% if page_obj.object_list %}
+  <div style="border: var(--border-w) solid var(--border); background: var(--surface); box-shadow: var(--shadow);">
+    <ul class="list-unstyled mb-0">
+      {% for solution in page_obj %}
+      <li style="padding: 0.9rem 1.25rem; {% if not forloop.last %}border-bottom: 2px solid rgba(0,0,0,0.1);{% endif %}">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <span>
+            <span style="color: var(--success); font-weight: 700;">&#10003;</span>
+            <strong>{{ solution.user.username }}</strong> solved
+            <span style="font-weight: 600;">{{ solution.problem.title }}</span>
+          </span>
+          <small style="color: var(--muted); white-space: nowrap;">{{ solution.submitted_at|timesince }} ago</small>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  {% if page_obj.has_other_pages %}
+  <div class="d-flex justify-content-between align-items-center" style="margin-top: 1.5rem;">
+    {% if page_obj.has_previous %}
+      <a class="btn btn-outline-dark" href="?page={{ page_obj.previous_page_number }}">&larr; Newer</a>
+    {% else %}<span></span>{% endif %}
+
+    <span style="font-family: var(--font-heading); font-size: 0.85rem;">
+      Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+    </span>
+
+    {% if page_obj.has_next %}
+      <a class="btn btn-outline-dark" href="?page={{ page_obj.next_page_number }}">Older &rarr;</a>
+    {% else %}<span></span>{% endif %}
+  </div>
+  {% endif %}
+
+  {% else %}
+  <div style="border: var(--border-w) solid var(--border); background: var(--surface); box-shadow: var(--shadow); padding: 3rem; text-align: center;">
+    <p style="margin: 0 0 1.25rem; font-weight: 600;">No accepted submissions yet.</p>
+    <a href="{% url 'problem_list' %}" class="btn btn-primary">Browse Problems</a>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

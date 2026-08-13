@@ -17,25 +17,30 @@ from .serializers import (
     AdminSettingsSerializer
 )
 from .pagination import StandardResultsSetPagination
+from .permissions import IsSetterOrAdminOrReadOnly, IsSelfOrStaff
 
 
 class UserViewSet(viewsets.ModelViewSet):
     """
     ViewSet for User model
     List: GET /api/users/
-    Create: POST /api/users/
     Retrieve: GET /api/users/{id}/
-    Update: PUT/PATCH /api/users/{id}/
-    Delete: DELETE /api/users/{id}/
+    Update: PUT/PATCH /api/users/{id}/  (own account, or staff)
+    Delete: DELETE /api/users/{id}/     (own account, or staff)
+
+    Account creation is deliberately not exposed here: this serializer has no
+    password field, so it would mint accounts with an unusable password.
+    Registration goes through the site's register view.
     """
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsSelfOrStaff]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['username', 'email', 'first_name', 'last_name']
     ordering_fields = ['id', 'date_joined', 'username']
     ordering = ['-date_joined']
     pagination_class = StandardResultsSetPagination
+    http_method_names = ['get', 'put', 'patch', 'delete', 'head', 'options']
 
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def me(self, request):
@@ -54,32 +59,32 @@ class UserViewSet(viewsets.ModelViewSet):
         except UserProfile.DoesNotExist:
             return Response({'detail': 'User profile not found'}, status=status.HTTP_404_NOT_FOUND)
 
-    def get_permissions(self):
-        """Allow anyone to list users, but only authenticated users for other actions"""
-        if self.action == 'list':
-            permission_classes = [AllowAny]
-        else:
-            permission_classes = [IsAuthenticated]
-        return [permission() for permission in permission_classes]
-
 
 class UserProfileViewSet(viewsets.ModelViewSet):
     """
     ViewSet for UserProfile model
     List: GET /api/profiles/
-    Create: POST /api/profiles/
     Retrieve: GET /api/profiles/{id}/
-    Update: PUT/PATCH /api/profiles/{id}/
-    Delete: DELETE /api/profiles/{id}/
+    Update: PUT/PATCH /api/profiles/{id}/  (own profile, or staff)
+
+    Note that `role` is only writable by staff - see get_serializer(). Without
+    that, any participant could PATCH their own profile to role=admin.
     """
     queryset = UserProfile.objects.all()
     serializer_class = UserProfileSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsSelfOrStaff]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['user__username', 'role']
     ordering_fields = ['user__username', 'role']
     ordering = ['user__username']
     pagination_class = StandardResultsSetPagination
+    http_method_names = ['get', 'put', 'patch', 'head', 'options']
+
+    def get_serializer(self, *args, **kwargs):
+        serializer = super().get_serializer(*args, **kwargs)
+        if not self.request.user.is_staff and 'role' in serializer.fields:
+            serializer.fields['role'].read_only = True
+        return serializer
 
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def me(self, request):
@@ -103,19 +108,12 @@ class ProblemViewSet(viewsets.ModelViewSet):
     """
     queryset = Problem.objects.all().order_by('-created_at')
     serializer_class = ProblemSerializer
+    permission_classes = [IsSetterOrAdminOrReadOnly]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['title', 'tags', 'description']
     ordering_fields = ['created_at', 'difficulty', 'title']
     ordering = ['-created_at']
     pagination_class = StandardResultsSetPagination
-
-    def get_permissions(self):
-        """Allow anyone to list and retrieve, but only authenticated users to create/update"""
-        if self.action in ['list', 'retrieve']:
-            permission_classes = [AllowAny]
-        else:
-            permission_classes = [IsAuthenticated]
-        return [permission() for permission in permission_classes]
 
     def perform_create(self, serializer):
         """Set created_by to current user"""
@@ -191,12 +189,16 @@ class SolutionViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def problem_solutions(self, request):
-        """Get solutions for a specific problem"""
+        """Get the requesting user's solutions for a specific problem.
+
+        This used to query Solution.objects directly, bypassing get_queryset()
+        and handing out every user's source code for any problem.
+        """
         problem_id = request.query_params.get('problem_id')
         if not problem_id:
             return Response({'error': 'problem_id parameter required'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        solutions = Solution.objects.filter(problem_id=problem_id).order_by('-submitted_at')
+
+        solutions = self.get_queryset().filter(problem_id=problem_id).order_by('-submitted_at')
         page = self.paginate_queryset(solutions)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
@@ -210,6 +212,7 @@ class ContestViewSet(viewsets.ModelViewSet):
     ViewSet for Contest model with comprehensive filtering and statistics
     """
     queryset = Contest.objects.all().order_by('-start_time')
+    permission_classes = [IsSetterOrAdminOrReadOnly]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['title', 'description']
     ordering_fields = ['start_time', 'created_at', 'title']
@@ -220,14 +223,6 @@ class ContestViewSet(viewsets.ModelViewSet):
         if self.action == 'retrieve':
             return ContestDetailSerializer
         return ContestListSerializer
-
-    def get_permissions(self):
-        """Allow anyone to list and retrieve, but only authenticated users to create/update"""
-        if self.action in ['list', 'retrieve']:
-            permission_classes = [AllowAny]
-        else:
-            permission_classes = [IsAuthenticated]
-        return [permission() for permission in permission_classes]
 
     def perform_create(self, serializer):
         """Set created_by to current user"""
@@ -348,17 +343,10 @@ class ContestProblemViewSet(viewsets.ModelViewSet):
     """ViewSet for ContestProblem model"""
     queryset = ContestProblem.objects.all().select_related('contest', 'problem')
     serializer_class = ContestProblemSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsSetterOrAdminOrReadOnly]
     filter_backends = [filters.OrderingFilter]
     ordering_fields = ['order', 'points']
     ordering = ['order']
-
-    def get_permissions(self):
-        if self.action in ['list', 'retrieve']:
-            permission_classes = [AllowAny]
-        else:
-            permission_classes = [IsAuthenticated]
-        return [permission() for permission in permission_classes]
 
     @action(detail=False, methods=['get'], permission_classes=[AllowAny])
     def by_contest(self, request):
@@ -372,8 +360,13 @@ class ContestProblemViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-class ContestParticipantViewSet(viewsets.ModelViewSet):
-    """ViewSet for ContestParticipant model"""
+class ContestParticipantViewSet(viewsets.ReadOnlyModelViewSet):
+    """Read-only view of contest registrations.
+
+    Registration happens through POST /api/contests/{id}/join/, which checks
+    capacity. Exposing write methods here let anyone create registrations for
+    other users or delete them outright.
+    """
     queryset = ContestParticipant.objects.all().select_related('contest', 'user')
     serializer_class = ContestParticipantSerializer
     permission_classes = [IsAuthenticated]
@@ -395,8 +388,14 @@ class ContestParticipantViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-class ContestSubmissionViewSet(viewsets.ModelViewSet):
-    """ViewSet for ContestSubmission model"""
+class ContestSubmissionViewSet(viewsets.ReadOnlyModelViewSet):
+    """Read-only view of contest submissions.
+
+    This was a full ModelViewSet guarded only by IsAuthenticated, so any user
+    could POST or PATCH verdict, score and points_awarded directly and write
+    themselves to the top of the standings. Scores are produced by the judge,
+    never by the client.
+    """
     queryset = ContestSubmission.objects.all().select_related('contest', 'participant', 'problem', 'solution')
     serializer_class = ContestSubmissionSerializer
     permission_classes = [IsAuthenticated]
@@ -425,7 +424,7 @@ class ContestAnnouncementViewSet(viewsets.ModelViewSet):
     """ViewSet for ContestAnnouncement model"""
     queryset = ContestAnnouncement.objects.all().select_related('contest', 'created_by')
     serializer_class = ContestAnnouncementSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsSetterOrAdminOrReadOnly]
     filter_backends = [filters.OrderingFilter]
     ordering_fields = ['created_at', 'is_important']
     ordering = ['-created_at']
