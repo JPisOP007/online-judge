@@ -9,6 +9,7 @@ import shutil
 import time
 import ast
 import re
+import signal
 from django.conf import settings
 
 # Platform detection
@@ -30,6 +31,34 @@ MAX_MEMORY_MB = 128  # MB
 MAX_FILE_SIZE = 1024 * 1024  # 1MB
 MAX_OUTPUT_SIZE = 1024 * 1024  # 1MB
 ALLOWED_LANGUAGES = ['python', 'cpp', 'java', 'javascript']
+
+# Per-language address space caps, in MB. None means "do not set RLIMIT_AS".
+#
+# RLIMIT_AS caps *virtual* address space, not resident memory. The JVM and Node
+# both reserve far more virtual space than they ever fault in - V8 reserves a
+# multi-gigabyte region during startup - so a 128MB RLIMIT_AS stops them
+# launching at all, with "Could not reserve enough space for object heap" or a
+# V8 fatal error, before a single line of user code runs. For those two the
+# heap is bounded with runtime flags instead (-Xmx, --max-old-space-size).
+ADDRESS_SPACE_MB = {
+    'python': 512,
+    'cpp': 512,
+    'java': None,
+    'javascript': None,
+}
+
+# RLIMIT_NPROC is enforced per UID, not per process: it counts every process
+# already owned by the application user, which on this deployment includes
+# gunicorn and the Celery worker. It also counts threads on Linux, and a JVM
+# spawns a few dozen at startup. The old value of 15 was below what the JVM
+# needs before user code begins. Runaway processes are actually contained by
+# the wall-clock kill in run_with_limits(), which now kills the whole process
+# group rather than only the direct child.
+MAX_PROCESSES = 128
+
+# g++ compiling <bits/stdc++.h> routinely takes longer than 10s on a small
+# instance, which surfaced to users as "Compilation timed out" on correct code.
+COMPILE_TIMEOUT = 30
 
 # Smart whitelist system for imports
 ALLOWED_IMPORTS = {
@@ -337,17 +366,50 @@ def create_secure_temp_directory():
     os.chmod(temp_dir, 0o777)
     return temp_dir
 
-def set_resource_limits():
-    """Set resource limits (Unix only)"""
-    if HAS_RESOURCE and not IS_WINDOWS:
+def make_resource_limiter(language):
+    """Build the preexec_fn that applies this language's rlimits.
+
+    Returns None where rlimits are unavailable (Windows), so the caller can
+    pass it straight to Popen(preexec_fn=...).
+    """
+    if IS_WINDOWS or not HAS_RESOURCE:
+        return None
+
+    address_space_mb = ADDRESS_SPACE_MB.get(language, MAX_MEMORY_MB)
+
+    def apply_limits():
         try:
-            memory_limit = MAX_MEMORY_MB * 1024 * 1024
-            resource.setrlimit(resource.RLIMIT_AS, (memory_limit, memory_limit))
+            if address_space_mb is not None:
+                cap = address_space_mb * 1024 * 1024
+                resource.setrlimit(resource.RLIMIT_AS, (cap, cap))
             resource.setrlimit(resource.RLIMIT_CPU, (MAX_EXECUTION_TIME, MAX_EXECUTION_TIME))
             resource.setrlimit(resource.RLIMIT_FSIZE, (MAX_FILE_SIZE, MAX_FILE_SIZE))
-            resource.setrlimit(resource.RLIMIT_NPROC, (15, 15))
+            resource.setrlimit(resource.RLIMIT_NPROC, (MAX_PROCESSES, MAX_PROCESSES))
         except (OSError, ValueError):
             pass
+
+    return apply_limits
+
+
+def terminate_process_tree(process):
+    """Kill a timed-out submission and anything it spawned.
+
+    process.kill() only signals the direct child, so a program that forked left
+    its children running after a TLE verdict. The child is started in its own
+    session, which lets us signal the entire group.
+    """
+    if IS_WINDOWS:
+        process.kill()
+    else:
+        try:
+            os.killpg(os.getpgid(process.pid), signal.SIGKILL)
+        except (ProcessLookupError, PermissionError, OSError):
+            process.kill()
+
+    try:
+        process.wait(timeout=5)
+    except Exception:
+        pass
 
 def find_compiler(compiler_name):
     """Find the full path of a compiler/interpreter"""
@@ -502,7 +564,7 @@ def execute_python_secure(code, input_data, expected_output, temp_dir):
     with open(filepath, 'w', encoding='utf-8') as f:
         f.write(restricted_code)
     
-    return run_with_limits([python_path, filepath], input_data, expected_output, temp_dir)
+    return run_with_limits([python_path, filepath], input_data, expected_output, temp_dir, 'python')
 
 def execute_cpp_secure(code, input_data, expected_output, temp_dir):
     gpp_path = find_compiler('g++')
@@ -517,13 +579,14 @@ def execute_cpp_secure(code, input_data, expected_output, temp_dir):
     compile_cmd = [gpp_path, filepath, '-o', exe_path]
     
     try:
-        compile_proc = subprocess.run(compile_cmd, capture_output=True, text=True, timeout=10)
+        compile_proc = subprocess.run(compile_cmd, capture_output=True, text=True,
+                                      timeout=COMPILE_TIMEOUT)
         if compile_proc.returncode != 0:
             return {'verdict': 'CE', 'error': compile_proc.stderr or "Compilation failed"}
     except subprocess.TimeoutExpired:
         return {'verdict': 'CE', 'error': 'Compilation timed out'}
-    
-    return run_with_limits([exe_path], input_data, expected_output, temp_dir)
+
+    return run_with_limits([exe_path], input_data, expected_output, temp_dir, 'cpp')
 
 def execute_java_secure(code, input_data, expected_output, temp_dir):
     javac_path = find_compiler('javac')
@@ -538,13 +601,24 @@ def execute_java_secure(code, input_data, expected_output, temp_dir):
     compile_cmd = [javac_path, filepath]
     
     try:
-        compile_proc = subprocess.run(compile_cmd, cwd=temp_dir, capture_output=True, text=True, timeout=10)
+        compile_proc = subprocess.run(compile_cmd, cwd=temp_dir, capture_output=True, text=True,
+                                      timeout=COMPILE_TIMEOUT)
         if compile_proc.returncode != 0:
             return {'verdict': 'CE', 'error': compile_proc.stderr or "Compilation failed"}
     except subprocess.TimeoutExpired:
         return {'verdict': 'CE', 'error': 'Compilation timed out'}
-    
-    return run_with_limits([java_path, '-cp', temp_dir, 'Main'], input_data, expected_output, temp_dir)
+
+    # -Xmx bounds the heap now that RLIMIT_AS no longer does. SerialGC keeps the
+    # thread count down on a small instance, TieredStopAtLevel=1 cuts JIT warmup
+    # off the 5s budget, and -Xss64m supports the deep recursion these problems
+    # tend to need.
+    java_cmd = [
+        java_path,
+        '-Xmx256m', '-Xss64m',
+        '-XX:+UseSerialGC', '-XX:TieredStopAtLevel=1',
+        '-cp', temp_dir, 'Main',
+    ]
+    return run_with_limits(java_cmd, input_data, expected_output, temp_dir, 'java')
 
 def create_javascript_harness(code):
     """Wrap JavaScript so stdin is available without require().
@@ -589,7 +663,9 @@ def execute_javascript_secure(code, input_data, expected_output, temp_dir):
     with open(filepath, 'w', encoding='utf-8') as f:
         f.write(create_javascript_harness(code))
 
-    return run_with_limits([node_path, filepath], input_data, expected_output, temp_dir)
+    # Bounds the V8 heap now that RLIMIT_AS no longer does.
+    node_cmd = [node_path, '--max-old-space-size=256', filepath]
+    return run_with_limits(node_cmd, input_data, expected_output, temp_dir, 'javascript')
 
 def build_execution_command(cmd, temp_dir):
     """Wrap command with appropriate isolation for the environment.
@@ -641,7 +717,7 @@ def build_execution_command(cmd, temp_dir):
     return ['sudo', '-n', '-u', 'sandboxuser'] + cmd
 
 
-def run_with_limits(cmd, input_data, expected_output, temp_dir):
+def run_with_limits(cmd, input_data, expected_output, temp_dir, language='python'):
     """Run command with limits"""
     start_time = time.time()
     
@@ -665,7 +741,7 @@ def run_with_limits(cmd, input_data, expected_output, temp_dir):
             )
         else:
             exec_cmd = build_execution_command(cmd, temp_dir)
-                
+
             process = subprocess.Popen(
                 exec_cmd,
                 stdin=subprocess.PIPE,
@@ -674,7 +750,9 @@ def run_with_limits(cmd, input_data, expected_output, temp_dir):
                 text=True,
                 cwd=temp_dir,
                 env=secure_env,
-                preexec_fn=set_resource_limits
+                preexec_fn=make_resource_limiter(language),
+                # Own session, so a timeout can kill the whole process group.
+                start_new_session=True,
             )
         
         # Normalize input
@@ -721,7 +799,7 @@ def run_with_limits(cmd, input_data, expected_output, temp_dir):
                 }
         
         except subprocess.TimeoutExpired:
-            process.kill()
+            terminate_process_tree(process)
             return {'verdict': 'TLE', 'error': f'Time Limit Exceeded ({MAX_EXECUTION_TIME} seconds)'}
     
     except Exception as e:
