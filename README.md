@@ -42,7 +42,7 @@ The platform is designed to be easily deployable using Docker.
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/online-judge.git
+git clone https://github.com/JPisOP007/online-judge.git
 cd online-judge
 
 # Set up environment variables

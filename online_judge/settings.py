@@ -36,7 +36,16 @@ else:
     if not SECRET_KEY:
         from django.core.exceptions import ImproperlyConfigured
         raise ImproperlyConfigured("DJANGO_SECRET_KEY environment variable is required in production (DEBUG=False).")
-ALLOWED_HOSTS = ["thiran.me", "www.thiran.me", "online-judge-11ld.onrender.com", "localhost", "127.0.0.1"]
+_DEFAULT_ALLOWED_HOSTS = [
+    "thiran.me", "www.thiran.me", "online-judge-11ld.onrender.com",
+    "localhost", "127.0.0.1",
+]
+# DJANGO_ALLOWED_HOSTS is documented in .env.example and DEPLOYMENT_GUIDE.md but
+# was previously ignored here. Entries are added to the defaults rather than
+# replacing them, so setting the variable can never knock the live host out of
+# the list.
+_env_allowed_hosts = [h.strip() for h in os.getenv('DJANGO_ALLOWED_HOSTS', '').split(',') if h.strip()]
+ALLOWED_HOSTS = list(dict.fromkeys(_DEFAULT_ALLOWED_HOSTS + _env_allowed_hosts))
 
 # Auto-add Render hostname
 _render_url = os.getenv('RENDER_EXTERNAL_URL', '')

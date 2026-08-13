@@ -21,7 +21,7 @@ This guide outlines how to deploy the Online Judge platform securely using Docke
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/yourusername/online-judge.git
+   git clone https://github.com/JPisOP007/online-judge.git
    cd online-judge
    ```
 
@@ -58,6 +58,24 @@ This guide outlines how to deploy the Online Judge platform securely using Docke
    # Collect static files
    docker-compose exec web python manage.py collectstatic --noinput
    ```
+
+## ☁️ Note on PaaS Deployment (Render)
+
+The public instance runs on Render from this repository's `Dockerfile`, not via
+`docker-compose`. Two differences matter:
+
+- Render runs **unprivileged containers**, so `nsjail` and `sudo -u sandboxuser`
+  are unavailable and submissions execute as the application user under
+  `setrlimit` alone. See `SECURITY_FIXES.md` for what that means for the threat
+  model.
+- There is **no Nginx layer**; Gunicorn is addressed directly and static files
+  are served by WhiteNoise.
+
+Set `REDIS_URL` on the service. It backs both Celery and the cache used for
+rate limiting; without it the cache silently falls back to per-process memory
+and the rate limit is enforced per worker rather than globally.
+
+---
 
 ## 🛡️ Security Configuration Checklist
 
@@ -97,4 +115,4 @@ docker-compose logs -f web
 docker-compose logs -f nginx
 ```
 
-Security events (like blocked dangerous code executions) are also logged internally to `security.log` if configured in the Django logging settings.
+Security events (blocked code executions, rate-limit trips) are written to stdout under the `core.security` logger, so they appear in `docker-compose logs` and in your platform's log stream. There is no log file: container disks are ephemeral.

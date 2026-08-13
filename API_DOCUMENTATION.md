@@ -46,6 +46,33 @@ Alternatively, use cookie-based session authentication after login.
 
 ---
 
+## Roles and Permissions
+
+Every account carries a role on its profile: `participant` (the default),
+`setter`, or `admin`. Django staff are treated as admin. The permission column
+in the tables below uses these terms:
+
+| Term | Meaning |
+|------|---------|
+| Public | No authentication required |
+| Authenticated | Any signed-in account |
+| Own account, or staff | The owning user, or Django staff |
+| Setter or admin | Accounts with the `setter` or `admin` role, or staff |
+
+Two things are deliberately not writable over the API:
+
+- **Contest scores.** `ContestSubmission` and `ContestParticipant` are
+  read-only. Verdicts and points come from the judge.
+- **Profile roles.** `role` is only writable by staff, so an account cannot
+  promote itself.
+
+**Hidden test cases** are omitted from problem responses unless the caller is
+staff or holds the `setter`/`admin` role. Anonymous and participant callers
+receive `"test_cases": []`, including where a problem is nested inside a
+contest-problem response.
+
+---
+
 ## API Endpoints
 
 ### Users
@@ -53,11 +80,10 @@ Alternatively, use cookie-based session authentication after login.
 
 | Method | Endpoint | Description | Permissions |
 |--------|----------|-------------|-------------|
-| GET | `/` | List all users (paginated) | Public |
-| POST | `/` | Create new user | Authenticated |
+| GET | `/` | List all users (paginated) | Authenticated |
 | GET | `/{id}/` | Get user details | Authenticated |
-| PUT | `/{id}/` | Update user | Authenticated |
-| DELETE | `/{id}/` | Delete user | Authenticated |
+| PUT | `/{id}/` | Update user | Own account, or staff |
+| DELETE | `/{id}/` | Delete user | Own account, or staff |
 | GET | `/me/` | Get current user | Authenticated |
 | GET | `/{id}/profile/` | Get user's profile | Authenticated |
 
@@ -86,10 +112,8 @@ Authorization: Bearer <token>
 | Method | Endpoint | Description | Permissions |
 |--------|----------|-------------|-------------|
 | GET | `/` | List all profiles | Authenticated |
-| POST | `/` | Create profile | Authenticated |
 | GET | `/{id}/` | Get profile details | Authenticated |
-| PUT | `/{id}/` | Update profile | Authenticated |
-| DELETE | `/{id}/` | Delete profile | Authenticated |
+| PUT | `/{id}/` | Update profile | Own profile, or staff |
 | GET | `/me/` | Get current user's profile | Authenticated |
 
 **Update Profile with Photo:**
@@ -104,7 +128,9 @@ Content-Type: multipart/form-data
 }
 ```
 
-Supported photo formats: JPG, PNG, GIF, WEBP (max 5MB, min 1024x1024px)
+Supported photo formats: JPG, PNG, GIF, WEBP (max 20MB, up to 4096x4096px). The
+file's magic bytes must match its extension, and the image must open cleanly in
+Pillow.
 
 ---
 
@@ -114,10 +140,10 @@ Supported photo formats: JPG, PNG, GIF, WEBP (max 5MB, min 1024x1024px)
 | Method | Endpoint | Description | Permissions |
 |--------|----------|-------------|-------------|
 | GET | `/` | List all problems | Public |
-| POST | `/` | Create problem | Authenticated |
+| POST | `/` | Create problem | Setter or admin |
 | GET | `/{id}/` | Get problem details | Public |
-| PUT | `/{id}/` | Update problem | Authenticated |
-| DELETE | `/{id}/` | Delete problem | Authenticated |
+| PUT | `/{id}/` | Update problem | Setter or admin |
+| DELETE | `/{id}/` | Delete problem | Setter or admin |
 | GET | `/by_difficulty/` | Filter by difficulty | Public |
 | GET | `/{id}/solutions_count/` | Get solution stats | Public |
 
@@ -181,7 +207,7 @@ Content-Type: application/json
 | POST | `/` | Submit solution | Authenticated |
 | GET | `/{id}/` | Get solution details | Authenticated |
 | GET | `/my_solutions/` | Get all my solutions | Authenticated |
-| GET | `/problem_solutions/` | Get solutions for problem | Authenticated |
+| GET | `/problem_solutions/` | Your own solutions for a problem | Authenticated |
 
 **Submit Solution:**
 ```bash
@@ -216,10 +242,10 @@ Authorization: Bearer <token>
 | Method | Endpoint | Description | Permissions |
 |--------|----------|-------------|-------------|
 | GET | `/` | List contests | Public |
-| POST | `/` | Create contest | Authenticated |
+| POST | `/` | Create contest | Setter or admin |
 | GET | `/{id}/` | Get contest details | Public |
-| PUT | `/{id}/` | Update contest | Authenticated |
-| DELETE | `/{id}/` | Delete contest | Authenticated |
+| PUT | `/{id}/` | Update contest | Setter or admin |
+| DELETE | `/{id}/` | Delete contest | Setter or admin |
 | GET | `/upcoming/` | Get upcoming contests | Public |
 | GET | `/running/` | Get running contests | Public |
 | GET | `/ended/` | Get ended contests | Public |
@@ -304,10 +330,10 @@ Content-Type: application/json
 | Method | Endpoint | Description | Permissions |
 |--------|----------|-------------|-------------|
 | GET | `/` | List contest problems | Public |
-| POST | `/` | Add problem to contest | Authenticated |
+| POST | `/` | Add problem to contest | Setter or admin |
 | GET | `/{id}/` | Get problem details | Public |
-| PUT | `/{id}/` | Update problem in contest | Authenticated |
-| DELETE | `/{id}/` | Remove problem from contest | Authenticated |
+| PUT | `/{id}/` | Update problem in contest | Setter or admin |
+| DELETE | `/{id}/` | Remove problem from contest | Setter or admin |
 | GET | `/by_contest/` | Get problems in contest | Public |
 
 **Get Problems in Contest:**
@@ -326,6 +352,9 @@ GET /api/contest-problems/by_contest/?contest_id=1
 | GET | `/{id}/` | Get participant details | Authenticated |
 | GET | `/by_contest/` | Get participants in contest | Public |
 
+> Read-only. Register with `POST /api/contests/{id}/join/`, which enforces the
+> capacity limit.
+
 **Get Participants in Contest:**
 ```bash
 GET /api/contest-participants/by_contest/?contest_id=1&page_size=50
@@ -339,9 +368,11 @@ GET /api/contest-participants/by_contest/?contest_id=1&page_size=50
 | Method | Endpoint | Description | Permissions |
 |--------|----------|-------------|-------------|
 | GET | `/` | List submissions | Authenticated |
-| POST | `/` | Create submission | Authenticated |
 | GET | `/{id}/` | Get submission details | Authenticated |
 | GET | `/by_contest/` | Get submissions in contest | Public |
+
+> Contest submissions are read-only over the API. Scores are produced by the
+> judge, never supplied by a client. Submit through the contest problem page.
 
 **Get Submissions in Contest:**
 ```bash

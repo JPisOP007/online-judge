@@ -13,15 +13,26 @@ Before any Python code is executed, it is parsed into an Abstract Syntax Tree (A
 - **Reflection & Introspection:** Blocks attributes like `getattr`, `setattr`, `vars`, `globals`, `locals`, and format-string dunder exploits to prevent sandbox escapes.
 - **Restricted `sys` Proxy:** We supply a safe proxy of the `sys` module to user scripts (allowing `stdin/stdout` and `setrecursionlimit`) while completely blocking access to `sys.modules` or `sys._getframe` which could be used to bypass AST filters. Standard library imports remain unhindered.
 
-### B. OS-Level Isolation (`nsjail`)
-For true robust containment of C++, Java, Node.js, and Python, we utilize Google's `nsjail` leveraging Linux namespaces (PID, mount, network, user, IPC) and `cgroups`:
-- **Network Isolation:** The sandbox runs without `CLONE_NEWNET` disabled for outbound egress. Untrusted code has absolutely no network access (`--disable_clone_newnet`, `--iface_no_lo`).
-- **Filesystem Isolation:** The sandbox is executed in a chroot with empty `tmpfs` overlays mounted over `/tmp`, `/etc`, `/var`, `/home`, and `/root`. This ensures world-readable host files (like `/etc/hostname`) or application canaries are invisible and inaccessible.
-- **Resource Constraints:** `nsjail` rigorously enforces limits on Memory (`RLIMIT_AS`), CPU time (`RLIMIT_CPU`), and File output size (`RLIMIT_FSIZE`).
-- **Identity Masking:** Code runs under the unprivileged `sandboxuser` (`UID/GID 65534`).
+### B. Static Analysis for C++, Java and JavaScript
+These languages have no equivalent to Python's import hook, so submissions are matched against per-language denylists covering process creation, file I/O, sockets, reflection, inline assembly and environment access. Matching runs on source with comments and string literals blanked out, so a payload cannot be hidden in a comment and a benign `printf("system(x)")` does not trigger a false positive.
 
-### C. Environment Scrubbing
-Before launching a subprocess for any language, the environment variables are explicitly wiped. The subprocess receives a clean, minimal environment (e.g., `{'PATH': '/usr/bin:/bin'}`). This ensures that application secrets (like `MONGODB_URI` and `DJANGO_SECRET_KEY`) injected into the container are never leaked to user-submitted code.
+JavaScript additionally runs inside a harness that pre-reads stdin and exposes `readline()` / `readAll()`, then executes user code in a scope where `require`, `process`, `module` and `globalThis` are shadowed — `require('child_process')` would otherwise be a one-line escape.
+
+**These are denylists, and denylists are incomplete by construction.** They reject known-dangerous constructs rather than permitting only known-safe ones. They raise the cost of an attack and stop opportunistic attempts; they are not a containment boundary. That role belongs to the OS-level isolation below.
+
+### C. OS-Level Isolation (`nsjail`) — Docker deployments only
+Where the container has the necessary capabilities, Google's `nsjail` provides containment using Linux namespaces:
+- **Filesystem Isolation:** Executed in a chroot with empty `tmpfs` overlays mounted over `/tmp`, `/etc`, `/var`, `/home`, and `/root`, so world-readable host files and application canaries are invisible.
+- **Resource Constraints:** Limits on memory (`RLIMIT_AS`), CPU time (`RLIMIT_CPU`) and output size (`RLIMIT_FSIZE`).
+- **Identity Masking:** Code runs as the unprivileged `sandboxuser` (`UID/GID 65534`).
+- **Network:** *Not* isolated. Creating a network namespace requires `CAP_NET_ADMIN`, which is unavailable in our PaaS environment, so the sandbox is launched with `--disable_clone_newnet` and shares the host network. Untrusted code can therefore make outbound network requests. This is a known gap, not a mitigation.
+
+**On the live deployment (Render), none of this applies.** Render runs unprivileged containers, so neither `nsjail` nor `sudo -u sandboxuser` is available and submissions execute as the application user with only `setrlimit` caps and the static analysis above. The isolation described in this section covers the Docker deployment.
+
+### D. Environment Scrubbing
+Subprocesses are launched with a minimal environment — only `PATH` — so application secrets such as `MONGODB_URI` and `DJANGO_SECRET_KEY` are not inherited.
+
+Note the limit of this control: where user code runs as the same OS user as the application, which is the case on Render, a process that got past the static analysis could still read the parent's environment through `/proc/<pid>/environ`. Scrubbing raises the bar; it is not a boundary.
 
 ## 2. Container Security
 
@@ -32,7 +43,10 @@ The application runs in a hardened Docker environment:
 
 ## 3. Web Application & API Security
 
-- **Rate Limiting:** IP-based throttling is enforced via Django REST Framework (100 requests/hour for anonymous, 1000/hour for authenticated users) to prevent API abuse.
+- **Rate Limiting:** Two layers. Django REST Framework throttles the API (100/hour anonymous, 1000/hour authenticated), and a custom middleware applies a site-wide per-minute budget backed by Redis so the counter is shared across workers. Authenticated callers are keyed by user id rather than by `X-Forwarded-For`, which a client can forge; anonymous callers fall back to IP, which is best-effort.
+- **Role-Based Access Control:** API writes are gated by profile role. Problems, contests and announcements require `setter` or `admin`; accounts and profiles are editable only by their owner or staff; `role` itself is writable only by staff; contest submissions and participants are read-only, so scores cannot be supplied by a client.
+- **Content Security Policy:** Restricts script, style, image and font sources to the CDNs actually in use, and sets `connect-src 'self'`, `form-action 'self'`, `object-src 'none'` and `frame-ancestors 'none'`. `'unsafe-inline'` is currently required for scripts and styles because the templates rely on inline blocks and attributes.
+- **Markdown Sanitisation:** Problem statements are rendered client-side with `marked` and scrubbed through DOMPurify before insertion, since `marked` has not sanitised by default since v5.
 - **JWT Authentication:** Secure access token generation with short lifespans (1 hour) and rotating refresh tokens (7 days).
 - **CORS Policies:** Cross-Origin Resource Sharing is strictly limited to allowed frontend domains specified in the environment variables.
 - **Security Headers:** The application enforces XSS filtering, content-type sniffing protection, and strict X-Frame-Options (`DENY`).
@@ -42,12 +56,16 @@ The application runs in a hardened Docker environment:
 To protect against malicious payloads disguised as profile photos:
 - **MIME Validation:** We use `python-magic` to inspect the actual file signature (magic bytes) rather than trusting the file extension.
 - **Image Integrity Checks:** Uploaded images are passed through the `Pillow` (PIL) library to verify they are structurally valid images.
-- **Size Restrictions:** Strict limits (max 5MB) on all media uploads.
+- **Size Restrictions:** Profile photos are capped at 20MB and 4096x4096 pixels by the validator; Django buffers uploads over 5MB to disk rather than memory.
 
 ## 5. Known Threat Model Exclusions
 
-While the application is heavily fortified, it is important to acknowledge the limitations of a software-level sandbox:
-- **Container Escapes:** We rely on Linux namespaces and standard Docker isolation. We do not currently use hypervisor-level microVMs (like Firecracker).
+It is worth being explicit about what this design does *not* stop:
+- **Denylists are incomplete by construction.** For C++, Java and JavaScript the application-level control rejects known-dangerous constructs rather than permitting only known-safe ones. A determined attacker who finds a construct the list does not name will get past it.
+- **Reduced isolation on PaaS.** On Render, unprivileged containers mean no `nsjail` and no separate sandbox user, so submissions run as the application user under `setrlimit` alone.
+- **Network access.** No network namespace is created (see section C), so untrusted code can make outbound requests.
+- **Filesystem reads.** Where code runs as the application user, it can read application source. Secrets are supplied by environment rather than committed, but see the note on `/proc/<pid>/environ` in section D.
+- **Container Escapes:** We rely on Linux namespaces and standard Docker isolation, not hypervisor-level microVMs such as Firecracker.
 - **Side-Channel Attacks:** CPU-level vulnerabilities (e.g., Spectre) are not mitigated by this sandbox.
 
 *For any security reports or vulnerabilities, please contact the repository maintainer directly rather than opening a public issue.*
