@@ -10,8 +10,12 @@ from django.db.models import Sum, Count, Q
 from django.core.paginator import Paginator
 from django.conf import settings
 from django.utils.http import url_has_allowed_host_and_scheme
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
 from functools import wraps
 from django.db import IntegrityError
+import re
 from core.models import (
     UserProfile, Problem, Solution, Contest, ContestParticipant,
     ContestProblem, ContestSubmission, ContestAnnouncement
@@ -93,28 +97,59 @@ def home(request):
     return render(request, 'core/home.html', context)
 
 def register(request):
+    username = ''
+    email = ''
+
     if request.method == 'POST':
-        username = request.POST.get('username')
-        password = request.POST.get('password')
-        email = request.POST.get('email', '')  # Optional
+        username = (request.POST.get('username') or '').strip()
+        email = (request.POST.get('email') or '').strip()
+        password = request.POST.get('password') or ''
 
-        if User.objects.filter(username=username).exists():
-            messages.error(request, 'Username already exists.')
-            return render(request, 'core/register.html')
+        errors = []
 
-        try:
-            user = User.objects.create_user(username=username, password=password, email=email)
+        if not username:
+            errors.append('Username is required.')
+        elif len(username) > 150:
+            errors.append('Username must be 150 characters or fewer.')
+        elif not re.match(r'^[\w.@+-]+$', username):
+            errors.append('Username can only contain letters, digits and @/./+/-/_ characters.')
+        elif User.objects.filter(username=username).exists():
+            errors.append('Username already exists.')
 
-            # Safe profile creation
-            UserProfile.objects.get_or_create(user=user, defaults={'role': 'participant'})
+        if email:
+            try:
+                validate_email(email)
+            except ValidationError:
+                errors.append('Enter a valid email address.')
 
-            messages.success(request, 'Registration successful! Please login.')
-            return redirect('login')
+        if not password:
+            errors.append('Password is required.')
+        else:
+            # AUTH_PASSWORD_VALIDATORS were configured but never ran here, because
+            # create_user() does not validate. Run them explicitly.
+            try:
+                validate_password(password, User(username=username, email=email))
+            except ValidationError as exc:
+                errors.extend(exc.messages)
 
-        except IntegrityError as e:
-            messages.error(request, f'Registration failed: {str(e)}')
+        if errors:
+            for error in errors:
+                messages.error(request, error)
+        else:
+            try:
+                user = User.objects.create_user(username=username, password=password, email=email)
 
-    return render(request, 'core/register.html')
+                # Safe profile creation
+                UserProfile.objects.get_or_create(user=user, defaults={'role': 'participant'})
+
+                messages.success(request, 'Registration successful! Please login.')
+                return redirect('login')
+
+            except IntegrityError:
+                # Lost a race on the username; don't leak database internals.
+                messages.error(request, 'That username is already taken. Please choose another.')
+
+    return render(request, 'core/register.html', {'username': username, 'email': email})
 
 def login_view(request):
     if request.method == 'POST':

@@ -11,10 +11,10 @@
         {% csrf_token %}
 
         <label for="username" style="font-weight: 700; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.05em; margin-bottom: 6px;">Username</label>
-        <input type="text" name="username" id="username" required class="form-control" style="margin-bottom: 1.25rem;">
+        <input type="text" name="username" id="username" required class="form-control" style="margin-bottom: 1.25rem;" value="{{ username|default:'' }}">
 
         <label for="email" style="font-weight: 700; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.05em; margin-bottom: 6px;">Email <span style="color: var(--muted); font-weight: 400; text-transform: none;">(optional)</span></label>
-        <input type="email" name="email" id="email" class="form-control" style="margin-bottom: 1.25rem;" placeholder="your@email.com">
+        <input type="email" name="email" id="email" class="form-control" style="margin-bottom: 1.25rem;" placeholder="your@email.com" value="{{ email|default:'' }}">
 
         <label for="password" style="font-weight: 700; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.05em; margin-bottom: 6px;">Password</label>
         <input type="password" name="password" id="password" required class="form-control" style="margin-bottom: 1.5rem;">
