@@ -821,15 +821,13 @@ public class Main {
   },
   javascript: {
     mode: 'javascript',
-    defaultCode: `// Write your JavaScript solution here
-const readline = require('readline');
+    defaultCode: `// Write your JavaScript solution here.
+// readline()  -> next line of input, or null at end of input
+// readAll()   -> the entire stdin as a single string
+// require() and process are not available in the sandbox.
 
-const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout
-});
-
-// Your code here`,
+const n = parseInt(readline());
+console.log(n);`,
   }
 };
 

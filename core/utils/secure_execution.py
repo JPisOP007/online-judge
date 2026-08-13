@@ -8,6 +8,7 @@ import os
 import shutil
 import time
 import ast
+import re
 from django.conf import settings
 
 # Platform detection
@@ -110,6 +111,139 @@ IMPORT_SUGGESTIONS = {
     'socket': "Network access is blocked.",
 }
 
+# ---------------------------------------------------------------------------
+# Static analysis for the compiled / non-Python languages.
+#
+# Python submissions get a real AST pass plus a runtime import hook. For C++,
+# Java and JavaScript we have no equivalent hook, so these denylists are the
+# only application-level control. They are defence-in-depth, not a sandbox:
+# the OS-level isolation described in SECURITY_FIXES.md is what actually
+# contains a determined attacker.
+#
+# The previous implementation tested `'system(' in code.lower()`, which missed
+# `system ("...")`, `std::system`, a function pointer taken with `&system`, and
+# every file, network and reflection API. Matching is now on word boundaries
+# against source with comments and string literals removed, so a payload
+# cannot hide in a comment and a benign printf("system(") does not false-flag.
+# ---------------------------------------------------------------------------
+
+FORBIDDEN_PATTERNS = {
+    'cpp': [
+        (r'\bsystem\b', "Process execution is blocked."),
+        (r'\bpopen\b|\bpclose\b', "Process execution is blocked."),
+        (r'\bexec(l|v)[pe]?e?\b|\bfork\b|\bvfork\b|\bclone\b',
+         "Process creation is blocked."),
+        (r'\bsyscall\b|\bptrace\b|\bdlopen\b|\bdlsym\b',
+         "Direct system calls are blocked."),
+        (r'\b(asm|__asm|__asm__)\b', "Inline assembly is blocked."),
+        (r'\bgetenv\b|\bsetenv\b|\bputenv\b|\benviron\b',
+         "Environment access is blocked."),
+        (r'\bfopen\b|\bfreopen\b|\bifstream\b|\bofstream\b|\bfstream\b',
+         "File I/O is blocked. Read from stdin and write to stdout."),
+        (r'\bstd\s*::\s*filesystem\b|\bstd\s*::\s*ofstream\b',
+         "File I/O is blocked. Read from stdin and write to stdout."),
+        (r'\bsocket\b|\bgethostby|\binet_|\bbind\s*\(', "Network access is blocked."),
+        (r'#\s*include\s*[<"]\s*(unistd\.h|sys/|netdb\.h|arpa/|netinet/|dlfcn\.h|'
+         r'fstream|filesystem|spawn\.h|pthread\.h)',
+         "This header is not available. Use standard algorithmic headers."),
+    ],
+    'java': [
+        (r'\bRuntime\b|\bProcessBuilder\b|\bProcessHandle\b',
+         "Process execution is blocked."),
+        (r'\bjava\s*\.\s*io\s*\.\s*File\b|\bFileReader\b|\bFileWriter\b|'
+         r'\bFileInputStream\b|\bFileOutputStream\b|\bRandomAccessFile\b',
+         "File I/O is blocked. Read from stdin and write to stdout."),
+        (r'\bjava\s*\.\s*nio\s*\.\s*file\b|\bFiles\b|\bPaths\b|\bFileSystems\b',
+         "File I/O is blocked. Read from stdin and write to stdout."),
+        (r'\bjava\s*\.\s*net\b|\bSocket\b|\bServerSocket\b|\bURLConnection\b|'
+         r'\bHttpClient\b', "Network access is blocked."),
+        (r'\bClass\s*\.\s*forName\b|\bgetDeclaredMethod|\bgetDeclaredField|'
+         r'\bsetAccessible\b|\bClassLoader\b|\bjava\s*\.\s*lang\s*\.\s*reflect\b|'
+         r'\bMethodHandles\b', "Reflection is blocked."),
+        (r'\bUnsafe\b', "sun.misc.Unsafe is blocked."),
+        (r'\bSystem\s*\.\s*getenv\b|\bSystem\s*\.\s*getProperties\b|'
+         r'\bSystem\s*\.\s*load', "Environment and native library access is blocked."),
+    ],
+    'javascript': [
+        (r'\brequire\b', "require() is blocked. Use readline() / input() for stdin."),
+        (r'\bprocess\b', "process is blocked. Use readline() / input() for stdin."),
+        (r'\bglobalThis\b|\bglobal\b', "Global object access is blocked."),
+        (r'\bmodule\b|\bexports\b|\b__dirname\b|\b__filename\b',
+         "Module scope access is blocked."),
+        (r'\beval\b|\bnew\s+Function\b|\bFunction\s*\(',
+         "Dynamic code evaluation is blocked."),
+        (r'\bimport\s*\(|\bimport\s+[\w{*]', "Module imports are blocked."),
+        (r'\bconstructor\s*\[|\[\s*[\'"]constructor[\'"]\s*\]',
+         "Constructor access is blocked."),
+    ],
+}
+
+
+def strip_comments_and_strings(code):
+    """Blank out comments and string literals in C-family source.
+
+    C++, Java and JavaScript share //, /* */, "..." and '...' syntax, so one
+    pass covers all three. Characters are replaced with spaces rather than
+    deleted so that reported offsets stay meaningful and tokens either side of
+    a removed literal do not accidentally join into a new identifier.
+    """
+    out = []
+    i = 0
+    n = len(code)
+    while i < n:
+        ch = code[i]
+        pair = code[i:i + 2]
+
+        if pair == '//':
+            while i < n and code[i] != '\n':
+                out.append(' ')
+                i += 1
+        elif pair == '/*':
+            while i < n and code[i:i + 2] != '*/':
+                out.append('\n' if code[i] == '\n' else ' ')
+                i += 1
+            out.append('  ')
+            i += 2
+        elif ch in ('"', "'", '`'):
+            quote = ch
+            out.append(' ')
+            i += 1
+            while i < n and code[i] != quote:
+                if code[i] == '\\':
+                    out.append(' ')
+                    i += 1
+                    if i < n:
+                        out.append('\n' if code[i] == '\n' else ' ')
+                        i += 1
+                    continue
+                out.append('\n' if code[i] == '\n' else ' ')
+                i += 1
+            out.append(' ')
+            i += 1
+        else:
+            out.append(ch)
+            i += 1
+
+    return ''.join(out)
+
+
+def analyze_compiled_code_security(code, language):
+    """Check C++/Java/JavaScript source against the per-language denylist."""
+    patterns = FORBIDDEN_PATTERNS.get(language)
+    if not patterns:
+        return True, []
+
+    scrubbed = strip_comments_and_strings(code)
+    violations = []
+    for pattern, message in patterns:
+        match = re.search(pattern, scrubbed)
+        if match:
+            token = match.group(0).strip()
+            violations.append(f"Blocked construct '{token}'. Hint: {message}")
+
+    return len(violations) == 0, violations
+
+
 def analyze_python_code_security(code):
     """Use AST to detect dangerous operations"""
     try:
@@ -186,19 +320,12 @@ def validate_code_security(code, language):
     
     if language == 'python':
         is_safe, violations = analyze_python_code_security(code)
-        if not is_safe:
-            return False, "Security violations detected: " + "; ".join(violations)
     else:
-        # Basic check for other languages
-        suspicious_patterns = [
-            'system(', 'popen(', 'exec(', 'ProcessBuilder', 'Runtime.getRuntime',
-            'fork(', 'execvp(', 'execve(', 'syscall('
-        ]
-        code_lower = code.lower()
-        for pattern in suspicious_patterns:
-            if pattern.lower() in code_lower:
-                return False, f"Suspicious pattern detected: {pattern}"
-    
+        is_safe, violations = analyze_compiled_code_security(code, language)
+
+    if not is_safe:
+        return False, "Security violations detected: " + "; ".join(violations)
+
     return True, "Code validation passed"
 
 def create_secure_temp_directory():
@@ -419,15 +546,49 @@ def execute_java_secure(code, input_data, expected_output, temp_dir):
     
     return run_with_limits([java_path, '-cp', temp_dir, 'Main'], input_data, expected_output, temp_dir)
 
+def create_javascript_harness(code):
+    """Wrap JavaScript so stdin is available without require().
+
+    Competitive JS normally reads input with require('fs').readFileSync(0),
+    but require() is the single easiest sandbox escape in Node
+    (require('child_process').execSync). The harness reads stdin up front and
+    exposes readline()/input(), then runs user code inside an IIFE where the
+    module and process bindings are shadowed - a second layer behind the
+    static check in analyze_compiled_code_security().
+    """
+    return """'use strict';
+const __rawInput = require('fs').readFileSync(0, 'utf8');
+const __lines = __rawInput.split('\\n');
+let __cursor = 0;
+
+function readline() {
+    return __cursor < __lines.length ? __lines[__cursor++] : null;
+}
+const input = readline;
+const readAll = () => __rawInput;
+
+(function () {
+    'use strict';
+    // Shadow the escape hatches. `eval` is deliberately absent: rebinding it
+    // is a SyntaxError under 'use strict'. The static denylist covers it.
+    const require = undefined, module = undefined, exports = undefined,
+          process = undefined, global = undefined, globalThis = undefined,
+          __dirname = undefined, __filename = undefined;
+
+""" + code + """
+})();
+"""
+
+
 def execute_javascript_secure(code, input_data, expected_output, temp_dir):
     node_path = find_compiler('node') or find_compiler('nodejs')
     if not node_path:
         return {'verdict': 'CE', 'error': 'Node.js not found'}
-    
+
     filepath = os.path.join(temp_dir, 'main.js')
     with open(filepath, 'w', encoding='utf-8') as f:
-        f.write(code)
-    
+        f.write(create_javascript_harness(code))
+
     return run_with_limits([node_path, filepath], input_data, expected_output, temp_dir)
 
 def build_execution_command(cmd, temp_dir):

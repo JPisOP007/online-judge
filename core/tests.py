@@ -69,16 +69,79 @@ class ValidationTests(TestCase):
         self.assertFalse(is_valid)
         self.assertEqual(msg, "Code too long")
 
-    def test_cpp_java_suspicious_patterns(self):
+    def test_cpp_suspicious_patterns(self):
         suspicious = [
-            "system('rm -rf /');",
-            "Runtime.getRuntime().exec(\"ls\");",
-            "ProcessBuilder pb = new ProcessBuilder();"
+            'system("rm -rf /");',
+            'std::system ("id");',           # space before paren defeated the old check
+            'auto f = &system; f("id");',    # so did taking a function pointer
+            '#include <fstream>\nstd::ifstream f("/etc/passwd");',
+            '#include <unistd.h>\nexecl("/bin/sh", "sh", 0);',
+            'getenv("DJANGO_SECRET_KEY");',
+            'popen("id", "r");',
         ]
         for code in suspicious:
             is_valid, msg = validate_code_security(code, "cpp")
             self.assertFalse(is_valid, f"Failed to catch: {code}")
-            self.assertTrue("Suspicious pattern" in msg)
+            self.assertIn("Security violations detected", msg)
+
+    def test_java_suspicious_patterns(self):
+        suspicious = [
+            'Runtime.getRuntime().exec("ls");',
+            'ProcessBuilder pb = new ProcessBuilder();',
+            'Class.forName("java.lang.Runtime");',
+            'new java.io.File("/").listFiles();',
+            'System.getenv("MONGODB_URI");',
+            'Files.readAllBytes(Paths.get("/etc/passwd"));',
+        ]
+        for code in suspicious:
+            is_valid, msg = validate_code_security(code, "java")
+            self.assertFalse(is_valid, f"Failed to catch: {code}")
+            self.assertIn("Security violations detected", msg)
+
+    def test_javascript_suspicious_patterns(self):
+        """require() was not checked at all before, making Node a one-line escape."""
+        suspicious = [
+            "require('child_process').execSync('id')",
+            "const cp = require ( 'child_process' );",
+            "process.binding('spawn_sync')",
+            "globalThis.process.mainModule.require('fs')",
+            "eval('require(\"fs\")')",
+            "new Function('return process')()",
+        ]
+        for code in suspicious:
+            is_valid, msg = validate_code_security(code, "javascript")
+            self.assertFalse(is_valid, f"Failed to catch: {code}")
+            self.assertIn("Security violations detected", msg)
+
+    def test_legitimate_solutions_are_not_flagged(self):
+        """Guard against the denylists becoming so broad they reject real code."""
+        legitimate = [
+            ("cpp", "#include <bits/stdc++.h>\nusing namespace std;\n"
+                    "int main(){int n;cin>>n;cout<<n*2<<endl;}"),
+            # <cstdlib> is allowed: it is needed for abs()/atoi(). The dangerous
+            # symbols it also declares are blocked by name instead.
+            ("cpp", "#include <cstdlib>\nint main(){ int x = abs(-5); printf(\"%d\", x); }"),
+            ("cpp", '#include <iostream>\nint main(){ std::cout << "call system(x)"; }'),
+            ("cpp", "// a comment mentioning system( and fork(\n"
+                    "#include <iostream>\nint main(){std::cout<<1;}"),
+            ("java", "import java.util.*;\npublic class Main{public static void main(String[] a){"
+                     "Scanner s=new Scanner(System.in);System.out.println(s.nextInt()*2);}}"),
+            # The deep-recursion idiom: a big-stack Thread must keep working.
+            ("java", "public class Main{public static void main(String[] a){"
+                     "new Thread(null, () -> System.out.println(1), \"m\", 1<<26).start();}}"),
+            ("javascript", "const n = parseInt(readline()); console.log(n*2);"),
+        ]
+        for language, code in legitimate:
+            is_valid, msg = validate_code_security(code, language)
+            self.assertTrue(is_valid, f"False positive on {language}: {msg}")
+
+    def test_comments_and_strings_are_stripped(self):
+        from .utils.secure_execution import strip_comments_and_strings
+        scrubbed = strip_comments_and_strings('int x; // system(1)\n/* fork() */ char* s = "popen";')
+        self.assertNotIn('system', scrubbed)
+        self.assertNotIn('fork', scrubbed)
+        self.assertNotIn('popen', scrubbed)
+        self.assertIn('int x;', scrubbed)
 
 
 class ExecutionTests(TestCase):
