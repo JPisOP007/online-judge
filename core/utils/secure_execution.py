@@ -72,11 +72,6 @@ EXECUTION_SLOTS = threading.BoundedSemaphore(MAX_CONCURRENT_EXECUTIONS)
 # a worker thread open indefinitely.
 EXECUTION_QUEUE_TIMEOUT = 20
 
-# Languages we decline to run unless the OS provides a boundary behind the
-# static checks. See language_is_available() for the reasoning.
-LANGUAGES_REQUIRING_ISOLATION = {'javascript'}
-REQUIRE_ISOLATION = os.environ.get('JUDGE_REQUIRE_ISOLATION', '1').strip().lower() not in ('0', 'false', 'no')
-
 # Smart whitelist system for imports
 ALLOWED_IMPORTS = {
     'collections': ['deque', 'defaultdict', 'Counter', 'OrderedDict', 'namedtuple', 'ChainMap'],
@@ -733,25 +728,6 @@ def get_isolation_level():
     return 'user'
 
 
-def language_is_available(language):
-    """Whether this deployment will run the language at all.
-
-    In-process shadowing of `require` and `process` is not containment: any
-    route to global scope reaches the real bindings, and V8 offers several.
-    `--disallow-code-generation-from-strings` closes the known ones, but "the
-    ones we know about" is precisely the assurance a denylist gives, and for
-    JavaScript being wrong means immediate arbitrary code execution. So it is
-    offered only where the OS provides a boundary behind the static checks.
-
-    Set JUDGE_REQUIRE_ISOLATION=0 to override, e.g. for local development.
-    """
-    if not REQUIRE_ISOLATION:
-        return True
-    if language in LANGUAGES_REQUIRING_ISOLATION:
-        return get_isolation_level() != 'none'
-    return True
-
-
 def build_execution_command(cmd, temp_dir):
     """Wrap command with appropriate isolation for the environment.
 
@@ -889,13 +865,6 @@ def run_with_limits(cmd, input_data, expected_output, temp_dir, language='python
 def secure_execute_code(language, code, input_data, expected_output):
     """Main function to securely execute code"""
     try:
-        if not language_is_available(language):
-            return {'verdict': 'CE', 'error': (
-                f'{language.title()} is unavailable on this deployment. It runs without '
-                'OS-level sandbox isolation, and JavaScript cannot be safely contained by '
-                'static analysis alone. Please use Python, C++ or Java.'
-            )}
-
         # Validate security. Cheap, and needs no execution slot.
         is_valid, message = validate_code_security(code, language)
         if not is_valid:

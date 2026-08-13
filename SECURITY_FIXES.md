@@ -18,15 +18,18 @@ These languages have no equivalent to Python's import hook, so submissions are m
 
 JavaScript additionally runs inside a harness that pre-reads stdin and exposes `readline()` / `readAll()`, then executes user code in a scope where `require`, `process`, `module` and `globalThis` are shadowed — `require('child_process')` would otherwise be a one-line escape.
 
-**Lexical shadowing alone proved insufficient**, and it is worth recording why. The Function constructor compiles code in *global* scope, outside those shadowed bindings, and it is reachable without ever naming `Function`:
+**Lexical shadowing alone proved insufficient**, and it is worth recording why. The Function constructor compiles code in *global* scope, outside those shadowed bindings, and is reachable without ever naming `Function`:
 
 ```javascript
 (()=>{}).constructor("return this")().process   // the real process object
 ```
 
-This was confirmed working against the harness. It is closed at two levels: Node is launched with `--disallow-code-generation-from-strings`, which makes V8 refuse `eval`, `Function()`, `.constructor()` and the async/generator function constructors outright, and the denylist rejects `.constructor` before execution.
+This was confirmed working against the harness — an escape to arbitrary code execution. It is closed at two levels:
 
-More importantly, it is the reason **JavaScript is only offered where OS-level isolation exists**. `language_is_available()` refuses JavaScript when `get_isolation_level()` reports `none`, which is the case on Render. An in-process shim is not a boundary: a single missed route to global scope is immediate arbitrary code execution, and "the routes we know about" is exactly the assurance a denylist provides. Set `JUDGE_REQUIRE_ISOLATION=0` to override for local development.
+- Node is launched with `--disallow-code-generation-from-strings`, which makes V8 refuse `eval`, `Function()`, `.constructor()` and the async and generator function constructors outright. This is an engine-level control, not a shim, and it does not depend on the denylist being complete.
+- The denylist additionally rejects `.constructor`, `Reflect`, `Proxy`, `WebAssembly`, `Atomics` and `SharedArrayBuffer` before execution.
+
+**Residual risk.** JavaScript is offered on all deployments, including those without OS-level isolation. The specific escape above is closed at the engine level, but shadowing intrinsics inside a shared process is not a containment boundary: another route to global scope would again mean immediate arbitrary code execution, with no OS boundary behind it on PaaS. This is an accepted risk for this deployment, not a solved problem — see the exclusions in section 5.
 
 **These are denylists, and denylists are incomplete by construction.** They reject known-dangerous constructs rather than permitting only known-safe ones. They raise the cost of an attack and stop opportunistic attempts; they are not a containment boundary. That role belongs to the OS-level isolation below.
 
@@ -71,7 +74,8 @@ To protect against malicious payloads disguised as profile photos:
 ## 5. Known Threat Model Exclusions
 
 It is worth being explicit about what this design does *not* stop:
-- **Denylists are incomplete by construction.** For C++, Java and JavaScript the application-level control rejects known-dangerous constructs rather than permitting only known-safe ones. A determined attacker who finds a construct the list does not name will get past it.
+- **Denylists are incomplete by construction.** For C++, Java and JavaScript the application-level control rejects known-dangerous constructs rather than permitting only known-safe ones. A determined attacker who finds a construct the list does not name will get past it. This is not hypothetical: probing these lists found a working JavaScript escape (section B) and three quieter holes in the C++ and Java lists, all since closed.
+- **In-process JavaScript sandboxing.** Shadowing `require` and `process` inside the same Node process is hardening, not containment. Where a deployment has no OS-level isolation, a successful escape has nothing behind it.
 - **Reduced isolation on PaaS.** On Render, unprivileged containers mean no `nsjail` and no separate sandbox user, so submissions run as the application user under `setrlimit` alone.
 - **Network access.** No network namespace is created (see section C), so untrusted code can make outbound requests.
 - **Filesystem reads.** Where code runs as the application user, it can read application source. Secrets are supplied by environment rather than committed, but see the note on `/proc/<pid>/environ` in section D.
