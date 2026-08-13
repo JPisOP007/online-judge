@@ -190,7 +190,13 @@ def contest_problem_detail(request, contest_uuid, problem_uuid):
     contest = get_object_or_404(Contest, uuid=contest_uuid)
     problem = get_object_or_404(Problem, uuid=problem_uuid)
     participant = get_object_or_404(ContestParticipant, contest=contest, user=request.user)
-    
+
+    # Problems must not be readable before the contest opens, even by people
+    # who have already registered. contest_problems() enforces this too.
+    if contest.is_upcoming:
+        messages.error(request, 'Contest has not started yet')
+        return redirect('contest_detail', contest_uuid=contest.uuid)
+
     context = {
         'contest': contest,
         'problem': problem,
@@ -243,6 +249,22 @@ def contest_problem_detail(request, contest_uuid, problem_uuid):
                     })
             
             elif action == "submit":
+                # Scored submissions are only accepted while the contest is live.
+                # Without this, submissions after the end time were still judged
+                # and still counted towards the standings.
+                if not contest.is_running:
+                    context.update({
+                        'form': form,
+                        'verdict': 'IE',
+                        'feedback_message': 'This contest is not currently accepting submissions.',
+                        'output': 'The contest has ended.' if contest.is_ended
+                                  else 'The contest has not started yet.',
+                        'user_submissions': ContestSubmission.objects.filter(
+                            contest=contest, participant=participant, problem=problem
+                        ).select_related('solution').order_by('-submitted_at')[:10],
+                    })
+                    return render(request, 'core/contest_problem_detail.html', context)
+
                 try:
                     test_cases = json.loads(problem.test_cases_json or "[]")
                 except json.JSONDecodeError:
