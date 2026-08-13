@@ -70,9 +70,29 @@ class ProblemSerializer(ObjectIdPrimaryKeyMixin, serializers.ModelSerializer):
         ]
         read_only_fields = ['uuid', 'created_at']
 
+    def _can_view_test_cases(self):
+        """Only staff and problem setters may see hidden test cases.
+
+        These are the expected outputs the judge grades against. Serving them
+        publicly lets anyone read the answers and print them back, which
+        defeats the judge completely.
+        """
+        request = self.context.get('request')
+        user = getattr(request, 'user', None)
+        if user is None or not user.is_authenticated:
+            return False
+        if user.is_staff:
+            return True
+        try:
+            return user.userprofile.role in ('setter', 'admin')
+        except (UserProfile.DoesNotExist, AttributeError):
+            return False
+
     def get_test_cases(self, obj):
-        """Parse and return test cases from JSON"""
+        """Parse and return test cases from JSON, for authorised users only."""
         import json
+        if not self._can_view_test_cases():
+            return []
         if obj.test_cases_json:
             try:
                 return json.loads(obj.test_cases_json)
