@@ -693,7 +693,13 @@ def run_with_limits(cmd, input_data, expected_output, temp_dir):
             clean_err_lines = [line for line in err.splitlines() if not line.startswith('[W]') and not line.startswith('[E]') and not line.startswith('[I]') and not line.startswith('[F]')]
             clean_err = '\n'.join(clean_err_lines).strip()
             
-            if process.returncode != 0 or clean_err:
+            # Judge on the exit status alone. Writing to stderr is not a
+            # failure: debug output to stderr is ordinary competitive practice,
+            # and the JVM emits notices there unprompted, both of which used to
+            # produce a spurious Runtime Error on otherwise-correct solutions.
+            # Every language we run exits non-zero on an actual crash - the
+            # Python harness calls sys.exit(1) from its exception handler.
+            if process.returncode != 0:
                 error_msg = clean_err or f"Process exited with code {process.returncode}"
                 return {'verdict': 'RE', 'error': error_msg, 'output': out.strip()}
             
