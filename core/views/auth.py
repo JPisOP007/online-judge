@@ -15,7 +15,11 @@ from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 from functools import wraps
 from django.db import IntegrityError
+from django.core.cache import cache
+import logging
 import re
+
+logger = logging.getLogger('core.security')
 from core.models import (
     UserProfile, Problem, Solution, Contest, ContestParticipant,
     ContestProblem, ContestSubmission, ContestAnnouncement
@@ -61,39 +65,56 @@ def role_required(allowed_roles):
         return wrapper
     return decorator
 
-def home(request):
+HOME_STATS_CACHE_KEY = 'home_page_stats_v1'
+HOME_STATS_CACHE_SECONDS = 60
+
+
+def _build_home_stats():
+    """The eight aggregate queries behind the home page."""
     now = timezone.now()
-    total_problems = Problem.objects.count()
-    active_contests = Contest.objects.filter(start_time__lte=now, end_time__gte=now).count()
-    total_users = User.objects.count()
-    total_contests = Contest.objects.count()
-    total_submissions = Solution.objects.count()
-    
+
     # Leaderboard: top 4 users by distinct problems solved
     top_users = User.objects.annotate(
         solved=Count('solution__problem', filter=Q(solution__verdict='AC'), distinct=True)
     ).filter(solved__gt=0).order_by('-solved')[:4]
-    
-    leaderboard = [{'username': u.username, 'solved': u.solved} for u in top_users]
-    
+
     # Recent activity: top 5 recent AC submissions
     recent_sols = Solution.objects.filter(verdict='AC').select_related('user', 'problem').order_by('-submitted_at')[:5]
-    recent_activity = [{'username': s.user.username, 'problem': s.problem.title, 'when': s.submitted_at} for s in recent_sols]
-        
-    context = {
-        'total_problems': total_problems,
-        'active_contests': active_contests,
-        'total_users': total_users,
-        'total_contests': total_contests,
-        'total_submissions': total_submissions,
-        'leaderboard': leaderboard,
-        'recent_activity': recent_activity,
+
+    return {
+        'total_problems': Problem.objects.count(),
+        'active_contests': Contest.objects.filter(start_time__lte=now, end_time__gte=now).count(),
+        'total_users': User.objects.count(),
+        'total_contests': Contest.objects.count(),
+        'total_submissions': Solution.objects.count(),
+        'leaderboard': [{'username': u.username, 'solved': u.solved} for u in top_users],
+        'recent_activity': [
+            {'username': s.user.username, 'problem': s.problem.title, 'when': s.submitted_at}
+            for s in recent_sols
+        ],
     }
-    
+
+
+def home(request):
+    # The landing page costs eight aggregate round trips and is identical for
+    # every visitor, so it is the first thing to fall over under a traffic
+    # spike. Cache it briefly; counters being up to a minute stale is fine.
+    try:
+        context = cache.get(HOME_STATS_CACHE_KEY)
+        if context is None:
+            context = _build_home_stats()
+            cache.set(HOME_STATS_CACHE_KEY, context, HOME_STATS_CACHE_SECONDS)
+    except Exception as exc:
+        # An unreachable cache must not take the home page down with it.
+        logger.warning(f"Home stats cache unavailable: {exc}")
+        context = _build_home_stats()
+
+    context = dict(context)
+
     if request.user.is_authenticated:
         user_solved = Solution.objects.filter(user=request.user, verdict='AC').values('problem').distinct().count()
         context['user_solved'] = user_solved
-        
+
     return render(request, 'core/home.html', context)
 
 def register(request):

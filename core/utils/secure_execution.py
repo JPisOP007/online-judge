@@ -10,6 +10,7 @@ import time
 import ast
 import re
 import signal
+import threading
 from django.conf import settings
 
 # Platform detection
@@ -59,6 +60,17 @@ MAX_PROCESSES = 128
 # g++ compiling <bits/stdc++.h> routinely takes longer than 10s on a small
 # instance, which surfaced to users as "Compilation timed out" on correct code.
 COMPILE_TIMEOUT = 30
+
+# "Run" executes synchronously inside the web request, so without a cap here
+# gunicorn's thread count would decide how many compilers run at once. A single
+# g++ pass over <bits/stdc++.h> is a sizeable fraction of a 512MB container, so
+# execution is rationed independently of how many threads are serving pages:
+# threads make page rendering concurrent, they do not make judging concurrent.
+MAX_CONCURRENT_EXECUTIONS = int(os.environ.get('JUDGE_MAX_CONCURRENCY', '1'))
+EXECUTION_SLOTS = threading.BoundedSemaphore(MAX_CONCURRENT_EXECUTIONS)
+# How long a request will wait for a slot before giving up rather than holding
+# a worker thread open indefinitely.
+EXECUTION_QUEUE_TIMEOUT = 20
 
 # Smart whitelist system for imports
 ALLOWED_IMPORTS = {
@@ -608,14 +620,18 @@ def execute_java_secure(code, input_data, expected_output, temp_dir):
     except subprocess.TimeoutExpired:
         return {'verdict': 'CE', 'error': 'Compilation timed out'}
 
-    # -Xmx bounds the heap now that RLIMIT_AS no longer does. SerialGC keeps the
-    # thread count down on a small instance, TieredStopAtLevel=1 cuts JIT warmup
-    # off the 5s budget, and -Xss64m supports the deep recursion these problems
-    # tend to need.
+    # -Xmx bounds the heap now that RLIMIT_AS no longer does. Kept well under
+    # the judge's nominal 128MB limit because heap is only part of what the JVM
+    # occupies - metaspace, code cache and thread stacks add roughly as much
+    # again - and this container also holds gunicorn and a Celery worker inside
+    # 512MB. Sizing this generously risks the whole container being OOM-killed.
+    # SerialGC keeps the thread count down, TieredStopAtLevel=1 cuts JIT warmup
+    # out of the 5s budget, and -Xss64m supports deep recursion.
     java_cmd = [
         java_path,
-        '-Xmx256m', '-Xss64m',
+        '-Xmx128m', '-Xss64m',
         '-XX:+UseSerialGC', '-XX:TieredStopAtLevel=1',
+        '-XX:MaxMetaspaceSize=64m',
         '-cp', temp_dir, 'Main',
     ]
     return run_with_limits(java_cmd, input_data, expected_output, temp_dir, 'java')
@@ -663,8 +679,10 @@ def execute_javascript_secure(code, input_data, expected_output, temp_dir):
     with open(filepath, 'w', encoding='utf-8') as f:
         f.write(create_javascript_harness(code))
 
-    # Bounds the V8 heap now that RLIMIT_AS no longer does.
-    node_cmd = [node_path, '--max-old-space-size=256', filepath]
+    # Bounds the V8 heap now that RLIMIT_AS no longer does. Same reasoning as
+    # the JVM flags above: sized for a shared 512MB container, not for the
+    # judge's nominal limit.
+    node_cmd = [node_path, '--max-old-space-size=128', filepath]
     return run_with_limits(node_cmd, input_data, expected_output, temp_dir, 'javascript')
 
 def build_execution_command(cmd, temp_dir):
@@ -808,31 +826,40 @@ def run_with_limits(cmd, input_data, expected_output, temp_dir, language='python
 def secure_execute_code(language, code, input_data, expected_output):
     """Main function to securely execute code"""
     try:
-        # Validate security
+        # Validate security. Cheap, and needs no execution slot.
         is_valid, message = validate_code_security(code, language)
         if not is_valid:
             return {'verdict': 'CE', 'error': f'Security violation: {message}'}
-        
-        # Create temp directory
-        temp_dir = create_secure_temp_directory()
-        
+
+        # Compiling and running is what has to be rationed.
+        if not EXECUTION_SLOTS.acquire(timeout=EXECUTION_QUEUE_TIMEOUT):
+            return {
+                'verdict': 'IE',
+                'error': 'The judge is busy right now. Please try again in a moment.',
+            }
+
         try:
-            if language == 'python':
-                return execute_python_secure(code, input_data, expected_output, temp_dir)
-            elif language == 'cpp':
-                return execute_cpp_secure(code, input_data, expected_output, temp_dir)
-            elif language == 'java':
-                return execute_java_secure(code, input_data, expected_output, temp_dir)
-            elif language == 'javascript':
-                return execute_javascript_secure(code, input_data, expected_output, temp_dir)
-            else:
-                return {'verdict': 'CE', 'error': f'Unsupported language: {language}'}
-        finally:
+            temp_dir = create_secure_temp_directory()
+
             try:
-                shutil.rmtree(temp_dir)
-            except:
-                pass
-    
+                if language == 'python':
+                    return execute_python_secure(code, input_data, expected_output, temp_dir)
+                elif language == 'cpp':
+                    return execute_cpp_secure(code, input_data, expected_output, temp_dir)
+                elif language == 'java':
+                    return execute_java_secure(code, input_data, expected_output, temp_dir)
+                elif language == 'javascript':
+                    return execute_javascript_secure(code, input_data, expected_output, temp_dir)
+                else:
+                    return {'verdict': 'CE', 'error': f'Unsupported language: {language}'}
+            finally:
+                try:
+                    shutil.rmtree(temp_dir)
+                except:
+                    pass
+        finally:
+            EXECUTION_SLOTS.release()
+
     except Exception as e:
         return {'verdict': 'RE', 'error': f'Execution error: {str(e)}'}
 
