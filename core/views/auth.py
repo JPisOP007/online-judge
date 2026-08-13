@@ -9,6 +9,7 @@ from django.utils import timezone
 from django.db.models import Sum, Count, Q
 from django.core.paginator import Paginator
 from django.conf import settings
+from django.utils.http import url_has_allowed_host_and_scheme
 from functools import wraps
 from django.db import IntegrityError
 from core.models import (
@@ -125,10 +126,18 @@ def login_view(request):
             # Create profile if it doesn't exist
             UserProfile.objects.get_or_create(user=user, defaults={'role': 'participant'})
             messages.success(request, f'Welcome back, {user.username}!')
-            
-            # Redirect to next page if specified
-            next_page = request.GET.get('next', 'home')
-            return redirect(next_page)
+
+            # Redirect to next page if specified, but only to URLs on this site.
+            # An unvalidated ?next= lets an attacker bounce users to an external
+            # phishing page straight off a genuine login on our own domain.
+            next_page = request.POST.get('next') or request.GET.get('next')
+            if next_page and url_has_allowed_host_and_scheme(
+                url=next_page,
+                allowed_hosts={request.get_host()},
+                require_https=request.is_secure(),
+            ):
+                return redirect(next_page)
+            return redirect('home')
         else:
             messages.error(request, 'Invalid username or password')
     return render(request, 'core/login.html')
