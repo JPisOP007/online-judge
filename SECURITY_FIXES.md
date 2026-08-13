@@ -18,6 +18,16 @@ These languages have no equivalent to Python's import hook, so submissions are m
 
 JavaScript additionally runs inside a harness that pre-reads stdin and exposes `readline()` / `readAll()`, then executes user code in a scope where `require`, `process`, `module` and `globalThis` are shadowed — `require('child_process')` would otherwise be a one-line escape.
 
+**Lexical shadowing alone proved insufficient**, and it is worth recording why. The Function constructor compiles code in *global* scope, outside those shadowed bindings, and it is reachable without ever naming `Function`:
+
+```javascript
+(()=>{}).constructor("return this")().process   // the real process object
+```
+
+This was confirmed working against the harness. It is closed at two levels: Node is launched with `--disallow-code-generation-from-strings`, which makes V8 refuse `eval`, `Function()`, `.constructor()` and the async/generator function constructors outright, and the denylist rejects `.constructor` before execution.
+
+More importantly, it is the reason **JavaScript is only offered where OS-level isolation exists**. `language_is_available()` refuses JavaScript when `get_isolation_level()` reports `none`, which is the case on Render. An in-process shim is not a boundary: a single missed route to global scope is immediate arbitrary code execution, and "the routes we know about" is exactly the assurance a denylist provides. Set `JUDGE_REQUIRE_ISOLATION=0` to override for local development.
+
 **These are denylists, and denylists are incomplete by construction.** They reject known-dangerous constructs rather than permitting only known-safe ones. They raise the cost of an attack and stop opportunistic attempts; they are not a containment boundary. That role belongs to the OS-level isolation below.
 
 ### C. OS-Level Isolation (`nsjail`) — Docker deployments only

@@ -19,7 +19,9 @@ from core.forms import (
     SubmitSolutionForm, ProblemForm, UserProfileForm, ContestForm,
     ContestRegistrationForm, AnnouncementForm
 )
-from core.utils.secure_execution import secure_execute_code, secure_evaluate_submission
+from core.utils.secure_execution import (
+    secure_execute_code, secure_evaluate_submission, language_is_available
+)
 from core.tasks import evaluate_submission_task
 from core.views.auth import role_required
 import json
@@ -365,6 +367,8 @@ def problem_detail(request, problem_id):
         'user_solved': user_solved,
         'user_submissions': user_submissions,
         'ai_review_enabled': admin_settings.ai_review_enabled,
+        # Don't offer a language the judge will refuse to run here.
+        'javascript_enabled': language_is_available('javascript'),
     })
 
 def _get_own_submission(request, submission_id):

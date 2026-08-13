@@ -135,6 +135,42 @@ class ValidationTests(TestCase):
             is_valid, msg = validate_code_security(code, language)
             self.assertTrue(is_valid, f"False positive on {language}: {msg}")
 
+    def test_known_sandbox_escapes_stay_closed(self):
+        """Payloads that were confirmed to bypass an earlier version of the
+        denylists. The JavaScript one reached the real `process` object at
+        runtime inside the harness, which is arbitrary code execution."""
+        escapes = [
+            ('javascript', 'const g=(()=>{}).constructor("return this")(); console.log(g);'),
+            ('javascript', 'const g=(()=>{}).constructor("return this")(); console.log(g["pro"+"cess"]);'),
+            ('javascript', 'console.log(Reflect.ownKeys(globalThis));'),
+            ('java', 'public class Main{public static void main(String[] a){'
+                     'System.out.println(System.getProperty("user.home"));}}'),
+            ('java', 'public class Main{public static void main(String[] a){'
+                     'System.out.println(new Main().getClass().getProtectionDomain());}}'),
+            ('java', 'import java.io.*;\nimport java.util.*;\npublic class Main{'
+                     'public static void main(String[] a)throws Exception{'
+                     'Scanner s=new Scanner(new File("/etc/passwd"));}}'),
+            ('cpp', '#include <fcntl.h>\nint main(){ int fd=open("/etc/passwd",0); return fd; }'),
+            ('cpp', '#include <sys/mman.h>\nint main(){ mmap(0,0,0,0,0,0); }'),
+        ]
+        for language, code in escapes:
+            is_valid, msg = validate_code_security(code, language)
+            self.assertFalse(is_valid, f"Escape no longer caught ({language}): {code[:60]}")
+
+    def test_javascript_requires_os_isolation(self):
+        """JavaScript is refused where nothing contains it but the denylist."""
+        from .utils.secure_execution import language_is_available, get_isolation_level
+        if get_isolation_level() == 'none':
+            self.assertFalse(language_is_available('javascript'))
+            result = secure_execute_code('javascript', 'console.log(1);', '', '')
+            self.assertEqual(result.get('verdict'), 'CE')
+            self.assertIn('unavailable', result.get('error', ''))
+        else:
+            self.assertTrue(language_is_available('javascript'))
+        # The other three are never gated on isolation.
+        for language in ('python', 'cpp', 'java'):
+            self.assertTrue(language_is_available(language))
+
     def test_comments_and_strings_are_stripped(self):
         from .utils.secure_execution import strip_comments_and_strings
         scrubbed = strip_comments_and_strings('int x; // system(1)\n/* fork() */ char* s = "popen";')

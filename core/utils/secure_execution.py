@@ -72,6 +72,11 @@ EXECUTION_SLOTS = threading.BoundedSemaphore(MAX_CONCURRENT_EXECUTIONS)
 # a worker thread open indefinitely.
 EXECUTION_QUEUE_TIMEOUT = 20
 
+# Languages we decline to run unless the OS provides a boundary behind the
+# static checks. See language_is_available() for the reasoning.
+LANGUAGES_REQUIRING_ISOLATION = {'javascript'}
+REQUIRE_ISOLATION = os.environ.get('JUDGE_REQUIRE_ISOLATION', '1').strip().lower() not in ('0', 'false', 'no')
+
 # Smart whitelist system for imports
 ALLOWED_IMPORTS = {
     'collections': ['deque', 'defaultdict', 'Counter', 'OrderedDict', 'namedtuple', 'ChainMap'],
@@ -181,17 +186,23 @@ FORBIDDEN_PATTERNS = {
          "Environment access is blocked."),
         (r'\bfopen\b|\bfreopen\b|\bifstream\b|\bofstream\b|\bfstream\b',
          "File I/O is blocked. Read from stdin and write to stdout."),
+        # Raw POSIX file descriptors bypass every <fstream> check above.
+        (r'\bopen\s*\(|\bopenat\b|\bcreat\s*\(|\bmmap\s*\(',
+         "Low-level file descriptor access is blocked."),
         (r'\bstd\s*::\s*filesystem\b|\bstd\s*::\s*ofstream\b',
          "File I/O is blocked. Read from stdin and write to stdout."),
         (r'\bsocket\b|\bgethostby|\binet_|\bbind\s*\(', "Network access is blocked."),
         (r'#\s*include\s*[<"]\s*(unistd\.h|sys/|netdb\.h|arpa/|netinet/|dlfcn\.h|'
-         r'fstream|filesystem|spawn\.h|pthread\.h)',
+         r'fstream|filesystem|spawn\.h|pthread\.h|fcntl\.h|io\.h)',
          "This header is not available. Use standard algorithmic headers."),
     ],
     'java': [
         (r'\bRuntime\b|\bProcessBuilder\b|\bProcessHandle\b',
          "Process execution is blocked."),
-        (r'\bjava\s*\.\s*io\s*\.\s*File\b|\bFileReader\b|\bFileWriter\b|'
+        # Bare `File` matters as much as the fully-qualified name: with
+        # `import java.io.*`, `new Scanner(new File("/etc/passwd"))` reads any
+        # file the process can. \bFile\b does not match FileNotFoundException.
+        (r'\bFile\b|\bFileReader\b|\bFileWriter\b|'
          r'\bFileInputStream\b|\bFileOutputStream\b|\bRandomAccessFile\b',
          "File I/O is blocked. Read from stdin and write to stdout."),
         (r'\bjava\s*\.\s*nio\s*\.\s*file\b|\bFiles\b|\bPaths\b|\bFileSystems\b',
@@ -202,8 +213,10 @@ FORBIDDEN_PATTERNS = {
          r'\bsetAccessible\b|\bClassLoader\b|\bjava\s*\.\s*lang\s*\.\s*reflect\b|'
          r'\bMethodHandles\b', "Reflection is blocked."),
         (r'\bUnsafe\b', "sun.misc.Unsafe is blocked."),
-        (r'\bSystem\s*\.\s*getenv\b|\bSystem\s*\.\s*getProperties\b|'
+        (r'\bSystem\s*\.\s*getenv\b|\bSystem\s*\.\s*getPropert(y|ies)\b|'
          r'\bSystem\s*\.\s*load', "Environment and native library access is blocked."),
+        (r'\bgetProtectionDomain\b|\bgetClassLoader\b|\bgetResource\b',
+         "Class metadata access is blocked."),
     ],
     'javascript': [
         (r'\brequire\b', "require() is blocked. Use readline() / input() for stdin."),
@@ -214,8 +227,14 @@ FORBIDDEN_PATTERNS = {
         (r'\beval\b|\bnew\s+Function\b|\bFunction\s*\(',
          "Dynamic code evaluation is blocked."),
         (r'\bimport\s*\(|\bimport\s+[\w{*]', "Module imports are blocked."),
-        (r'\bconstructor\s*\[|\[\s*[\'"]constructor[\'"]\s*\]',
+        # (()=>{}).constructor is the Function constructor by another name, and
+        # builds code in global scope where require/process are not shadowed.
+        # Node is also launched with --disallow-code-generation-from-strings,
+        # which refuses this at the engine level; this is the earlier warning.
+        (r'\.\s*constructor\b|\bconstructor\s*\[|\[\s*[\'"]constructor[\'"]\s*\]',
          "Constructor access is blocked."),
+        (r'\bReflect\b|\bProxy\b|\bWebAssembly\b|\bAtomics\b|\bSharedArrayBuffer\b',
+         "This intrinsic is blocked."),
     ],
 }
 
@@ -679,31 +698,75 @@ def execute_javascript_secure(code, input_data, expected_output, temp_dir):
     with open(filepath, 'w', encoding='utf-8') as f:
         f.write(create_javascript_harness(code))
 
-    # Bounds the V8 heap now that RLIMIT_AS no longer does. Same reasoning as
-    # the JVM flags above: sized for a shared 512MB container, not for the
-    # judge's nominal limit.
-    node_cmd = [node_path, '--max-old-space-size=128', filepath]
+    # --disallow-code-generation-from-strings is the load-bearing one. The
+    # harness shadows require/process lexically, but the Function constructor
+    # compiles code in *global* scope, outside those bindings:
+    #     (()=>{}).constructor("return this")().process
+    # reaches the real process object. The same applies via Function(), eval,
+    # and the async and generator function constructors. This V8 flag refuses
+    # all of them at the engine level, which a prototype patch cannot.
+    #
+    # --max-old-space-size bounds the heap now that RLIMIT_AS no longer does,
+    # sized for a shared 512MB container.
+    node_cmd = [
+        node_path,
+        '--disallow-code-generation-from-strings',
+        '--max-old-space-size=128',
+        filepath,
+    ]
     return run_with_limits(node_cmd, input_data, expected_output, temp_dir, 'javascript')
+
+def get_isolation_level():
+    """Report what OS-level containment is available for untrusted processes.
+
+    'namespace' - nsjail: mount/PID namespaces plus an unprivileged uid
+    'user'      - a separate uid via sudo, sharing namespaces
+    'none'      - runs as the application user with rlimits only
+    """
+    if IS_WINDOWS:
+        return 'none'
+    # Render runs unprivileged containers, where nsjail and sudo both fail.
+    if os.environ.get('RENDER'):
+        return 'none'
+    if shutil.which('nsjail'):
+        return 'namespace'
+    return 'user'
+
+
+def language_is_available(language):
+    """Whether this deployment will run the language at all.
+
+    In-process shadowing of `require` and `process` is not containment: any
+    route to global scope reaches the real bindings, and V8 offers several.
+    `--disallow-code-generation-from-strings` closes the known ones, but "the
+    ones we know about" is precisely the assurance a denylist gives, and for
+    JavaScript being wrong means immediate arbitrary code execution. So it is
+    offered only where the OS provides a boundary behind the static checks.
+
+    Set JUDGE_REQUIRE_ISOLATION=0 to override, e.g. for local development.
+    """
+    if not REQUIRE_ISOLATION:
+        return True
+    if language in LANGUAGES_REQUIRING_ISOLATION:
+        return get_isolation_level() != 'none'
+    return True
+
 
 def build_execution_command(cmd, temp_dir):
     """Wrap command with appropriate isolation for the environment.
-    
+
     Priority:
-    1. nsjail (Docker with SYS_ADMIN capability) - true mount/PID/net namespace isolation
+    1. nsjail (Docker with SYS_ADMIN capability) - true mount/PID namespace isolation
     2. sudo -u sandboxuser (Docker without nsjail) - user-level isolation
     3. bare command (Render / Windows) - no OS-level isolation
     """
-    if IS_WINDOWS:
+    level = get_isolation_level()
+
+    if level == 'none':
         return cmd
-        
-    # Render: bare execution (limited isolation — see security docs)
-    # Render runs unprivileged containers where nsjail and sudo fail
-    if os.environ.get('RENDER'):
-        return cmd
-    
-    # Check if nsjail is available (Docker environment)
-    nsjail_path = shutil.which('nsjail')
-    if nsjail_path:
+
+    if level == 'namespace':
+        nsjail_path = shutil.which('nsjail')
         return [
             nsjail_path, '--quiet', '--mode', 'o',
             '--time_limit', str(MAX_EXECUTION_TIME + 2),
@@ -826,6 +889,13 @@ def run_with_limits(cmd, input_data, expected_output, temp_dir, language='python
 def secure_execute_code(language, code, input_data, expected_output):
     """Main function to securely execute code"""
     try:
+        if not language_is_available(language):
+            return {'verdict': 'CE', 'error': (
+                f'{language.title()} is unavailable on this deployment. It runs without '
+                'OS-level sandbox isolation, and JavaScript cannot be safely contained by '
+                'static analysis alone. Please use Python, C++ or Java.'
+            )}
+
         # Validate security. Cheap, and needs no execution slot.
         is_valid, message = validate_code_security(code, language)
         if not is_valid:
