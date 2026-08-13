@@ -11,8 +11,7 @@ urlpatterns = [
     # Problem Management
     path('add-problem/', problems.add_problem, name='add_problem'),
     path('problems/', problems.problem_list, name='problem_list'),  
-    path('problem/<uuid:problem_id>/', problems.problem_detail, name='problem_detail'),  
-    path('submit/<uuid:problem_id>/', problems.submit_solution, name='submit_solution'),
+    path('problem/<uuid:problem_id>/', problems.problem_detail, name='problem_detail'),
     path('submission/<str:submission_id>/', problems.submission_detail, name='submission_detail'),
     
     # User Management and Profile

@@ -367,24 +367,6 @@ def problem_detail(request, problem_id):
         'ai_review_enabled': admin_settings.ai_review_enabled,
     })
 
-@login_required
-def submit_solution(request, problem_id):
-    problem = get_object_or_404(Problem, uuid=problem_id)
-    if request.method == 'POST':
-        form = SubmitSolutionForm(request.POST)
-        if form.is_valid():
-            Solution.objects.create(
-                problem=problem,
-                user=request.user,
-                code=form.cleaned_data['source_code'],
-                language=form.cleaned_data['language']
-            )
-            messages.success(request, "Solution submitted successfully")
-            return redirect('problem_detail', problem_id=problem.uuid)
-    else:
-        form = SubmitSolutionForm(initial={'problem_id': str(problem.uuid)})
-    return render(request, 'core/submit_solution.html', {'problem': problem, 'form': form})
-
 def _get_own_submission(request, submission_id):
     """Look up a submission, restricted to the requesting user unless they are staff.
 
