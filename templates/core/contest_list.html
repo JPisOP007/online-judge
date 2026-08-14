@@ -34,9 +34,9 @@
                 <label class="form-label">Type</label>
                 <select name="type" class="form-select">
                     <option value="all" {% if type_filter == 'all' %}selected{% endif %}>All Types</option>
-                    <option value="public" {% if type_filter == 'public' %}selected{% endif %}>Public</option>
-                    <option value="private" {% if type_filter == 'private' %}selected{% endif %}>Private</option>
-                    <option value="educational" {% if type_filter == 'educational' %}selected{% endif %}>Educational</option>
+                    {% for value, label in contest_types %}
+                        <option value="{{ value }}" {% if type_filter == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
                 </select>
             </div>
             <div class="col-md-2 d-flex align-items-end">
@@ -60,13 +60,18 @@
                                         {{ contest.title }}
                                     </a>
                                 </h5>
-                                {% if contest.is_upcoming %}
-                                    <span class="badge bg-info">Upcoming</span>
-                                {% elif contest.is_running %}
-                                    <span class="badge bg-success">Running</span>
-                                {% else %}
-                                    <span class="badge bg-secondary">Ended</span>
-                                {% endif %}
+                                <div class="d-flex gap-1 flex-wrap justify-content-end">
+                                    {% if not contest.is_public %}
+                                        <span class="badge bg-dark" title="Only you and the admins can see this contest">Unlisted</span>
+                                    {% endif %}
+                                    {% if contest.is_upcoming %}
+                                        <span class="badge bg-info">Upcoming</span>
+                                    {% elif contest.is_running %}
+                                        <span class="badge bg-success">Running</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Ended</span>
+                                    {% endif %}
+                                </div>
                             </div>
 
                             <div class="mb-3">
@@ -94,16 +99,18 @@
 
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <span class="badge bg-light">{{ contest.get_contest_type_display }}</span>
-                                {% if contest.registration_required %}
-                                    {% if contest.is_registered %}
-                                        <small style="color: var(--success); font-weight: 700;">
-                                            <i class="bi bi-check-circle me-1"></i>Registered
-                                        </small>
-                                    {% elif contest.is_upcoming %}
-                                        <small style="color: var(--warning); font-weight: 700;">
-                                            <i class="bi bi-exclamation-circle me-1"></i>Registration Required
-                                        </small>
-                                    {% endif %}
+                                {% if contest.is_registered %}
+                                    <small style="color: var(--success); font-weight: 700;">
+                                        <i class="bi bi-check-circle me-1"></i>Registered
+                                    </small>
+                                {% elif not contest.registration_required %}
+                                    <small style="color: var(--muted); font-weight: 700;">
+                                        <i class="bi bi-unlock me-1"></i>Open Entry
+                                    </small>
+                                {% elif not contest.is_ended %}
+                                    <small style="color: var(--warning); font-weight: 700;">
+                                        <i class="bi bi-exclamation-circle me-1"></i>Registration Required
+                                    </small>
                                 {% endif %}
                             </div>
 
@@ -111,11 +118,11 @@
                                 <a href="{% url 'contest_detail' contest.uuid %}" class="btn btn-outline-primary btn-sm flex-fill">
                                     <i class="bi bi-eye me-1"></i>View Details
                                 </a>
-                                {% if contest.is_running and contest.is_registered %}
+                                {% if contest.is_running and contest.is_registered or contest.is_running and not contest.registration_required %}
                                     <a href="{% url 'contest_problems' contest.uuid %}" class="btn btn-success btn-sm flex-fill">
                                         <i class="bi bi-play-circle me-1"></i>Enter Contest
                                     </a>
-                                {% elif contest.is_upcoming and not contest.is_registered and contest.registration_required %}
+                                {% elif not contest.is_ended and not contest.is_registered and contest.registration_required %}
                                     <a href="{% url 'contest_detail' contest.uuid %}" class="btn btn-primary btn-sm flex-fill">
                                         <i class="bi bi-person-plus me-1"></i>Register
                                     </a>

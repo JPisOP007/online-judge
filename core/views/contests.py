@@ -27,6 +27,21 @@ from django.utils.crypto import constant_time_compare
 import json
 
 
+def user_is_contest_admin(user):
+    """True for site staff and for the admin profile role.
+
+    Setters author their own contests; only admins oversee everyone's.
+    """
+    if user is None or not user.is_authenticated:
+        return False
+    if user.is_staff:
+        return True
+    try:
+        return user.userprofile.role == 'admin'
+    except (UserProfile.DoesNotExist, AttributeError):
+        return False
+
+
 def contest_is_full(contest):
     """True when the contest has a participant cap and has reached it."""
     return bool(
@@ -65,7 +80,16 @@ def get_participation(contest, user):
 
 def contest_list(request):
     contests = Contest.objects.all().order_by('-created_at')
-    
+
+    # is_public was stored but never consulted, so unlisted contests were on
+    # the public list like any other. Their author and the admins still see
+    # them, since they are the people who have to manage them.
+    if not user_is_contest_admin(request.user):
+        if request.user.is_authenticated:
+            contests = contests.filter(Q(is_public=True) | Q(created_by=request.user))
+        else:
+            contests = contests.filter(is_public=True)
+
     # Status filter
     status_filter = request.GET.get('status', 'all')
     if status_filter != 'all':
@@ -76,35 +100,56 @@ def contest_list(request):
             contests = contests.filter(start_time__lte=now, end_time__gt=now)
         elif status_filter == 'ended':
             contests = contests.filter(end_time__lt=now)
-    
+
     # Search filter
     search_query = request.GET.get('search', '')
     if search_query:
         contests = contests.filter(title__icontains=search_query)
-    
-    # Type filter
+
+    # Type filter. Anything that is not one of the model's own choices is
+    # ignored rather than silently matching nothing.
     type_filter = request.GET.get('type', 'all')
-    if type_filter != 'all':
+    valid_types = {value for value, _ in Contest.CONTEST_TYPES}
+    if type_filter in valid_types:
         contests = contests.filter(contest_type=type_filter)
-    
+    else:
+        type_filter = 'all'
+
     # Pagination
     paginator = Paginator(contests, 10)
     page_number = request.GET.get('page')
     contests = paginator.get_page(page_number)
-    
-    # Add additional info for each contest
+
+    # Participant counts and the viewer's own registrations, in two queries for
+    # the whole page. Asking per contest inside the loop meant twenty round
+    # trips for ten cards.
+    page_contest_ids = [contest.id for contest in contests]
+    participant_counts = dict(
+        ContestParticipant.objects
+        .filter(contest_id__in=page_contest_ids)
+        .values_list('contest_id')
+        .annotate(total=Count('id'))
+        .values_list('contest_id', 'total')
+    )
+    if request.user.is_authenticated:
+        registered_ids = set(
+            ContestParticipant.objects
+            .filter(contest_id__in=page_contest_ids, user=request.user)
+            .values_list('contest_id', flat=True)
+        )
+    else:
+        registered_ids = set()
+
     for contest in contests:
-        contest.participant_count = contest.participants.count()
-        if request.user.is_authenticated:
-            contest.is_registered = contest.participants.filter(id=request.user.id).exists()
-        else:
-            contest.is_registered = False
-    
+        contest.participant_count = participant_counts.get(contest.id, 0)
+        contest.is_registered = contest.id in registered_ids
+
     context = {
         'contests': contests,
         'status_filter': status_filter,
         'search_query': search_query,
         'type_filter': type_filter,
+        'contest_types': Contest.CONTEST_TYPES,
     }
     return render(request, 'core/contest_list.html', context)
 
