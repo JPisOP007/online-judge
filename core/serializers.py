@@ -185,15 +185,17 @@ class ContestListSerializer(ObjectIdPrimaryKeyMixin, serializers.ModelSerializer
         return obj.status
 
 
-class ContestDetailSerializer(ObjectIdPrimaryKeyMixin, serializers.ModelSerializer):
-    """Detailed serializer for contest with nested data"""
-    created_by_username = serializers.CharField(source='created_by.username', read_only=True)
-    participant_count = serializers.SerializerMethodField()
-    status = serializers.SerializerMethodField()
+class ContestDetailSerializer(ContestListSerializer):
+    """Detailed serializer for contest with nested data.
+
+    Inherits from the list serializer so that participant_count and status keep
+    their get_* methods. Declaring the SerializerMethodFields here without the
+    methods made every contest detail response raise AttributeError.
+    """
     problems = ContestProblemSerializer(source='contest_problems', many=True, read_only=True)
     announcements = ContestAnnouncementSerializer(many=True, read_only=True)
-    
-    class Meta:
+
+    class Meta(ContestListSerializer.Meta):
         model = Contest
         fields = [
             'id', 'uuid', 'title', 'description', 'contest_type',
