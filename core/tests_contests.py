@@ -489,6 +489,15 @@ class ContestPageSmokeTests(TestCase):
             with self.subTest(url=url):
                 self.assertEqual(self.client.get(url).status_code, 200)
 
+    def test_problem_page_ships_the_code_editor(self):
+        """The contest editor is the same CodeMirror the practice page uses."""
+        response = self.client.get(
+            reverse('contest_problem_detail', args=[self.contest.uuid, self.problem.uuid])
+        )
+        self.assertContains(response, 'codemirror.min.js')
+        self.assertContains(response, 'class="editor-wrapper"')
+        self.assertContains(response, 'id="id_source_code"')
+
     def test_problem_page_shows_the_judge_limits(self):
         response = self.client.get(
             reverse('contest_problem_detail', args=[self.contest.uuid, self.problem.uuid])

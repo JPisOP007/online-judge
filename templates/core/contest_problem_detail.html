@@ -2,6 +2,10 @@
 
 {% block title %}{{ problem.title }} - {{ contest.title }}{% endblock %}
 
+{# The Add Problem button floats over the Run and Submit buttons here, and
+   adding a problem is not something anyone does mid-contest anyway. #}
+{% block floating_action %}{% endblock %}
+
 {% block content %}
 <div class="row">
   <!-- Contest Info Bar -->
@@ -39,7 +43,7 @@
   </div>
 
   <!-- Problem Content -->
-  <div class="col-lg-8">
+  <div class="col-lg-7">
     <div class="card-section">
       <div class="d-flex justify-content-between align-items-start mb-4">
         <div>
@@ -99,7 +103,7 @@
   </div>
 
   <!-- Submission Panel -->
-  <div class="col-lg-4">
+  <div class="col-lg-5">
     <div class="card-section sticky-top" style="top: 20px;">
       <h5 class="mb-3" style="font-family: var(--font-heading); text-transform: uppercase; border-bottom: 2px solid var(--border); padding-bottom: 8px;">
         <i class="bi bi-code-slash me-2"></i>Submit Solution
@@ -186,15 +190,21 @@
         <input type="hidden" name="problem_id" value="{{ problem.uuid }}">
         <input type="hidden" name="action" id="action-input" value="">
         
-        <div class="mb-3">
-          <label class="form-label" style="font-family: var(--font-heading); text-transform: uppercase;">Programming Language</label>
-          {{ form.language }}
+        <div class="editor-container mb-3">
+          <div class="editor-header">
+            <label class="form-label mb-0" for="{{ form.language.id_for_label }}">
+              <i class="bi bi-gear me-1"></i>Language:
+            </label>
+            {{ form.language }}
+            <span class="editor-hint">
+              <i class="bi bi-keyboard me-1"></i>Ctrl+Enter = Run
+            </span>
+          </div>
+          <div class="editor-wrapper">
+            {{ form.source_code }}
+          </div>
         </div>
-        <div class="mb-3">
-          <label class="form-label" style="font-family: var(--font-heading); text-transform: uppercase;">Source Code</label>
-          {{ form.source_code }}
-        </div>
-        
+
         <div class="d-grid gap-2 mb-3">
           <button type="button" class="btn btn-outline-primary" id="run-btn">
             <i class="bi bi-play me-1"></i>Run on Sample
@@ -263,16 +273,121 @@
 {% endblock %}
 
 {% block extra_css %}
+<!-- Same pinned CodeMirror build the practice problem page uses, so the editor
+     is the same editor in both places. -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-darker.min.css">
 <style>
   .problem-content { line-height: 1.7; font-size: 1.05rem; }
   .sticky-top { position: sticky; z-index: 1020; }
   @media (max-width: 991.98px) {
     .sticky-top { position: static; }
   }
+
+  .editor-container {
+    border: var(--border-w) solid var(--border);
+    background: var(--surface);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+  }
+
+  .editor-header {
+    background: var(--primary);
+    color: #fff;
+    padding: 10px 14px;
+    border-bottom: var(--border-w) solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .editor-header .form-label {
+    color: #fff;
+    font-family: var(--font-heading);
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    white-space: nowrap;
+  }
+
+  .editor-header select {
+    border: 2px solid #fff;
+    border-radius: 0;
+    padding: 4px 10px;
+    background: var(--primary);
+    color: #fff;
+    font-weight: 700;
+    font-family: var(--font-heading);
+    width: auto;
+    flex: 1 1 auto;
+    min-width: 110px;
+  }
+
+  .editor-header select option {
+    background: var(--primary);
+    color: #fff;
+  }
+
+  .editor-hint {
+    margin-left: auto;
+    color: rgba(255, 255, 255, 0.55);
+    font-size: 0.75rem;
+    white-space: nowrap;
+  }
+
+  .editor-wrapper {
+    height: 460px;
+    background: #1e293b;
+  }
+
+  @media (max-width: 575.98px) {
+    /* Keeps the header on one row on a phone, where the shortcut is moot. */
+    .editor-hint { display: none; }
+  }
+
+  .editor-wrapper .CodeMirror {
+    height: 100%;
+    font-family: 'Space Mono', 'Courier New', monospace !important;
+    font-size: 13.5px !important;
+    line-height: 1.55 !important;
+  }
+
+  .CodeMirror-gutters {
+    background: rgba(30, 41, 59, 0.8) !important;
+    border-right: 2px solid #475569 !important;
+  }
+
+  .CodeMirror-linenumber { color: #94a3b8 !important; }
+  .CodeMirror-focused .CodeMirror-cursor { border-left: 2px solid #fff; }
+
+  /* Shown only when CodeMirror cannot load; without this the raw textarea is
+     an unstyled white box in the middle of a dark editor frame. */
+  .editor-wrapper textarea {
+    width: 100%;
+    height: 100%;
+    border: none;
+    outline: none;
+    resize: none;
+    padding: 16px;
+    background: #1e293b;
+    color: #e2e8f0;
+    font-family: 'Space Mono', 'Courier New', monospace;
+    font-size: 13.5px;
+    line-height: 1.55;
+  }
 </style>
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/clike/clike.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/comment/comment.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/selection/active-line.min.js"></script>
+
 <script>
   (function () {
     const timeRemainingEl = document.getElementById('time-remaining');
@@ -321,30 +436,131 @@
   // Handle form submission with proper action
   document.getElementById('run-btn').addEventListener('click', function(e) {
     e.preventDefault();
-    
+
     // Set the action
     document.getElementById('action-input').value = 'run';
-    
+
     // Update button state
     this.disabled = true;
     this.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Running...';
-    
+
     // Submit the form
-    document.getElementById('solution-form').submit();
+    submitSolutionForm();
   });
 
   document.getElementById('submit-btn').addEventListener('click', function(e) {
     e.preventDefault();
-    
+
     // Set the action
     document.getElementById('action-input').value = 'submit';
-    
+
     // Update button state
     this.disabled = true;
     this.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Submitting...';
-    
+
     // Submit the form
-    document.getElementById('solution-form').submit();
+    submitSolutionForm();
   });
+
+  // The contest page posts the form normally rather than over fetch, and
+  // form.submit() skips submit handlers - so the editor's contents have to be
+  // written back to the textarea by hand before the page navigates.
+  function submitSolutionForm() {
+    if (window.contestEditor) {
+      window.contestEditor.save();
+    }
+    document.getElementById('solution-form').submit();
+  }
+
+  // Code editor. The submission box used to be the raw Django textarea: no
+  // line numbers, no syntax highlighting, no indentation, in a proportional
+  // page font - while the practice problem page had a full editor.
+  (function () {
+    const textarea = document.getElementById('{{ form.source_code.auto_id }}');
+    const languageSelect = document.getElementById('{{ form.language.auto_id }}');
+
+    if (!textarea || typeof CodeMirror === 'undefined') {
+      return;  // CSS keeps the plain textarea legible in the editor frame.
+    }
+
+    const languageConfigs = {
+      python: {
+        mode: 'python',
+        defaultCode: '# Write your Python solution here\n\n'
+      },
+      cpp: {
+        mode: 'text/x-c++src',
+        defaultCode: '#include <bits/stdc++.h>\nusing namespace std;\n\n'
+          + 'int main() {\n    // Your C++ code here\n\n    return 0;\n}\n'
+      },
+      java: {
+        mode: 'text/x-java',
+        defaultCode: 'import java.util.*;\nimport java.io.*;\n\n'
+          + 'public class Main {\n    public static void main(String[] args) {\n'
+          + '        Scanner sc = new Scanner(System.in);\n        // Your Java code here\n\n'
+          + '        sc.close();\n    }\n}\n'
+      },
+      javascript: {
+        mode: 'javascript',
+        defaultCode: '// readline() -> next line of input, or null at end of input\n'
+          + '// readAll()  -> the entire stdin as a single string\n\n'
+      }
+    };
+
+    function configFor(language) {
+      return languageConfigs[language] || languageConfigs.python;
+    }
+
+    const runButton = document.getElementById('run-btn');
+    const submitButton = document.getElementById('submit-btn');
+
+    const editor = CodeMirror.fromTextArea(textarea, {
+      lineNumbers: true,
+      mode: configFor(languageSelect ? languageSelect.value : 'python').mode,
+      theme: 'material-darker',
+      autoCloseBrackets: true,
+      matchBrackets: true,
+      styleActiveLine: true,
+      indentUnit: 4,
+      tabSize: 4,
+      indentWithTabs: false,
+      lineWrapping: true,
+      extraKeys: {
+        'Ctrl-/': 'toggleComment',
+        'Cmd-/': 'toggleComment',
+        'Ctrl-Enter': function () { runButton.click(); },
+        'Ctrl-Shift-Enter': function () {
+          if (!submitButton.disabled) {
+            submitButton.click();
+          }
+        }
+      }
+    });
+
+    // Keep the code across a run or a failed submit: the view re-renders the
+    // page with the bound form, so whatever came back is what belongs here.
+    if (!editor.getValue().trim() && languageSelect) {
+      editor.setValue(configFor(languageSelect.value).defaultCode);
+    }
+
+    window.contestEditor = editor;
+
+    if (languageSelect) {
+      languageSelect.addEventListener('change', function () {
+        const config = configFor(this.value);
+        editor.setOption('mode', config.mode);
+
+        // Only replace the buffer when it is still an untouched stub, never
+        // when it holds work.
+        const current = editor.getValue().trim();
+        const isStub = current === '' || Object.keys(languageConfigs).some(
+          function (key) { return current === languageConfigs[key].defaultCode.trim(); }
+        );
+        if (isStub) {
+          editor.setValue(config.defaultCode);
+        }
+      });
+    }
+  })();
 </script>
 {% endblock %}

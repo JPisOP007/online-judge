@@ -836,12 +836,16 @@
     </div>
   </footer>
 
+  {# Pages that have their own controls in the bottom-right corner override
+     this block to empty, so the floating button cannot sit on top of them. #}
+  {% block floating_action %}
   {% if user.is_authenticated and user.userprofile.role == 'setter' or user.is_authenticated and user.userprofile.role == 'admin' %}
   <a href="{% url 'add_problem' %}" class="floating-add-btn">
     <i class="bi bi-plus-lg"></i>
     <span class="d-none d-sm-inline">Add Problem</span>
   </a>
   {% endif %}
+  {% endblock %}
 
   <!-- JS Dependencies -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
