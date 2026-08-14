@@ -154,33 +154,50 @@ class UserProfileForm(forms.ModelForm):
 # Form: Contest Forms
 # -------------------------------
 
+# A <input type="datetime-local"> only accepts and returns this exact shape.
+# Django's default DateTimeInput format ("2026-08-14 10:30:00") is rejected by
+# the browser, which then renders the field blank - so editing a contest lost
+# its start and end times unless they were retyped by hand.
+DATETIME_LOCAL_FORMAT = '%Y-%m-%dT%H:%M'
+DATETIME_LOCAL_INPUT_FORMATS = [
+    DATETIME_LOCAL_FORMAT,
+    '%Y-%m-%dT%H:%M:%S',
+    '%Y-%m-%d %H:%M:%S',
+    '%Y-%m-%d %H:%M',
+]
+
+
 class ContestForm(forms.ModelForm):
     problems = forms.ModelMultipleChoiceField(
-        queryset=Problem.objects.all(),
+        queryset=Problem.objects.all().order_by('title'),
         widget=forms.CheckboxSelectMultiple,
         required=False
     )
-    
+
     start_time = forms.DateTimeField(
         widget=forms.DateTimeInput(
             attrs={
                 'type': 'datetime-local',
                 'class': 'form-control'
-            }
+            },
+            format=DATETIME_LOCAL_FORMAT,
         ),
+        input_formats=DATETIME_LOCAL_INPUT_FORMATS,
         help_text="Contest start date and time"
     )
-    
+
     end_time = forms.DateTimeField(
         widget=forms.DateTimeInput(
             attrs={
-                'type': 'datetime-local', 
+                'type': 'datetime-local',
                 'class': 'form-control'
-            }
+            },
+            format=DATETIME_LOCAL_FORMAT,
         ),
+        input_formats=DATETIME_LOCAL_INPUT_FORMATS,
         help_text="Contest end date and time"
     )
-    
+
     class Meta:
         model = Contest
         fields = [
@@ -188,10 +205,18 @@ class ContestForm(forms.ModelForm):
             'max_participants', 'is_public', 'registration_required', 'password'
         ]
         widgets = {
-            'description': forms.Textarea(attrs={'rows': 4}),
-            'password': forms.PasswordInput(attrs={'placeholder': 'Leave empty for public contest'}),
+            'title': forms.TextInput(attrs={'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'rows': 4, 'class': 'form-control'}),
+            'contest_type': forms.Select(attrs={'class': 'form-select'}),
+            'max_participants': forms.NumberInput(attrs={'class': 'form-control', 'min': 1}),
+            'is_public': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'registration_required': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'password': forms.PasswordInput(
+                attrs={'class': 'form-control', 'placeholder': 'Leave empty for public contest'},
+                render_value=True,
+            ),
         }
-    
+
     def clean_max_participants(self):
         max_participants = self.cleaned_data.get('max_participants')
         if max_participants is not None and max_participants < 1:
@@ -216,12 +241,29 @@ class ContestForm(forms.ModelForm):
             end_time = timezone.make_aware(end_time)
             cleaned_data['end_time'] = end_time
 
-        if start_time and end_time:
-            if start_time >= end_time:
-                raise forms.ValidationError("End time must be after start time")
+        # Contest.clean() rejects an inverted window and its message reaches the
+        # form through _post_clean, so repeating the check here only produced
+        # the same error twice in the UI.
+        if start_time and end_time and start_time < end_time:
             cleaned_data['duration'] = end_time - start_time
 
         return cleaned_data
+
+    def save(self, commit=True):
+        """Keep `duration` consistent with the contest window.
+
+        clean() puts the derived duration in cleaned_data, but duration is not
+        a form field so nothing ever copied it onto the instance: editing a
+        contest's times left the old duration on display forever. Apply it
+        here, which covers both the commit=True and commit=False callers.
+        """
+        contest = super().save(commit=False)
+        if contest.start_time and contest.end_time:
+            contest.duration = contest.end_time - contest.start_time
+        if commit:
+            contest.save()
+            self.save_m2m()
+        return contest
 
 class ContestRegistrationForm(forms.Form):
     password = forms.CharField(

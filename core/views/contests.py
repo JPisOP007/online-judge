@@ -441,12 +441,10 @@ def create_contest(request):
         
         if form.is_valid():
             try:
+                # ContestForm.save() derives duration from the contest window.
                 contest = form.save(commit=False)
                 contest.created_by = request.user
-                
-                if not contest.duration and contest.start_time and contest.end_time:
-                    contest.duration = contest.end_time - contest.start_time
-                
+
                 contest.full_clean()
                 contest.save()
                 
@@ -470,9 +468,11 @@ def create_contest(request):
             except Exception as e:
                 messages.error(request, f'Error creating contest: {str(e)}')
         else:
-            for field, errors in form.errors.items():
-                for error in errors:
-                    messages.error(request, f'{field}: {error}')
+            # Field errors are rendered next to their inputs by the template;
+            # only form-wide errors ("__all__") need surfacing as messages, and
+            # they should not be prefixed with that placeholder field name.
+            for error in form.non_field_errors():
+                messages.error(request, error)
     else:
         form = ContestForm()
     
