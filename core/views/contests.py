@@ -421,15 +421,21 @@ def contest_problem_detail(request, contest_uuid, problem_uuid):
                         failed_test_case = i + 1
                         break
 
+                # Scores are out of the points the setter gave this problem in
+                # this contest, not a flat 100. The standings header has always
+                # advertised those points, so a 200-point problem could only
+                # ever award 100 and every problem was worth the same.
+                max_points = contest_problem.points
+
                 if all_passed:
                     verdict = "AC"
                     output = "✅ All test cases passed."
                     feedback_message = "🎉 Code Accepted!"
-                    score = 100
+                    score = max_points
                 else:
                     # Calculate partial score based on passed test cases
                     passed_cases = failed_test_case - 1 if failed_test_case else 0
-                    score = int((passed_cases / len(test_cases)) * 100)
+                    score = int(max_points * passed_cases / len(test_cases))
 
                 try:
                     solution = Solution.objects.create(
