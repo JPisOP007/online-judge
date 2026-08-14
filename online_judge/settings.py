@@ -174,15 +174,29 @@ import os
 import certifi
 
 # MongoDB configuration (django-mongodb-backend >= 6.0.x)
+DEFAULT_MONGODB_NAME = "online_judge"
+MONGODB_URI = os.getenv("MONGODB_URI", f"mongodb://localhost:27017/{DEFAULT_MONGODB_NAME}")
+
+
+def _database_name_from_uri(uri, default=DEFAULT_MONGODB_NAME):
+    """Read the database name out of a MongoDB connection string.
+
+    NAME used to be hardcoded, so the database named in MONGODB_URI was
+    ignored: pointing the variable at a scratch database still read and wrote
+    the production one. The name is the URI's path component; URIs that omit
+    it (common for Atlas, where it is optional) keep the default.
+    """
+    from urllib.parse import urlparse
+
+    path = urlparse(uri).path.lstrip("/")
+    return path or default
+
+
 DATABASES = {
     "default": {
         "ENGINE": "django_mongodb_backend",
-        "HOST": os.getenv(
-            "MONGODB_URI",
-            "mongodb://localhost:27017/online_judge"
-        ),
-        # Ensure the DB name is set (MongoDB uses the path component of the URI)
-        "NAME": "online_judge",
+        "HOST": MONGODB_URI,
+        "NAME": _database_name_from_uri(MONGODB_URI),
     }
 }
 
