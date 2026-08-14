@@ -47,8 +47,8 @@
           <div class="d-flex align-items-center gap-3 mb-3 flex-wrap">
             <span class="difficulty-{{ problem.difficulty|lower }}" style="padding: 4px 10px; font-size: 0.8rem;">{{ problem.get_difficulty_display }}</span>
             <span class="badge" style="background: var(--accent-yellow); color: var(--primary); border: 2px solid var(--border); font-size: 0.8rem;">{{ contest_problem.points }} points</span>
-            <span style="font-size: 0.8rem; font-weight: 700; font-family: 'Space Mono', monospace; border: 2px solid var(--border); padding: 4px 8px; background: var(--bg);"><i class="bi bi-clock me-1"></i>{{ problem.time_limit }}s</span>
-            <span style="font-size: 0.8rem; font-weight: 700; font-family: 'Space Mono', monospace; border: 2px solid var(--border); padding: 4px 8px; background: var(--bg);"><i class="bi bi-memory me-1"></i>{{ problem.memory_limit }}MB</span>
+            <span style="font-size: 0.8rem; font-weight: 700; font-family: 'Space Mono', monospace; border: 2px solid var(--border); padding: 4px 8px; background: var(--bg);"><i class="bi bi-clock me-1"></i>{{ time_limit }}s</span>
+            <span style="font-size: 0.8rem; font-weight: 700; font-family: 'Space Mono', monospace; border: 2px solid var(--border); padding: 4px 8px; background: var(--bg);"><i class="bi bi-memory me-1"></i>{{ memory_limit }}MB</span>
           </div>
         </div>
       </div>
@@ -199,10 +199,19 @@
           <button type="button" class="btn btn-outline-primary" id="run-btn">
             <i class="bi bi-play me-1"></i>Run on Sample
           </button>
-          <button type="button" class="btn btn-success" id="submit-btn">
+          <button type="button" class="btn btn-success" id="submit-btn"
+                  {% if not contest.is_running %}disabled title="This contest is not accepting submissions"{% endif %}>
            <i class="bi bi-upload me-1"></i>Submit Solution
           </button>
         </div>
+
+        {% if not contest.is_running %}
+        <div class="alert alert-secondary" style="border: 2px solid var(--border); border-radius: 0; font-size: 0.9rem;">
+          <i class="bi bi-lock me-1"></i>
+          The contest has ended. You can still run your code against the sample,
+          but submissions are closed.
+        </div>
+        {% endif %}
       </form>
 
       {% if user_submissions %}
@@ -224,21 +233,23 @@
               <tr>
                 <td style="font-family: 'Space Mono', monospace;"><small>{{ submission.submitted_at|date:"H:i" }}</small></td>
                 <td>
-                  {% if submission.solution.verdict == 'AC' %}
+                  {% if submission.verdict == 'AC' %}
                     <span class="badge bg-success" style="border: 1px solid var(--border);">AC</span>
-                  {% elif submission.solution.verdict == 'WA' %}
+                  {% elif submission.verdict == 'WA' %}
                     <span class="badge" style="background: var(--accent-yellow); color: #000; border: 1px solid var(--border);">WA</span>
-                  {% elif submission.solution.verdict == 'TLE' %}
+                  {% elif submission.verdict == 'TLE' %}
                     <span class="badge bg-info" style="border: 1px solid var(--border);">TLE</span>
-                  {% elif submission.solution.verdict == 'CE' %}
+                  {% elif submission.verdict == 'CE' %}
                     <span class="badge bg-danger" style="border: 1px solid var(--border);">CE</span>
-                  {% elif submission.solution.verdict == 'RE' %}
+                  {% elif submission.verdict == 'RE' %}
                     <span class="badge bg-danger" style="border: 1px solid var(--border);">RE</span>
                   {% else %}
-                    <span class="badge bg-secondary" style="border: 1px solid var(--border);">{{ submission.solution.verdict }}</span>
+                    <span class="badge bg-secondary" style="border: 1px solid var(--border);">{{ submission.verdict }}</span>
                   {% endif %}
                 </td>
-                <td style="font-family: 'Space Mono', monospace; font-weight: 700;">{{ submission.points_awarded }}</td>
+                <td style="font-family: 'Space Mono', monospace; font-weight: 700;">
+                  {{ submission.points_awarded }}<small class="text-muted">/{{ contest_problem.points }}</small>
+                </td>
               </tr>
               {% endfor %}
             </tbody>

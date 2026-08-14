@@ -78,48 +78,41 @@
                     <td style="vertical-align: middle;">
                         <span style="background: var(--accent-yellow); color: var(--primary); border: 2px solid var(--border); padding: 4px 8px; font-weight: 700; font-family: 'Space Mono', monospace; font-size: 0.85rem;">{{ contest_problem.points }} pts</span>
                     </td>
+                    {% with status=problem_status|get_item:contest_problem.problem.uuid %}
                     <td style="vertical-align: middle;">
-                        {% with user_submissions|default_if_none:''|get_item:contest_problem.problem.uuid as submissions %}
-                            {% if submissions %}
-                                {% with submissions|first as latest_submission %}
-                                    {% if latest_submission.verdict == 'AC' %}
-                                        <span class="badge bg-success" style="border: 2px solid var(--border);"><i class="bi bi-check-circle me-1"></i>Accepted</span>
-                                    {% elif latest_submission.verdict == 'WA' %}
-                                        <span class="badge bg-warning text-dark" style="border: 2px solid var(--border);"><i class="bi bi-x-circle me-1"></i>Wrong Answer</span>
-                                    {% elif latest_submission.verdict == 'TLE' %}
-                                        <span class="badge bg-info text-dark" style="border: 2px solid var(--border);"><i class="bi bi-clock me-1"></i>Time Limit</span>
-                                    {% elif latest_submission.verdict == 'RE' %}
-                                        <span class="badge bg-danger" style="border: 2px solid var(--border);"><i class="bi bi-exclamation-triangle me-1"></i>Runtime Error</span>
-                                    {% elif latest_submission.verdict == 'CE' %}
-                                        <span class="badge bg-warning text-dark" style="border: 2px solid var(--border);"><i class="bi bi-gear me-1"></i>Compile Error</span>
-                                    {% elif latest_submission.verdict == 'MLE' %}
-                                        <span class="badge bg-warning text-dark" style="border: 2px solid var(--border);"><i class="bi bi-memory me-1"></i>Memory Limit</span>
-                                    {% elif latest_submission.verdict == 'PE' %}
-                                        <span class="badge bg-warning text-dark" style="border: 2px solid var(--border);"><i class="bi bi-file-text me-1"></i>Presentation Error</span>
-                                    {% elif latest_submission.verdict == 'OLE' %}
-                                        <span class="badge bg-warning text-dark" style="border: 2px solid var(--border);"><i class="bi bi-file-text me-1"></i>Output Limit</span>
-                                    {% elif latest_submission.verdict == 'IE' %}
-                                        <span class="badge bg-secondary" style="border: 2px solid var(--border);"><i class="bi bi-exclamation-triangle me-1"></i>Internal Error</span>
-                                    {% else %}
-                                        <span class="badge bg-secondary" style="border: 2px solid var(--border);">{{ latest_submission.verdict }}</span>
-                                    {% endif %}
-                                {% endwith %}
-                            {% else %}
-                                <span class="badge bg-light text-dark" style="border: 2px solid var(--border);">
-                                    <i class="bi bi-dash-circle me-1"></i>Not Attempted
-                                </span>
-                            {% endif %}
-                        {% endwith %}
+                        {% if status.solved %}
+                            <span class="badge bg-success" style="border: 2px solid var(--border);"><i class="bi bi-check-circle me-1"></i>Accepted</span>
+                        {% elif status.best_points > 0 %}
+                            <span class="badge bg-warning text-dark" style="border: 2px solid var(--border);"><i class="bi bi-hourglass-split me-1"></i>{{ status.best_points }} pts</span>
+                        {% elif status.latest_verdict == 'WA' %}
+                            <span class="badge bg-warning text-dark" style="border: 2px solid var(--border);"><i class="bi bi-x-circle me-1"></i>Wrong Answer</span>
+                        {% elif status.latest_verdict == 'TLE' %}
+                            <span class="badge bg-info text-dark" style="border: 2px solid var(--border);"><i class="bi bi-clock me-1"></i>Time Limit</span>
+                        {% elif status.latest_verdict == 'RE' %}
+                            <span class="badge bg-danger" style="border: 2px solid var(--border);"><i class="bi bi-exclamation-triangle me-1"></i>Runtime Error</span>
+                        {% elif status.latest_verdict == 'CE' %}
+                            <span class="badge bg-warning text-dark" style="border: 2px solid var(--border);"><i class="bi bi-gear me-1"></i>Compile Error</span>
+                        {% elif status.latest_verdict == 'MLE' %}
+                            <span class="badge bg-warning text-dark" style="border: 2px solid var(--border);"><i class="bi bi-memory me-1"></i>Memory Limit</span>
+                        {% elif status.latest_verdict == 'PE' %}
+                            <span class="badge bg-warning text-dark" style="border: 2px solid var(--border);"><i class="bi bi-file-text me-1"></i>Presentation Error</span>
+                        {% elif status.latest_verdict == 'OLE' %}
+                            <span class="badge bg-warning text-dark" style="border: 2px solid var(--border);"><i class="bi bi-file-text me-1"></i>Output Limit</span>
+                        {% elif status.latest_verdict == 'IE' %}
+                            <span class="badge bg-secondary" style="border: 2px solid var(--border);"><i class="bi bi-exclamation-triangle me-1"></i>Internal Error</span>
+                        {% elif status.latest_verdict %}
+                            <span class="badge bg-secondary" style="border: 2px solid var(--border);">{{ status.latest_verdict }}</span>
+                        {% else %}
+                            <span class="badge bg-light text-dark" style="border: 2px solid var(--border);">
+                                <i class="bi bi-dash-circle me-1"></i>Not Attempted
+                            </span>
+                        {% endif %}
                     </td>
                     <td style="vertical-align: middle;">
-                        {% with user_submissions|default_if_none:''|get_item:contest_problem.problem.uuid as submissions %}
-                            {% if submissions %}
-                                <span class="text-muted fw-bold" style="font-family: 'Space Mono', monospace;">{{ submissions|length }}</span> <span class="text-muted" style="font-size: 0.85rem;">submission{{ submissions|length|pluralize }}</span>
-                            {% else %}
-                                <span class="text-muted fw-bold" style="font-family: 'Space Mono', monospace;">0</span> <span class="text-muted" style="font-size: 0.85rem;">submissions</span>
-                            {% endif %}
-                        {% endwith %}
+                        <span class="text-muted fw-bold" style="font-family: 'Space Mono', monospace;">{{ status.attempts|default:0 }}</span>
+                        <span class="text-muted" style="font-size: 0.85rem;">submission{{ status.attempts|default:0|pluralize }}</span>
                     </td>
+                    {% endwith %}
                 </tr>
                 {% empty %}
                 <tr>

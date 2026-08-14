@@ -307,16 +307,31 @@ def contest_problems(request, contest_uuid):
 
     accepted_problems = len(accepted_problem_uuids)
 
+    # The page used to badge each problem with the verdict of the most recent
+    # submission, so a solved problem read "Wrong Answer" as soon as the
+    # participant tried a different approach on it. Summarise instead: solved
+    # is solved, and the best score stands.
+    problem_status = {
+        problem_id: {
+            'solved': problem_id in accepted_problem_uuids,
+            'attempts': len(problem_submissions),
+            'best_points': max((s.points_awarded or 0) for s in problem_submissions),
+            'latest_verdict': problem_submissions[0].verdict,
+        }
+        for problem_id, problem_submissions in user_submissions.items()
+    }
+
     progress_stats = {
         'accepted_problems': accepted_problems,
         'total_problems': contest_problems.count(),
         'total_submissions': total_submissions,
     }
-    
+
     context = {
         'contest': contest,
         'contest_problems': contest_problems,
         'user_submissions': user_submissions,
+        'problem_status': problem_status,
         'progress_stats': progress_stats,
     }
     return render(request, 'core/contest_problems.html', context)
@@ -343,6 +358,8 @@ def contest_problem_detail(request, contest_uuid, problem_uuid):
         messages.error(request, join_error)
         return redirect('contest_detail', contest_uuid=contest.uuid)
 
+    execution_limits = getattr(settings, 'CODE_EXECUTION', {})
+
     context = {
         'contest': contest,
         'problem': problem,
@@ -351,6 +368,11 @@ def contest_problem_detail(request, contest_uuid, problem_uuid):
         'verdict': '',
         'feedback_message': '',
         'user_submissions': [],
+        # The template advertised problem.time_limit / problem.memory_limit,
+        # fields the Problem model does not have, so the badges read "s" and
+        # "MB". These are the limits the judge actually enforces.
+        'time_limit': execution_limits.get('TIME_LIMIT', 5),
+        'memory_limit': execution_limits.get('MEMORY_LIMIT', 128),
     }
 
     if request.method == "POST":
