@@ -23,7 +23,45 @@ from core.utils.secure_execution import secure_execute_code, secure_evaluate_sub
 from core.views.auth import role_required
 from core.views.problems import get_feedback_message
 from collections import defaultdict
+from django.utils.crypto import constant_time_compare
 import json
+
+
+def contest_is_full(contest):
+    """True when the contest has a participant cap and has reached it."""
+    return bool(
+        contest.max_participants
+        and contest.participants.count() >= contest.max_participants
+    )
+
+
+def get_participation(contest, user):
+    """Return (participant, error) for a user entering a contest.
+
+    A ContestParticipant row is what every contest page keys off, so a user
+    without one cannot open problems or submit. Contests with
+    registration_required=False have no registration step at all, which used to
+    leave them unenterable by anybody: contest_detail refused to show the
+    registration form and every other view then rejected the user for not being
+    a participant. For those contests the row is created on first entry.
+    """
+    if not user.is_authenticated:
+        return None, 'You must be logged in to take part in a contest'
+
+    try:
+        return ContestParticipant.objects.get(contest=contest, user=user), None
+    except ContestParticipant.DoesNotExist:
+        pass
+
+    if contest.registration_required:
+        return None, 'You must be registered to take part in this contest'
+
+    if contest_is_full(contest):
+        return None, 'This contest is full'
+
+    participant, _ = ContestParticipant.objects.get_or_create(contest=contest, user=user)
+    return participant, None
+
 
 def contest_list(request):
     contests = Contest.objects.all().order_by('-created_at')
@@ -73,53 +111,75 @@ def contest_list(request):
 @login_required
 def contest_detail(request, contest_uuid):
     contest = get_object_or_404(Contest, uuid=contest_uuid)
-    is_registered = contest.participants.filter(id=request.user.id).exists()
-    can_register = not is_registered and not contest.is_ended and contest.registration_required
-    
+    is_registered = ContestParticipant.objects.filter(contest=contest, user=request.user).exists()
+    is_full = contest_is_full(contest)
+    can_register = (
+        not is_registered
+        and not contest.is_ended
+        and contest.registration_required
+        and not is_full
+    )
+    # Contests that do not require registration are entered directly from the
+    # problems page, which creates the participant record on the way in.
+    can_enter = is_registered or (not contest.registration_required and not contest.is_upcoming)
+
     if request.method == 'POST' and can_register:
         form = ContestRegistrationForm(request.POST)
         if form.is_valid():
             password = form.cleaned_data.get('password', '')
-            
-            if contest.password and contest.password != password:
+
+            if contest.password and not constant_time_compare(contest.password, password):
                 messages.error(request, 'Incorrect contest password')
-            elif contest.max_participants and contest.participants.count() >= contest.max_participants:
+            elif contest_is_full(contest):
                 messages.error(request, 'Contest is full')
             else:
-                ContestParticipant.objects.create(contest=contest, user=request.user)
-                messages.success(request, 'Successfully registered for the contest!')
+                # get_or_create, not create: a double-submitted registration
+                # form used to hit the (contest, user) unique constraint and
+                # return a 500 instead of a registered user.
+                _, created = ContestParticipant.objects.get_or_create(
+                    contest=contest, user=request.user
+                )
+                if created:
+                    messages.success(request, 'Successfully registered for the contest!')
+                else:
+                    messages.info(request, 'You are already registered for this contest')
                 return redirect('contest_detail', contest_uuid=contest.uuid)
     else:
         form = ContestRegistrationForm()
-    
+
     contest_problems = ContestProblem.objects.filter(contest=contest).select_related('problem')
     announcements = contest.announcements.all()[:5]
-    
+
     user_submissions = []
     problem_status = {}
-    
-    if is_registered and not contest.is_upcoming:
-        user_submissions = ContestSubmission.objects.filter(
-            contest=contest,
-            participant__user=request.user
-        ).select_related('problem', 'solution')
-        
+
+    if can_enter and not contest.is_upcoming:
+        user_submissions = list(
+            ContestSubmission.objects.filter(
+                contest=contest,
+                participant__user=request.user,
+            ).select_related('problem')
+        )
+
+        solved = {s.problem_id for s in user_submissions if s.verdict == 'AC'}
+        attempted = {s.problem_id for s in user_submissions}
+
         for contest_problem in contest_problems:
-            problem_uuid = contest_problem.problem.uuid
-            problem_submissions = user_submissions.filter(problem=contest_problem.problem)
-            
-            if problem_submissions.exists():
-                if problem_submissions.filter(verdict='AC').exists():
-                    problem_status[problem_uuid] = 'Accepted'
-                else:
-                    problem_status[problem_uuid] = 'Attempted'
+            # get_item looks these up by str(uuid); keep that key shape.
+            key = str(contest_problem.problem.uuid)
+            if contest_problem.problem_id in solved:
+                problem_status[key] = 'Accepted'
+            elif contest_problem.problem_id in attempted:
+                problem_status[key] = 'Attempted'
             else:
-                problem_status[problem_uuid] = 'Not Attempted'
-    
+                problem_status[key] = 'Not Attempted'
+
     context = {
         'contest': contest,
         'is_registered': is_registered,
         'can_register': can_register,
+        'can_enter': can_enter,
+        'is_full': is_full,
         'form': form,
         'contest_problems': contest_problems,
         'announcements': announcements,
@@ -131,47 +191,40 @@ def contest_detail(request, contest_uuid):
 @login_required
 def contest_problems(request, contest_uuid):
     contest = get_object_or_404(Contest, uuid=contest_uuid)
-    
-    if not contest.participants.filter(id=request.user.id).exists():
-        messages.error(request, 'You must be registered to view contest problems')
-        return redirect('contest_detail', contest_uuid=contest.uuid)
-    
+
+    # Order matters: nobody joins a contest that has not started yet.
     if contest.is_upcoming:
         messages.error(request, 'Contest has not started yet')
         return redirect('contest_detail', contest_uuid=contest.uuid)
-    
+
+    participant, join_error = get_participation(contest, request.user)
+    if participant is None:
+        messages.error(request, join_error)
+        return redirect('contest_detail', contest_uuid=contest.uuid)
+
     contest_problems = ContestProblem.objects.filter(contest=contest).select_related('problem').order_by('order')
-    
+
     user_submissions = {}
     total_submissions = 0
     accepted_problems = 0
-    
-    if request.user.is_authenticated:
-        try:
-            participant = ContestParticipant.objects.get(contest=contest, user=request.user)
-        except ContestParticipant.DoesNotExist:
-            participant = None
-        
-        if participant:
-            submissions = ContestSubmission.objects.filter(
-                contest=contest,
-                participant=participant
-            ).select_related('problem', 'solution').order_by('-submitted_at')
-            
-            accepted_problem_uuids = set()
-            
-            for submission in submissions:
-                problem_id = str(submission.problem.uuid)
-                if problem_id not in user_submissions:
-                    user_submissions[problem_id] = []
-                user_submissions[problem_id].append(submission)
-                total_submissions += 1
-                
-                if submission.verdict == 'AC':
-                    accepted_problem_uuids.add(problem_id)
-            
-            accepted_problems = len(accepted_problem_uuids)
-    
+
+    submissions = ContestSubmission.objects.filter(
+        contest=contest,
+        participant=participant
+    ).select_related('problem').order_by('-submitted_at')
+
+    accepted_problem_uuids = set()
+
+    for submission in submissions:
+        problem_id = str(submission.problem.uuid)
+        user_submissions.setdefault(problem_id, []).append(submission)
+        total_submissions += 1
+
+        if submission.verdict == 'AC':
+            accepted_problem_uuids.add(problem_id)
+
+    accepted_problems = len(accepted_problem_uuids)
+
     progress_stats = {
         'accepted_problems': accepted_problems,
         'total_problems': contest_problems.count(),
@@ -190,7 +243,9 @@ def contest_problems(request, contest_uuid):
 def contest_problem_detail(request, contest_uuid, problem_uuid):
     contest = get_object_or_404(Contest, uuid=contest_uuid)
     problem = get_object_or_404(Problem, uuid=problem_uuid)
-    participant = get_object_or_404(ContestParticipant, contest=contest, user=request.user)
+    # 404s when the problem is not part of this contest, before anything else
+    # reads it.
+    contest_problem = get_object_or_404(ContestProblem, contest=contest, problem=problem)
 
     # Problems must not be readable before the contest opens, even by people
     # who have already registered. contest_problems() enforces this too.
@@ -198,10 +253,18 @@ def contest_problem_detail(request, contest_uuid, problem_uuid):
         messages.error(request, 'Contest has not started yet')
         return redirect('contest_detail', contest_uuid=contest.uuid)
 
+    # A registered user has a participant row; an open contest creates one on
+    # entry. Anyone else is sent back with an explanation rather than a bare
+    # 404, which is what get_object_or_404 on the participant used to give.
+    participant, join_error = get_participation(contest, request.user)
+    if participant is None:
+        messages.error(request, join_error)
+        return redirect('contest_detail', contest_uuid=contest.uuid)
+
     context = {
         'contest': contest,
         'problem': problem,
-        'contest_problem': get_object_or_404(ContestProblem, contest=contest, problem=problem),
+        'contest_problem': contest_problem,
         'output': '',
         'verdict': '',
         'feedback_message': '',
