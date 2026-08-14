@@ -292,47 +292,55 @@
 
 {% block extra_js %}
 <script>
-  // Contest timer functionality
-  function updateTimer() {
+  (function () {
     const timeRemainingEl = document.getElementById('time-remaining');
     const timeUntilStartEl = document.getElementById('time-until-start');
-    
-    if (timeRemainingEl) {
-      const endTime = new Date(timeRemainingEl.dataset.endTime);
-      const now = new Date();
-      const diff = endTime - now;
-      
-      if (diff > 0) {
-        const hours = Math.floor(diff / (1000 * 60 * 60));
-        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-        timeRemainingEl.textContent = `${hours}h ${minutes}m ${seconds}s`;
-      } else {
-        timeRemainingEl.textContent = 'Contest ended';
-        location.reload(); // Refresh when contest ends
-      }
-    }
-    
-    if (timeUntilStartEl) {
-      const startTime = new Date(timeUntilStartEl.dataset.startTime);
-      const now = new Date();
-      const diff = startTime - now;
-      
-      if (diff > 0) {
-        const hours = Math.floor(diff / (1000 * 60 * 60));
-        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-        timeUntilStartEl.textContent = `${hours}h ${minutes}m ${seconds}s`;
-      } else {
-        location.reload(); // Refresh when contest starts
-      }
-    }
-  }
-  
-  // Update timer every second
-  setInterval(updateTimer, 1000);
-  updateTimer(); // Initial call
+    const countdownEl = timeRemainingEl || timeUntilStartEl;
 
-  // Auto-refresh standings every 30 seconds during active contest
+    // A single latch for the whole page: calling location.reload() from inside
+    // a one-second interval fired a fresh reload on every tick until the
+    // navigation happened.
+    let reloading = false;
+    function reloadOnce() {
+      if (reloading) {
+        return;
+      }
+      reloading = true;
+      location.reload();
+    }
+
+    if (countdownEl) {
+      const deadline = new Date(timeRemainingEl
+        ? timeRemainingEl.dataset.endTime
+        : timeUntilStartEl.dataset.startTime);
+
+      const timerInterval = setInterval(updateTimer, 1000);
+      updateTimer();
+
+      function updateTimer() {
+        const diff = deadline - new Date();
+
+        if (diff > 0) {
+          const hours = Math.floor(diff / 3600000);
+          const minutes = Math.floor((diff % 3600000) / 60000);
+          const seconds = Math.floor((diff % 60000) / 1000);
+          countdownEl.textContent = `${hours}h ${minutes}m ${seconds}s`;
+          return;
+        }
+
+        clearInterval(timerInterval);
+        if (timeRemainingEl) {
+          countdownEl.textContent = 'Contest ended';
+        }
+        reloadOnce();
+      }
+    }
+
+    // Keep a running contest's standings current without the reader having to
+    // refresh. This was promised by a comment and never implemented.
+    {% if contest.is_running %}
+    setInterval(reloadOnce, 30000);
+    {% endif %}
+  })();
 </script>
 {% endblock %}

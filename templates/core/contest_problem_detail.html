@@ -274,40 +274,49 @@
 
 {% block extra_js %}
 <script>
-  function updateTimer() {
+  (function () {
     const timeRemainingEl = document.getElementById('time-remaining');
     const timeUntilStartEl = document.getElementById('time-until-start');
-    const now = new Date();
+    const countdownEl = timeRemainingEl || timeUntilStartEl;
 
-    if (timeRemainingEl) {
-      const endTime = new Date(timeRemainingEl.dataset.endTime);
-      const diff = endTime - now;
+    if (!countdownEl) {
+      return;
+    }
+
+    const deadline = new Date(timeRemainingEl
+      ? timeRemainingEl.dataset.endTime
+      : timeUntilStartEl.dataset.startTime);
+    let reloading = false;
+
+    function updateTimer() {
+      const diff = deadline - new Date();
+
       if (diff > 0) {
         const hours = Math.floor(diff / 3600000);
         const minutes = Math.floor((diff % 3600000) / 60000);
         const seconds = Math.floor((diff % 60000) / 1000);
-        timeRemainingEl.textContent = `${hours}h ${minutes}m ${seconds}s remaining`;
-      } else {
-        timeRemainingEl.parentElement.innerHTML = '<span class="text-secondary">Contest Ended</span>';
+        countdownEl.textContent = timeRemainingEl
+          ? `${hours}h ${minutes}m ${seconds}s remaining`
+          : `${hours}h ${minutes}m ${seconds}s`;
+        return;
+      }
+
+      // When the clock runs out the page has to come back from the server:
+      // submissions are closed now and the Submit button's state is rendered
+      // server-side. The old code only rewrote the label - and did it by
+      // replacing the parent's innerHTML, which deleted the label with it -
+      // leaving a live Submit button the view would reject.
+      countdownEl.textContent = timeRemainingEl ? 'Contest ended' : 'Starting…';
+      clearInterval(timerInterval);
+      if (!reloading) {
+        reloading = true;
+        setTimeout(function () { location.reload(); }, 1000);
       }
     }
 
-    if (timeUntilStartEl) {
-      const startTime = new Date(timeUntilStartEl.dataset.startTime);
-      const diff = startTime - now;
-      if (diff > 0) {
-        const hours = Math.floor(diff / 3600000);
-        const minutes = Math.floor((diff % 3600000) / 60000);
-        const seconds = Math.floor((diff % 60000) / 1000);
-        timeUntilStartEl.textContent = `${hours}h ${minutes}m ${seconds}s`;
-      } else {
-        location.reload();
-      }
-    }
-  }
-
-  setInterval(updateTimer, 1000);
-  updateTimer();
+    const timerInterval = setInterval(updateTimer, 1000);
+    updateTimer();
+  })();
 
   // Handle form submission with proper action
   document.getElementById('run-btn').addEventListener('click', function(e) {

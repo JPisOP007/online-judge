@@ -35,106 +35,66 @@
 {% block extra_js %}
 {% if contest.is_running or contest.is_upcoming %}
 <script>
-    // Contest timer functionality
-    function updateTimer() {
-        fetch('{% url "contest_timer_api" contest.uuid %}')
-            .then(function(response) {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
-            .then(function(data) {
-                console.log('Timer data received:', data); // Debug log
-                
-                const timerDisplay = document.getElementById('timerDisplay');
-                const statusBadge = document.getElementById('contestStatusBadge');
-                
-                if (!timerDisplay) {
-                    console.log('Timer display element not found');
-                    return;
-                }
-                
-                let seconds = 0;
-                let statusText = 'Unknown';
-                let statusClass = 'bg-secondary';
-                
-                // Update status badge
-                if (data.status === 'upcoming') {
-                    seconds = data.time_until_start || 0;
-                    statusText = 'Upcoming';
-                    statusClass = 'bg-info';
-                } else if (data.status === 'running') {
-                    seconds = data.time_remaining || 0;
-                    statusText = 'Running';
-                    statusClass = 'bg-success';
-                } else if (data.status === 'ended') {
-                    statusText = 'Ended';
-                    statusClass = 'bg-secondary';
-                }
-                
-                // Update status badge if it exists
-                if (statusBadge) {
-                    statusBadge.textContent = statusText;
-                    statusBadge.className = 'badge contest-status-badge ' + statusClass;
-                }
-                
-                // Update timer display
-                if (seconds > 0) {
-                    const hours = Math.floor(seconds / 3600);
-                    const minutes = Math.floor((seconds % 3600) / 60);
-                    const secs = seconds % 60;
-                    
-                    const timeString = 
-                        hours.toString().padStart(2, '0') + ':' +
-                        minutes.toString().padStart(2, '0') + ':' +
-                        secs.toString().padStart(2, '0');
-                    
-                    timerDisplay.textContent = timeString;
-                    
-                    // Update timer label
-                    const timerLabel = document.querySelector('.timer-label');
-                    if (timerLabel) {
-                        if (data.status === 'upcoming') {
-                            timerLabel.textContent = 'Contest starts in:';
-                        } else if (data.status === 'running') {
-                            timerLabel.textContent = 'Time remaining:';
-                        }
-                    }
-                } else {
-                    if (data.status === 'ended') {
-                        timerDisplay.textContent = 'Contest ended';
-                    } else {
-                        timerDisplay.textContent = '00:00:00';
-                    }
-                    
-                    // Reload page when contest status changes
-                    if ((data.status === 'running' && '{{ contest.status }}' === 'upcoming') ||
-                        (data.status === 'ended' && '{{ contest.status }}' === 'running')) {
-                        console.log('Contest status changed, reloading page...');
-                        setTimeout(function() {
-                            location.reload();
-                        }, 2000);
-                    }
-                }
-            })
-            .catch(function(error) {
-                console.error('Timer update failed:', error);
-                const timerDisplay = document.getElementById('timerDisplay');
-                if (timerDisplay) {
-                    timerDisplay.textContent = 'Timer error';
-                }
-            });
-    }
-    
-    // Update timer every second
-    const timerInterval = setInterval(updateTimer, 1000);
-    updateTimer(); // Initial call
-    
-    // Clear interval when page is about to unload
-    window.addEventListener('beforeunload', function() {
-        clearInterval(timerInterval);
-    });
+    // The countdown runs off the deadline the server rendered into the page.
+    // It used to fetch the timer endpoint once a second per open tab, which is
+    // one request per second per viewer for a number the browser can work out
+    // on its own.
+    (function () {
+        const timerDisplay = document.getElementById('timerDisplay');
+        const timerLabel = document.querySelector('.timer-label');
+        const statusBadge = document.getElementById('contestStatusBadge');
+        const isUpcoming = {{ contest.is_upcoming|yesno:"true,false" }};
+        const deadline = new Date(isUpcoming
+            ? '{{ contest.start_time|date:"c" }}'
+            : '{{ contest.end_time|date:"c" }}');
+
+        if (!timerDisplay || isNaN(deadline)) {
+            return;
+        }
+
+        let reloading = false;
+
+        function render() {
+            const remaining = deadline - new Date();
+
+            if (remaining > 0) {
+                const total = Math.floor(remaining / 1000);
+                const hours = Math.floor(total / 3600);
+                const minutes = Math.floor((total % 3600) / 60);
+                const seconds = total % 60;
+
+                timerDisplay.textContent =
+                    String(hours).padStart(2, '0') + ':' +
+                    String(minutes).padStart(2, '0') + ':' +
+                    String(seconds).padStart(2, '0');
+                return;
+            }
+
+            timerDisplay.textContent = isUpcoming ? '00:00:00' : 'Contest ended';
+            if (timerLabel) {
+                timerLabel.textContent = isUpcoming ? 'Starting…' : 'Finished';
+            }
+            if (statusBadge && !isUpcoming) {
+                statusBadge.textContent = 'Ended';
+                statusBadge.className = 'badge contest-status-badge bg-secondary';
+            }
+
+            // One reload, not one per tick: the page has to come back from the
+            // server for the problem links and submit button to change state.
+            clearInterval(timerInterval);
+            if (!reloading) {
+                reloading = true;
+                setTimeout(function () { location.reload(); }, 2000);
+            }
+        }
+
+        const timerInterval = setInterval(render, 1000);
+        render();
+
+        window.addEventListener('beforeunload', function () {
+            clearInterval(timerInterval);
+        });
+    })();
 </script>
 {% endif %}
 {% endblock %}
