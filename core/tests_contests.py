@@ -476,6 +476,25 @@ class ContestPageSmokeTests(TestCase):
             created_by=self.owner,
         )
 
+    def contest_urls(self):
+        return [
+            reverse('contest_list'),
+            reverse('contest_detail', args=[self.contest.uuid]),
+            reverse('contest_problems', args=[self.contest.uuid]),
+            reverse('contest_problem_detail', args=[self.contest.uuid, self.problem.uuid]),
+            reverse('contest_standings', args=[self.contest.uuid]),
+            reverse('contest_announcements', args=[self.contest.uuid]),
+        ]
+
+    def test_no_page_leaks_template_syntax(self):
+        """A {# #} comment split over two lines is not a comment - Django's
+        lexer does not match across newlines - so it renders as page text."""
+        for url in self.contest_urls():
+            with self.subTest(url=url):
+                html = self.client.get(url).content.decode()
+                self.assertNotIn('{#', html)
+                self.assertNotIn('{%', html)
+
     def test_pages_render(self):
         urls = [
             reverse('contest_list'),

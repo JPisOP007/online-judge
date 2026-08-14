@@ -836,8 +836,10 @@
     </div>
   </footer>
 
-  {# Pages that have their own controls in the bottom-right corner override
-     this block to empty, so the floating button cannot sit on top of them. #}
+  {% comment %}
+    Pages that have their own controls in the bottom-right corner override
+    this block to empty, so the floating button cannot sit on top of them.
+  {% endcomment %}
   {% block floating_action %}
   {% if user.is_authenticated and user.userprofile.role == 'setter' or user.is_authenticated and user.userprofile.role == 'admin' %}
   <a href="{% url 'add_problem' %}" class="floating-add-btn">

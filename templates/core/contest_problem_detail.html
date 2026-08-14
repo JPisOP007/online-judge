@@ -2,8 +2,10 @@
 
 {% block title %}{{ problem.title }} - {{ contest.title }}{% endblock %}
 
-{# The Add Problem button floats over the Run and Submit buttons here, and
-   adding a problem is not something anyone does mid-contest anyway. #}
+{% comment %}
+  The Add Problem button floats over the Run and Submit buttons here, and
+  adding a problem is not something anyone does mid-contest anyway.
+{% endcomment %}
 {% block floating_action %}{% endblock %}
 
 {% block content %}
