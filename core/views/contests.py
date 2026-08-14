@@ -103,6 +103,11 @@ def get_participation(contest, user):
     if contest.registration_required:
         return None, 'You must be registered to take part in this contest'
 
+    # Joining an open contest after the fact would put a participant with no
+    # submissions on the final standings, so entry closes with the contest.
+    if contest.is_ended:
+        return None, 'This contest has ended'
+
     if contest_is_full(contest):
         return None, 'This contest is full'
 
@@ -201,8 +206,9 @@ def contest_detail(request, contest_uuid):
         and not is_full
     )
     # Contests that do not require registration are entered directly from the
-    # problems page, which creates the participant record on the way in.
-    can_enter = is_registered or (not contest.registration_required and not contest.is_upcoming)
+    # problems page, which creates the participant record on the way in - up
+    # until the contest ends, after which no new participants are taken.
+    can_enter = is_registered or (not contest.registration_required and contest.is_running)
 
     if request.method == 'POST' and can_register:
         form = ContestRegistrationForm(request.POST)

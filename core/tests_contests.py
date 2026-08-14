@@ -112,6 +112,22 @@ class RegistrationTests(TestCase):
             ContestParticipant.objects.filter(contest=contest, user=self.user).exists()
         )
 
+    def test_open_contest_stops_taking_entrants_once_it_ends(self):
+        """Joining after the end would add a blank row to the final standings."""
+        now = timezone.now()
+        contest = make_contest(
+            self.owner,
+            registration_required=False,
+            start_time=now - timedelta(hours=3),
+            end_time=now - timedelta(hours=1),
+        )
+
+        response = self.client.get(reverse('contest_problems', args=[contest.uuid]))
+        self.assertRedirects(response, reverse('contest_detail', args=[contest.uuid]))
+        self.assertFalse(
+            ContestParticipant.objects.filter(contest=contest, user=self.user).exists()
+        )
+
     def test_unregistered_user_cannot_see_problems_of_closed_contest(self):
         contest = make_contest(self.owner)
         response = self.client.get(reverse('contest_problems', args=[contest.uuid]))
