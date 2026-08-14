@@ -45,7 +45,7 @@
   </div>
 
   <!-- Problem Content -->
-  <div class="col-lg-7">
+  <div class="col-12 mb-4">
     <div class="card-section">
       <div class="d-flex justify-content-between align-items-start mb-4">
         <div>
@@ -105,8 +105,8 @@
   </div>
 
   <!-- Submission Panel -->
-  <div class="col-lg-5">
-    <div class="card-section sticky-top" style="top: 20px;">
+  <div class="col-12">
+    <div class="card-section">
       <h5 class="mb-3" style="font-family: var(--font-heading); text-transform: uppercase; border-bottom: 2px solid var(--border); padding-bottom: 8px;">
         <i class="bi bi-code-slash me-2"></i>Submit Solution
       </h5>
@@ -207,7 +207,7 @@
           </div>
         </div>
 
-        <div class="d-grid gap-2 mb-3">
+        <div class="d-flex gap-2 flex-wrap mb-3">
           <button type="button" class="btn btn-outline-primary" id="run-btn">
             <i class="bi bi-play me-1"></i>Run on Sample
           </button>
@@ -215,6 +215,9 @@
                   {% if not contest.is_running %}disabled title="This contest is not accepting submissions"{% endif %}>
            <i class="bi bi-upload me-1"></i>Submit Solution
           </button>
+          <span class="ms-auto align-self-center" style="color: var(--muted); font-size: 0.85rem;">
+            Run checks the sample only. Submit runs every test case and scores it.
+          </span>
         </div>
 
         {% if not contest.is_running %}
@@ -231,7 +234,7 @@
         <h6 class="mb-3" style="font-family: var(--font-heading); text-transform: uppercase; border-bottom: 2px solid var(--border); padding-bottom: 8px;">
           <i class="bi bi-clock-history me-2"></i>Your Submissions
         </h6>
-        <div class="table-responsive">
+        <div class="table-responsive" style="max-width: 520px;">
           <table class="table table-sm">
             <thead>
               <tr style="border-bottom: 2px solid var(--border);">
@@ -280,10 +283,12 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-darker.min.css">
 <style>
-  .problem-content { line-height: 1.7; font-size: 1.05rem; }
-  .sticky-top { position: sticky; z-index: 1020; }
-  @media (max-width: 991.98px) {
-    .sticky-top { position: static; }
+  /* The statement card spans the page now, but prose is easier to read at a
+     fixed measure than at 1200px. */
+  .problem-content {
+    line-height: 1.7;
+    font-size: 1.05rem;
+    max-width: 78ch;
   }
 
   .editor-container {
@@ -338,8 +343,12 @@
   }
 
   .editor-wrapper {
-    height: 460px;
+    height: 520px;
     background: #1e293b;
+  }
+
+  @media (max-width: 767.98px) {
+    .editor-wrapper { height: 380px; }
   }
 
   @media (max-width: 575.98px) {
