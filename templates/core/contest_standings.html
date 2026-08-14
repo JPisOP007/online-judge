@@ -127,12 +127,17 @@
               {% for contest_problem in contest_problems %}
               <td class="text-center problem-cell">
                 {% with problem_score=standing.problem_scores|get_item:contest_problem.problem.uuid %}
-                {% if problem_score.points > 0 %}
+                {% if problem_score.solved %}
                   <div class="problem-accepted">
                     <div class="fw-bold text-success">{{ problem_score.points }}</div>
                     {% if problem_score.submissions > 1 %}
                     <small class="text-muted">({{ problem_score.submissions }})</small>
                     {% endif %}
+                  </div>
+                {% elif problem_score.points > 0 %}
+                  <div class="problem-partial">
+                    <div class="fw-bold text-dark">{{ problem_score.points }}</div>
+                    <small class="text-muted">({{ problem_score.submissions }})</small>
                   </div>
                 {% elif problem_score.submissions > 0 %}
                   <div class="problem-attempted">
@@ -176,10 +181,16 @@
               <span>Accepted solution with points earned</span>
             </div>
             <div class="d-flex align-items-center mb-2">
+              <div class="problem-partial me-3" style="width: 40px; height: 30px; display: flex; align-items: center; justify-content: center;">
+                <span class="fw-bold text-dark">60</span>
+              </div>
+              <span>Partial credit, not yet accepted</span>
+            </div>
+            <div class="d-flex align-items-center mb-2">
               <div class="problem-attempted me-3" style="width: 40px; height: 30px; display: flex; align-items: center; justify-content: center;">
                 <span class="text-danger">-</span>
               </div>
-              <span>Attempted but not solved</span>
+              <span>Attempted, nothing scored</span>
             </div>
           </div>
           <div class="col-md-6">
@@ -239,6 +250,12 @@
 
   .problem-accepted {
     background-color: #DCFCE7;
+    padding: 8px 4px;
+    border: 2px solid var(--border);
+  }
+
+  .problem-partial {
+    background-color: var(--accent-yellow);
     padding: 8px 4px;
     border: 2px solid var(--border);
   }

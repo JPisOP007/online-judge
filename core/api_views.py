@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 from rest_framework import viewsets, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -295,31 +297,52 @@ class ContestViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
     def standings(self, request, pk=None):
-        """Get contest standings/leaderboard"""
+        """Get contest standings/leaderboard.
+
+        Mirrors the web standings: a participant's score for a problem is
+        their best submission on it, not the sum of every attempt - which used
+        to mean resubmitting an accepted solution kept raising your score.
+        """
         contest = self.get_object()
-        
-        # Get all participants with their scores
+
         participants = ContestParticipant.objects.filter(contest=contest).select_related('user')
-        standings = []
-        
-        for participant in participants:
-            total_score = ContestSubmission.objects.filter(
-                participant=participant
-            ).aggregate(total=models.Sum('score'))['total'] or 0
-            
-            standings.append({
-                'rank': len(standings) + 1,
+
+        best_scores = defaultdict(dict)
+        solved = defaultdict(set)
+        submission_counts = defaultdict(int)
+        rows = ContestSubmission.objects.filter(contest=contest).values_list(
+            'participant_id', 'problem_id', 'score', 'verdict'
+        )
+        for participant_id, problem_id, score, verdict in rows:
+            current = best_scores[participant_id].get(problem_id, 0)
+            best_scores[participant_id][problem_id] = max(current, score or 0)
+            if verdict == 'AC':
+                solved[participant_id].add(problem_id)
+            submission_counts[participant_id] += 1
+
+        standings = [
+            {
+                'rank': 0,
                 'user': participant.user.username,
                 'user_id': participant.user.id,
-                'score': total_score,
-                'submissions': participant.contestsubmission_set.count()
-            })
-        
-        # Sort by score descending
-        standings.sort(key=lambda x: x['score'], reverse=True)
-        for i, standing in enumerate(standings):
-            standing['rank'] = i + 1
-        
+                'score': sum(best_scores[participant.id].values()),
+                'solved': len(solved[participant.id]),
+                'submissions': submission_counts[participant.id],
+            }
+            for participant in participants
+        ]
+
+        standings.sort(key=lambda row: (-row['score'], row['submissions']))
+
+        previous_key = None
+        current_rank = 0
+        for position, row in enumerate(standings, start=1):
+            key = (row['score'], row['submissions'])
+            if key != previous_key:
+                current_rank = position
+                previous_key = key
+            row['rank'] = current_rank
+
         return Response(standings)
 
     @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])

@@ -502,12 +502,19 @@ def contest_standings(request, contest_uuid):
     tally = {}
     submission_totals = defaultdict(int)
     submissions = ContestSubmission.objects.filter(contest=contest).values_list(
-        'participant_id', 'problem_id', 'points_awarded'
+        'participant_id', 'problem_id', 'points_awarded', 'verdict'
     )
-    for participant_id, problem_id, points in submissions:
-        entry = tally.setdefault((participant_id, problem_id), {'points': 0, 'submissions': 0})
+    for participant_id, problem_id, points, verdict in submissions:
+        entry = tally.setdefault(
+            (participant_id, problem_id),
+            {'points': 0, 'submissions': 0, 'solved': False},
+        )
         entry['submissions'] += 1
         entry['points'] = max(entry['points'], points or 0)
+        # "Solved" means an accepted submission. Scoring partial credit as a
+        # solve made a participant who never passed a full test set outrank one
+        # who did on the Solved column.
+        entry['solved'] = entry['solved'] or verdict == 'AC'
         submission_totals[participant_id] += 1
 
     standings = []
@@ -519,12 +526,12 @@ def contest_standings(request, contest_uuid):
         for contest_problem in contest_problems:
             entry = tally.get(
                 (participant.id, contest_problem.problem_id),
-                {'points': 0, 'submissions': 0},
+                {'points': 0, 'submissions': 0, 'solved': False},
             )
             # get_item looks these up by str(uuid); keep that key shape.
             problem_scores[str(contest_problem.problem.uuid)] = dict(entry)
             user_points += entry['points']
-            if entry['points'] > 0:
+            if entry['solved']:
                 solved_problems += 1
 
         standings.append({
@@ -537,8 +544,16 @@ def contest_standings(request, contest_uuid):
 
     standings.sort(key=lambda x: (-x['total_points'], x['submissions_count']))
 
-    for i, standing in enumerate(standings):
-        standing['rank'] = i + 1
+    # Participants who are level on points and attempts share a rank, and the
+    # next one down skips the places they take up. Numbering the sorted list
+    # 1..n instead handed out an arbitrary ordering as if it were a result.
+    previous_key = None
+    for position, standing in enumerate(standings, start=1):
+        key = (standing['total_points'], standing['submissions_count'])
+        if key != previous_key:
+            current_rank = position
+            previous_key = key
+        standing['rank'] = current_rank
 
     context = {
         'contest': contest,
