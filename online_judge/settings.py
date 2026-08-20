@@ -20,6 +20,11 @@ AI_FEATURES_ENABLED = False
 # Read Groq API key from environment only — never hardcode secrets
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
 
+# Optional override for the review model. Groq retires hosted models, so this
+# lets a dead model be swapped without a deploy; core.utils.ai_review falls
+# back through its own list when this is unset.
+GROQ_MODEL = os.environ.get("GROQ_MODEL", "")
+
 if GROQ_API_KEY:
     AI_FEATURES_ENABLED = True
 else:

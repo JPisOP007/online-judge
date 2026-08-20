@@ -928,6 +928,44 @@ function getCSRFToken() {
   return document.querySelector('#csrf-form [name=csrfmiddlewaretoken]').value;
 }
 
+// Render an AI review into a container.
+//
+// The review text goes in as text, never as markup. It is model output shaped
+// by the user's own submitted code, so a submission can steer what it says;
+// both call sites used to interpolate it straight into innerHTML.
+function renderAiReview(review, container) {
+  const sections = [
+    ['bi-gear-fill text-primary', 'Logic & Correctness', review.logic],
+    ['bi-speedometer2 text-success', 'Efficiency & Performance', review.efficiency],
+    ['bi-eye-fill text-info', 'Code Clarity & Readability', review.clarity],
+    ['bi-award-fill text-warning', 'Best Practices', review.best_practices]
+  ];
+
+  const wrapper = document.createElement('div');
+  wrapper.className = 'ai-review-structured';
+
+  sections.forEach(([iconClass, title, body]) => {
+    const section = document.createElement('div');
+    section.className = 'review-section';
+
+    const heading = document.createElement('h6');
+    const icon = document.createElement('i');
+    icon.className = 'bi ' + iconClass;
+    heading.appendChild(icon);
+    heading.appendChild(document.createTextNode(' ' + title));
+
+    const paragraph = document.createElement('p');
+    paragraph.textContent = body || 'No feedback available';
+
+    section.appendChild(heading);
+    section.appendChild(paragraph);
+    wrapper.appendChild(section);
+  });
+
+  container.textContent = '';
+  container.appendChild(wrapper);
+}
+
 // Show error message
 function showError(message) {
   const alertDiv = document.createElement('div');
@@ -1205,27 +1243,7 @@ function displaySubmissionResult(data) {
   // Display AI feedback if provided
   if (data.ai_feedback) {
       if (typeof data.ai_feedback === 'object') {
-        const review = data.ai_feedback.review || data.ai_feedback;
-        aiContent.innerHTML = `
-          <div class="ai-review-structured">
-            <div class="review-section">
-              <h6><i class="bi bi-gear-fill text-primary"></i> Logic & Correctness</h6>
-              <p>${review.logic || 'No feedback available'}</p>
-            </div>
-            <div class="review-section">
-              <h6><i class="bi bi-speedometer2 text-success"></i> Efficiency & Performance</h6>
-              <p>${review.efficiency || 'No feedback available'}</p>
-            </div>
-            <div class="review-section">
-              <h6><i class="bi bi-eye-fill text-info"></i> Code Clarity & Readability</h6>
-              <p>${review.clarity || 'No feedback available'}</p>
-            </div>
-            <div class="review-section">
-              <h6><i class="bi bi-award-fill text-warning"></i> Best Practices</h6>
-              <p>${review.best_practices || 'No feedback available'}</p>
-            </div>
-          </div>
-        `;
+        renderAiReview(data.ai_feedback.review || data.ai_feedback, aiContent);
       } else {
         aiContent.textContent = data.ai_feedback;
       }
@@ -1311,27 +1329,7 @@ async function getAIReview() {
       
       // Format and show AI review content
       if (data.review && typeof data.review === 'object') {
-        const review = data.review;
-        aiContent.innerHTML = `
-          <div class="ai-review-structured">
-            <div class="review-section">
-              <h6><i class="bi bi-gear-fill text-primary"></i> Logic & Correctness</h6>
-              <p>${review.logic || 'No feedback available'}</p>
-            </div>
-            <div class="review-section">
-              <h6><i class="bi bi-speedometer2 text-success"></i> Efficiency & Performance</h6>
-              <p>${review.efficiency || 'No feedback available'}</p>
-            </div>
-            <div class="review-section">
-              <h6><i class="bi bi-eye-fill text-info"></i> Code Clarity & Readability</h6>
-              <p>${review.clarity || 'No feedback available'}</p>
-            </div>
-            <div class="review-section">
-              <h6><i class="bi bi-award-fill text-warning"></i> Best Practices</h6>
-              <p>${review.best_practices || 'No feedback available'}</p>
-            </div>
-          </div>
-        `;
+        renderAiReview(data.review, aiContent);
       } else {
         aiContent.textContent = data.review || data.feedback || 'AI review completed';
       }
